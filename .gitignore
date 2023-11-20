@@ -11,6 +11,12 @@
 *.tif
 *.eps
 
+# random crap
+*.pdf
+*.txt
+*.png
+
+
 # exceptions
 !All_Sentences.csv
 

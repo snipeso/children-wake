@@ -50,9 +50,8 @@ Parameters = analysisParameters();
 Paths = Parameters.Paths;
 Task = Parameters.Task;
 Sessions = Parameters.Sessions.(Task);
-Participants = Parameters.Participants;
 Bands = Parameters.Narrowbands;
-Triggers = Parameters.Triggers;
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

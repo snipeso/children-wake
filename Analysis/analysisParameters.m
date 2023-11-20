@@ -10,6 +10,7 @@ Parameters = struct();
 
 % Who, what, when
 Parameters.Datasets = {'ADHD', 'BMS', 'BMSSL', 'Koffein', 'SleepLearning'};
+Parameters.Tasks = {}; % if is empty, will do all of them
 % Folder structure: Preprocessed > Power > Clean > ADHD > 1Oddball
 
 %%% labels
