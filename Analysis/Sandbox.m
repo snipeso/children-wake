@@ -10,8 +10,8 @@ BandLabels = fieldnames(Bands);
 %%%% Choose a file
 %%%%
 %%%%
-Source = 'X:\Data\Preprocessed\Power\Clean\SleepLearning\3Oddball';
-Filename_Source = 'P115_SleepLearning_Session11_mor_3Oddball_n_1.mat';
+Source = 'X:\Data\Preprocessed\Power\Clean\Koffein\Oddball';
+Filename_Source = 'P107_Koffein_Session1_eve_Oddball_n_1.mat';
 %%%%
 %%%%
 %%%%
