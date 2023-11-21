@@ -49,7 +49,7 @@ MinClusteringFrequencyRange = 1; % to cluster bursts across channels
 Parameters = analysisParameters();
 Paths = Parameters.Paths;
 Datasets = Parameters.Datasets;
-Tasks = Parameters.Tasks;
+TaskList = Parameters.Tasks;
 Bands = Parameters.Narrowbands;
 
 
@@ -60,9 +60,12 @@ Bands = Parameters.Narrowbands;
 for DatasetCell = Datasets
         Dataset = DatasetCell{1};
 
-    if isempty(Tasks)
+    if isempty(TaskList)
         Tasks = list_filenames(fullfile(Paths.CleanEEG, Dataset))';
         Tasks(contains(Tasks, '.')) = [];
+    else
+        Tasks = TaskList;
+     
     end
 
     for TaskCell = Tasks
@@ -77,6 +80,11 @@ for DatasetCell = Datasets
 
         %%% run
         Filenames = list_filenames(EEGSource);
+        if isempty(Filenames)
+            disp(['Skipping ' EEGSource])
+            continue
+        end
+
         for Filename = Filenames'
 
             % load data

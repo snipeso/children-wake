@@ -33,7 +33,7 @@ Parameters.Labels.t = 't-values';
 %%% Locations
 
 if exist( 'D:\LSM\Preprocessed', 'dir') % KISPI desktop
-    Core = 'D:\LSM\';
+    Core = 'D:\AllWake\';
     addpath('H:\Code\chART')
     addpath('H:\Code\Matcycle')
     addpath('H:\Code\fooof_mat\fooof_mat')
