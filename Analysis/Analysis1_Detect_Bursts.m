@@ -80,6 +80,11 @@ for DatasetCell = Datasets
 
         %%% run
         Filenames = list_filenames(EEGSource);
+        if isempty(Filenames)
+            disp(['Skipping ' EEGSource])
+            continue
+        end
+
         for Filename = Filenames'
 
             % load data
