@@ -129,7 +129,7 @@ BurstClusters = cycy.aggregate_bursts_into_clusters(Bursts, EEG, MinFrequencyRan
 
 %% plot final output in entire EEG
 
-cycy.plot.plot_all_bursts(EEG, 10, BurstClusters, 'Band');
+cycy.plot.plot_all_bursts(EEG, 20, BurstClusters, 'Band');
 
 %% Plot bar graph of which criteria set was most influential
 cycy.plot.burst_criteriaset_diagnostics(BurstClusters)
