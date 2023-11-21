@@ -11,6 +11,7 @@ Parameters = struct();
 % Who, what, when
 Parameters.Datasets = {'ADHD', 'BMS', 'BMSSL', 'Koffein', 'SleepLearning'};
 Parameters.Tasks = {}; % if is empty, will do all of them
+Parameters.Participants = 156;
 % Parameters.Datasets = {'BMS'};
 % Parameters.Tasks = {'1GoNoGo'};
 % Folder structure: Preprocessed > Power > Clean > ADHD > 1Oddball
@@ -112,7 +113,7 @@ Triggers.Tones = 'S 12';
 Parameters.Triggers = Triggers;
 
 Parameters.PlotProps.Manuscript = chART.load_plot_properties({'LSM', 'Manuscript'});
-Parameters.Manuscript.Figure.Width = 22;
+Parameters.PlotProps.Manuscript.Figure.Width = 22;
 
 Parameters.PlotProps.Powerpoint = chART.load_plot_properties({'LSM', 'Powerpoint'});
 Parameters.PlotProps.Poster = chART.load_plot_properties({'LSM', 'Poster'});
