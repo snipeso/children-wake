@@ -82,9 +82,9 @@ if Refresh || ~exist(fullfile(CacheDir, CacheName), 'file')
             end
         end
     end
-    save(fullfile(CacheDir, CacheName), 'PowerSpectra', 'Freqs', 'Chanlocs')
+    save(fullfile(CacheDir, CacheName), 'PowerSpectra', 'Freqs', 'Chanlocs', 'GammaTopographies')
 else
-    load(fullfile(CacheDir, CacheName), 'PowerSpectra', 'Freqs', 'Chanlocs')
+    load(fullfile(CacheDir, CacheName), 'PowerSpectra', 'Freqs', 'Chanlocs', 'GammaTopographies')
 end
 
 
