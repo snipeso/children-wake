@@ -81,19 +81,19 @@ end
 
 %% plot spectra
 
-% close all
+close all
 
-plotGamma = true;
+plotGamma = false;
 FigureDimentions = [5 8];
 
 Colors = chART.color_picker([4, 2]);
 
 if plotGamma
     Range = [25 40];
-    FigLabel = 'GAMMAPower_';
+    FigLabel = 'SLGAMMAPower_';
 else
     Range = [1 40];
-    FigLabel = 'AllPower_';
+    FigLabel = 'SLAllPower_';
 end
 Idx = 1;
 figure('Units','normalized','OuterPosition',[0 0 1 1])
