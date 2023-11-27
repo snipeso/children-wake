@@ -13,6 +13,9 @@ if isempty(Filename)
     warning(['No data in ', Participant, '_' Session])
     DataOut = [];
     return
+elseif numel(Filename)>1
+    warning(['too many files in ', char(Filename(1))])
+    Filename = Filename(1);
 end
 
 % load data

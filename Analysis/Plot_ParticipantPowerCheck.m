@@ -43,45 +43,44 @@ if Refresh || ~exist(fullfile(CacheDir, CacheName), 'file')
     PowerSpectra = nan(numel(Participants), 4, 4, 2, nFreqs); % P x S x T x H x F
     GammaTopographies = nan(numel(Participants), nChans);
 
-    for DatasetCell = Datasets
-        Dataset = DatasetCell{1};
+    for ParticipantIdx = 1:numel(Participants)
+        Participant = Participants{ParticipantIdx};
+        Dataset = UniqueMetadata.Dataset{strcmp(UniqueMetadata.Participant, Participant)};
         Tasks = Parameters.Tasks.(Dataset);
         Sessions = Parameters.Sessions.(Dataset);
 
-        for ParticipantIdx = 1:numel(Participants)
-            Participant = Participants{ParticipantIdx};
-            for TaskIdx = 1:numel(Tasks)
-                Task = Tasks{TaskIdx};
-                for SessionIdx = 1:numel(Sessions)
-                    Session = Sessions{SessionIdx};
-                    for HourIdx = 1:numel(Hours)
-                        Hour = Hours{HourIdx};
+        for TaskIdx = 1:numel(Tasks)
+            Task = Tasks{TaskIdx};
+            for SessionIdx = 1:numel(Sessions)
+                Session = Sessions{SessionIdx};
+                for HourIdx = 1:numel(Hours)
+                    Hour = Hours{HourIdx};
 
-                        % load in data
-                        Path = fullfile(Paths.AnalyzedData, 'EEG', 'Power', Folder, Dataset, Task);
-                        Power = load_datafile(Path, Participant, Session, Hour, 'Power', '.mat');
-                        if isempty(Power); continue; end
-                        if ~exist('Chanlocs', 'var')
-                            Chanlocs = load_datafile(Path, Participant, Session, Hour, 'Chanlocs', '.mat');
-                            Freqs = load_datafile(Path, Participant, Session, Hour, 'Freqs', '.mat');
-                        end
+                    % load in data
+                    Path = fullfile(Paths.AnalyzedData, 'EEG', 'Power', Folder, Dataset, Task);
+                    Power = load_datafile(Path, Participant, Session, Hour, 'Power', '.mat');
+                    if isempty(Power); continue; end
+                    if ~exist('Chanlocs', 'var')
+                        Chanlocs = load_datafile(Path, Participant, Session, Hour, 'Chanlocs', '.mat');
+                        Freqs = load_datafile(Path, Participant, Session, Hour, 'Freqs', '.mat');
+                    end
 
-                        % average across channels
-                        Spectrum = mean(Power, 1, 'omitnan');
-                        SpectrumSmooth =  smooth_frequencies(Spectrum, Freqs, 2);
-                        PowerSpectra(ParticipantIdx, SessionIdx, TaskIdx, HourIdx, :) = SpectrumSmooth;
+                    % average across channels
+                    Spectrum = mean(Power, 1, 'omitnan');
+                    SpectrumSmooth =  smooth_frequencies(Spectrum, Freqs, 2);
+                    PowerSpectra(ParticipantIdx, SessionIdx, TaskIdx, HourIdx, :) = SpectrumSmooth;
 
 
-                        % gather topography of peak frequency
-                        if TaskIdx == 1 && HourIdx == 1 && SessionIdx == 1
-                            PeakFreq = find_periodic_peak(SpectrumSmooth, Freqs, GammaRange);
-                            if ~isempty(PeakFreq)
-                                BumpIndex = ismember(Freqs, PeakFreq);
-                                GammaTopographies(ParticipantIdx, :) = Power(:, BumpIndex);
-                            end
+                    % gather topography of peak frequency
+                    if TaskIdx == 1 && HourIdx == 1 && SessionIdx == 1
+                        PeakFreq = find_periodic_peak(SpectrumSmooth, Freqs, GammaRange);
+                        if ~isempty(PeakFreq)
+                            BumpIndex = ismember(Freqs, PeakFreq);
+                            GammaTopographies(ParticipantIdx, :) = Power(:, BumpIndex);
                         end
                     end
                 end
+
             end
             disp(['Finished ' Participants{ParticipantIdx}])
         end
