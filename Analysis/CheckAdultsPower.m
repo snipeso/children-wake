@@ -6,19 +6,20 @@ close all
 Parameters = analysisParameters();
 Paths = Parameters.Paths;
 PlotProps = Parameters.PlotProps.Manuscript;
-Path = 'E:\Data\Final\EEG\Unlocked\window8s_duration4m';
+Path = 'E:\Data\Final\EEG\Unlocked\window4s_duration4m';
 ResultsFolder = fullfile(Paths.Results, 'PowerSpectra');
 
-Tasks = {'Game', 'Music', 'SpFT'};
-Sessions = {'Session2','Baseline'};
+Tasks = { 'Standing'};
+Sessions = {'Main8', 'Main7', 'Main6', 'Main5', 'Main4', 'Main3', 'Main2', 'Main1'};
 
 % Tasks = {'Fixation', 'Standing', 'Oddball'};
 % Sessions = {'Main7', 'BaselinePost'};
 Participants = {'P01', 'P02', 'P03', 'P04', 'P05', 'P06', 'P07', 'P08', ...
     'P09', 'P10', 'P11', 'P12', 'P13', 'P14', 'P15', 'P16', 'P17', 'P19'};
 
-GammaRange = [30, 40];
-nFreqs = 1025;
+GammaRange = [25 35];
+% nFreqs = 1025;
+nFreqs = 513;
 nChans = 120;
 
 
@@ -41,7 +42,7 @@ Spectrum = mean(Power, 1, 'omitnan');
             % Spectrum = mean(Power(labels2indexes(Parameters.Channels.PreROI.Front, Chanlocs), :), 1, 'omitnan');
             SpectrumSmooth =  smooth_frequencies(Spectrum, Freqs, 2);
             PowerSpectra(ParticipantIdx, TaskIdx, SessionIdx, :) = SpectrumSmooth;
-            if TaskIdx == 1 && SessionIdx == numel(Sessions)
+            if TaskIdx == 1 && SessionIdx == 1
                 PeakFreq = find_periodic_peak(SpectrumSmooth, Freqs, GammaRange);
                 if ~isempty(PeakFreq)
                     BumpIndex = ismember(Freqs, PeakFreq);
@@ -56,7 +57,7 @@ end
 
 % close all
 
-plotGamma = tru e;
+plotGamma = false;
 FigureDimentions = [4 5];
 
 Colors = chART.color_picker([numel(Tasks), numel(Sessions)]);
@@ -92,6 +93,7 @@ end
 
  %% plot gamma topographies
 
+FigureDimentions = [4 5];
 
 FigLabel = 'AdultGammaTopo';
 Idx = 1;
