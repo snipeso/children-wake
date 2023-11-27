@@ -29,57 +29,61 @@ end
 
 GammaRange = [25, 35];
 
+Metadata = readtable(fullfile(Paths.Metadata, 'Metadata.csv'));
+Metadata = Metadata(contains(Metadata.Dataset, Datasets), :);
 
+[Participants, UniqueIndx] = unique(Metadata.Participant);
+UniqueMetadata = Metadata(UniqueIndx, :);
+
+Hours = Parameters.Hours;
 
 %%% gather data
 if Refresh || ~exist(fullfile(CacheDir, CacheName), 'file')
     EEGPowerSource = fullfile(Paths.AnalyzedData, 'EEG', 'Power', Folder);
-    PowerSpectra = nan(Parameters.Participants, 4, 2, nFreqs);
-    GammaTopographies = nan(Parameters.Participants, nChans);
+    PowerSpectra = nan(numel(Participants), 4, 4, 2, nFreqs); % P x S x T x H x F
+    GammaTopographies = nan(numel(Participants), nChans);
 
     for DatasetCell = Datasets
         Dataset = DatasetCell{1};
+        Tasks = Parameters.Tasks.(Dataset);
+        Sessions = Parameters.Sessions.(Dataset);
 
-        Tasks = list_filenames(fullfile(EEGPowerSource, Dataset))';
-        Tasks(contains(Tasks, '.')) = [];
+        for ParticipantIdx = 1:numel(Participants)
+            Participant = Participants{ParticipantIdx};
+            for TaskIdx = 1:numel(Tasks)
+                Task = Tasks{TaskIdx};
+                for SessionIdx = 1:numel(Sessions)
+                    Session = Sessions{SessionIdx};
+                    for HourIdx = 1:numel(Hours)
+                        Hour = Hours{HourIdx};
 
-        for TaskIdx = 1:numel(Tasks)
-            Task = Tasks{TaskIdx};
+                        % load in data
+                        Path = fullfile(Paths.AnalyzedData, 'EEG', 'Power', Folder, Dataset, Task);
+                        Power = load_datafile(Path, Participant, Session, Hour, 'Power', '.mat');
+                        if isempty(Power); continue; end
+                        if ~exist('Chanlocs', 'var')
+                            Chanlocs = load_datafile(Path, Participant, Session, Hour, 'Chanlocs', '.mat');
+                            Freqs = load_datafile(Path, Participant, Session, Hour, 'Freqs', '.mat');
+                        end
 
-            % set paths and files
-            TaskFiles = list_filenames(fullfile(EEGPowerSource, Dataset, Task));
-            TaskFiles(~contains(TaskFiles, '.m')) = [];
-
-            for TaskFile = TaskFiles'
-
-                % get coordinates in mega matrix to save data
-                Filename = TaskFile{1};
-                Levels = split(Filename, '_');
-                ParticipantID = str2double(Levels{1}(2:end));
-                HourID = strcmp(Levels{4}, 'mor') + 1; % hack; 0+1 for evening, 1+1 for morning
-
-                % load and save data
-                load(fullfile(EEGPowerSource, Dataset, Task, Filename), 'Power', 'Chanlocs', 'Freqs')
-
-                PrevSession = squeeze(PowerSpectra(ParticipantID, TaskIdx, HourID, :))';
-                AllSessions = cat(1, PrevSession, mean(Power, 1, 'omitnan'));
-                Spectrum = mean(AllSessions, 1, 'omitnan');
-                SpectrumSmooth =  smooth_frequencies(Spectrum, Freqs, 2);
-                PowerSpectra(ParticipantID, TaskIdx, HourID, :) = SpectrumSmooth;
+                        % average across channels
+                        Spectrum = mean(Power, 1, 'omitnan');
+                        SpectrumSmooth =  smooth_frequencies(Spectrum, Freqs, 2);
+                        PowerSpectra(ParticipantIdx, SessionIdx, TaskIdx, HourIdx, :) = SpectrumSmooth;
 
 
-                % gather topography of peak frequency
-                if TaskIdx == 1 && HourID == 1
-                    PeakFreq = find_periodic_peak(SpectrumSmooth, Freqs, GammaRange);
-                    if ~isempty(PeakFreq)
-                        BumpIndex = ismember(Freqs, PeakFreq);
-                        GammaTopographies(ParticipantID, :) = Power(:, BumpIndex);
+                        % gather topography of peak frequency
+                        if TaskIdx == 1 && HourIdx == 1 && SessionIdx == 1
+                            PeakFreq = find_periodic_peak(SpectrumSmooth, Freqs, GammaRange);
+                            if ~isempty(PeakFreq)
+                                BumpIndex = ismember(Freqs, PeakFreq);
+                                GammaTopographies(ParticipantIdx, :) = Power(:, BumpIndex);
+                            end
+                        end
                     end
                 end
-
-
-                disp(['Finished ' Filename])
             end
+            disp(['Finished ' Participants{ParticipantIdx}])
         end
     end
     save(fullfile(CacheDir, CacheName), 'PowerSpectra', 'Freqs', 'Chanlocs', 'GammaTopographies')
@@ -127,11 +131,11 @@ for ParticipantIdx = 1:Parameters.Participants
 
     Idx = Idx+1;
     if Idx > FigureDimentions(1)*FigureDimentions(2)
-        chART.save_figure([FigLabel,num2str(ParticipantIdx)], ResultsFolder, PlotProps)
+        % chART.save_figure([FigLabel,num2str(ParticipantIdx)], ResultsFolder, PlotProps)
         Idx = 1;
         figure('Units','normalized','OuterPosition',[0 0 1 1])
     elseif ParticipantIdx == Parameters.Participants
-        chART.save_figure([FigLabel, num2str(ParticipantIdx)], ResultsFolder, PlotProps)
+        % chART.save_figure([FigLabel, num2str(ParticipantIdx)], ResultsFolder, PlotProps)
     end
 end
 

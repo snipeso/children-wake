@@ -9,12 +9,22 @@ Parameters = struct();
 %%% Analysis paramaters
 
 % Who, what, when
-Parameters.Datasets = {'ADHD', 'BMS', 'BMSSL', 'Koffein', 'SleepLearning'};
+Parameters.Datasets = {'ADHD', 'BMS', 'BMSSL', 'SleepLearning'};
 Parameters.Tasks = {}; % if is empty, will do all of them
 Parameters.Participants = 156;
+Parameters.Hours = {'eve', 'mor'};
+
 % Parameters.Datasets = {'BMS'};
 % Parameters.Tasks = {'1GoNoGo'};
 % Folder structure: Preprocessed > Power > Clean > ADHD > 1Oddball
+Parameters.Sessions.ADHD = {'Session1'};
+Parameters.Tasks.ADHD = {'1Oddball', '3Oddball'};
+Parameters.Sessions.BMS = {'Session1', 'Session2'};
+Parameters.Tasks.BMS = {'1GoNoGo', '2Alertness', '3Fixation', '4Fixation'};
+Parameters.Sessions.BMSSL = {'Session1', 'Session2'};
+Parameters.Tasks.BMSSL = {'1GoNoGo', '2Alertness', '3Fixation'};
+Parameters.Sessions.SleepLearning = {'Session11', 'Session12', 'Session2', 'Session3'};
+Parameters.Tasks.SleepLearning = {'1Oddball', '3Oddball'};
 
 %%% labels
 Parameters.Labels.logBands = [1 2 4 8 16 32]; % x markers for plot on log scale
@@ -52,7 +62,7 @@ Paths.Core = Core;
 Paths.AnalyzedData  = fullfile(Core, 'Final'); % where data gets saved once its been turned into something else
 Paths.Cache = fullfile(Core, 'Cache', 'children-wake');
 Paths.Results = fullfile(Core, 'Results', 'children-wake');
-
+Paths.Metadata = fullfile(Core, 'Metadata');
 if ~exist(Paths.Results, 'dir')
     mkdir(Paths.Results)
 end
