@@ -16,7 +16,7 @@ nChans = 109;
 Folder = 'window8s_allt/';
 
 CacheDir = Paths.Cache;
-CacheName = 'AllAveragePower.m';
+CacheName = 'AllAveragePower.mat';
 
 if ~exist(CacheDir, 'dir')
     mkdir(CacheDir)
@@ -41,7 +41,7 @@ Hours = Parameters.Hours;
 if Refresh || ~exist(fullfile(CacheDir, CacheName), 'file')
     EEGPowerSource = fullfile(Paths.AnalyzedData, 'EEG', 'Power', Folder);
     PowerSpectra = nan(numel(Participants), 4, 4, 2, nFreqs); % P x S x T x H x F
-    GammaTopographies = nan(numel(Participants), nChans);
+    GammaTopographies = nan(numel(Participants), 4, 4, 2, nChans); % P x S x T x H x Ch
 
     for ParticipantIdx = 1:numel(Participants)
         Participant = Participants{ParticipantIdx};
@@ -72,12 +72,11 @@ if Refresh || ~exist(fullfile(CacheDir, CacheName), 'file')
 
 
                     % gather topography of peak frequency
-                    if TaskIdx == 1 && HourIdx == 1 && SessionIdx == 1
-                        PeakFreq = find_periodic_peak(SpectrumSmooth, Freqs, GammaRange);
-                        if ~isempty(PeakFreq)
-                            BumpIndex = ismember(Freqs, PeakFreq);
-                            GammaTopographies(ParticipantIdx, :) = Power(:, BumpIndex);
-                        end
+
+                    PeakFreq = find_periodic_peak(SpectrumSmooth, Freqs, GammaRange);
+                    if ~isempty(PeakFreq)
+                        BumpIndex = ismember(Freqs, PeakFreq);
+                        GammaTopographies(ParticipantIdx, SessionIdx, TaskIdx, HourIdx, :) = Power(:, BumpIndex);
                     end
                 end
 
@@ -99,7 +98,7 @@ close all
 
 plotGamma = true;
 FigureDimentions = [5 8];
-
+SessionIdx = 1;
 Colors = chART.color_picker([4, 2]);
 
 if plotGamma
@@ -109,21 +108,24 @@ else
     Range = [1 40];
     FigLabel = 'AllPower_';
 end
+
+[~, Indexes] = sort(UniqueMetadata.Handedness);
+
 Idx = 1;
 figure('Units','normalized','OuterPosition',[0 0 1 1])
-for ParticipantIdx = 1:Parameters.Participants
+for ParticipantIdx = Indexes'
 
     subplot(FigureDimentions(1), FigureDimentions(2), Idx)
     hold on
     for TaskIdx = 1:4
         for HourIdx = 1:2
-            Data = squeeze(PowerSpectra(ParticipantIdx, TaskIdx, HourIdx, :));
+            Data = squeeze(PowerSpectra(ParticipantIdx, SessionIdx, TaskIdx, HourIdx, :));
 
             plot(Freqs, Data, 'LineWidth', 1.5, 'Color', squeeze(Colors(HourIdx, :, TaskIdx)));
             xlabel('Frequency (Hz)')
             ylabel('Power')
             set(gca, 'XScale', 'log', 'YScale', 'log', 'xlim', Range)
-            title(ParticipantIdx)
+            title(UniqueMetadata.Participant(ParticipantIdx))
         end
     end
 
@@ -146,7 +148,7 @@ FigLabel = 'GammaTopo';
 Idx = 1;
 figure('Units','normalized','OuterPosition',[0 0 1 1])
 CLims = 'minmax';
-for ParticipantIdx = 1:Parameters.Participants
+for ParticipantIdx = 1:numel(Participants)
 
     Data = GammaTopographies(ParticipantIdx, :);
     if ~all(isnan(Data))
@@ -168,6 +170,9 @@ for ParticipantIdx = 1:Parameters.Participants
 end
 
 
+%% 
+
+ParticipantsBMS = UniqueMetadata(contains(UniqueMetadata.Dataset, 'BMS'), :);
 
 
 
