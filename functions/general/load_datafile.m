@@ -22,11 +22,11 @@ end
 
 % load data
 if iscell(Variables)
-    DataOut = cell();
+    DataOut = cell([1, numel(Variables)]);
     for VariablesIdx = 1:numel(Variables)
         Variable = Variables{VariablesIdx};
         Data = load(fullfile(Path, Filename), Variable);
-        DataOut(VariablesIdx) = Data.(Variable);
+        DataOut{VariablesIdx} = Data.(Variable);
     end
 
 else

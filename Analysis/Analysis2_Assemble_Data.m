@@ -78,15 +78,15 @@ for RecordingIdx = 1:nRecordings
         TaskMetadata = cat(1, TaskMetadata, Metadata(RecordingIdx, :));
         TaskMetadata.Task{end} = Task;
 
-        BurstFrequencies = [Bursts.BurstFrequency];
+        BurstFrequencies = discretize([Bursts.BurstFrequency], Frequencies);
         BurstChannels = [Bursts.ChannelIndex];
 
         for Channel = 1:nChans
             for FrequencyIdx = 1:numel(Frequencies)
                 Frequency = Frequencies(FrequencyIdx);
-                BurstIdx = BurstFrequencies>=Frequency & BurstFrequencies<Frequency+1 & ...
-                    BurstChannels==Channel;
+                BurstIdx = BurstFrequencies==FrequencyIdx & BurstChannels==Channel;
                 BurstsTemp = Bursts(BurstIdx);
+                
                 if numel(BurstTemp)<5
                     continue
                 end
