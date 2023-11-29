@@ -13,9 +13,9 @@ Hours = Parameters.Hours;
 Variables = {''};
 VariablesCluster = {};
 
-Frequencies = 4:14;
-nFrequencies = numel(Frequencies);
-nChans = 109;
+Frequencies = 5:16;
+nFrequencies = numel(Frequencies)-1;
+nChans = 123;
 nVariables = 3;
 
 Source = fullfile(Paths.AnalyzedData, 'EEG', 'Bursts');
@@ -30,21 +30,19 @@ end
 Metadata = readtable(fullfile(Paths.Metadata, 'Metadata.csv'));
 Metadata = Metadata(contains(Metadata.Dataset, Datasets), :);
 nRecordings = size(Metadata, 1);
-Metadata.Exists = zeros(nRecordings, 1);
 Metadata.Task = repmat({''}, nRecordings, 1);
-ClusterBlank = nan(nRecordings, nFrequencies); % synthesized data pooled into clusters
-BurstBlank = nan(nRecordings, nChans, nFrequencies);  % information for each channel to produce topographies
+Metadata.Globality = nan(nRecordings, 1);
+Metadata.Amplitude = nan(nRecordings, 1);
+Metadata.Duration =  nan(nRecordings, 1);
+Metadata.Frequency =  nan(nRecordings, 1);
 
 BurstInformationClusters = struct();
+BurstInformationClusters.Amplitude = nan(nRecordings, nFrequencies);
+BurstInformationClusters.Quantity =nan(nRecordings, nFrequencies);
+
 BurstInformationTopography = struct();
-
-BurstInformationClusters.Amplitude = ClusterBlank;
-BurstInformationClusters.Quantity = ClusterBlank;
-BurstInformationClusters.Globality = ClusterBlank;
-BurstInformationClusters.Duration = ClusterBlank;
-
-BurstInformationTopography.Quantity = BurstBlank;
-BurstInformationTopography.Amplitude = BurstBlank;
+BurstInformationTopography.Quantity = nan(nRecordings, nChans);
+BurstInformationTopography.Amplitude = nan(nRecordings, nChans);
 BurstInformationTopography.Frequency = nan(nRecordings, nChans); % average frequency
 
 TaskMetadata = table(); % set up new metadata table that also takes into account task
@@ -53,7 +51,7 @@ for RecordingIdx = 1:nRecordings
 
     Dataset = Metadata.Dataset{RecordingIdx};
     Participant = Metadata.Participant{RecordingIdx};
-    Session = Metadata.Session{RecordingIdx};
+    Session = replace(Metadata.Session{RecordingIdx}, '_', '');
     Hour = Metadata.Hour{RecordingIdx};
 
     Tasks = Parameters.Tasks.(Dataset);
@@ -72,51 +70,60 @@ for RecordingIdx = 1:nRecordings
         EEGMetadata = DataOut{3};
         Chanlocs = EEGMetadata.chanlocs;
         SampleRate = EEGMetadata.srate;
-        RecordingDuration = (EEGMetadata.times)/60; % in minutes
+        RecordingDuration = EEGMetadata.times(end)/60; % in minutes
 
-        % load in variables
+        % load in variables that apply to whole recording
         TaskMetadata = cat(1, TaskMetadata, Metadata(RecordingIdx, :));
         TaskMetadata.Task{end} = Task;
+        TaskMetadata.Globality(end) = mean([BurstClusters.ClusterGlobality]);
+        TaskMetadata.Amplitude(end) = mean([BurstClusters.ClusterAmplitude]);
+        TaskMetadata.Duration(end) = mean([BurstClusters.ClusterEnd]-[BurstClusters.ClusterStart])/SampleRate;
+        TaskMetadata.Frequency(end) = mean([BurstClusters.BurstFrequency]);
 
-        BurstFrequencies = discretize([Bursts.BurstFrequency], Frequencies);
-        BurstChannels = [Bursts.ChannelIndex];
 
+        %%% load in data for topographies
         for Channel = 1:nChans
-            for FrequencyIdx = 1:numel(Frequencies)
-                Frequency = Frequencies(FrequencyIdx);
-                BurstIdx = BurstFrequencies==FrequencyIdx & BurstChannels==Channel;
-                BurstsTemp = Bursts(BurstIdx);
-                
-                if numel(BurstTemp)<5
-                    continue
-                end
+            BurstsTemp = Bursts([Bursts.ChannelIndex]==Channel);
 
-                % how many cycles in that channel
-                CyclesPerMinute = sum([BurstsTemp.CyclesCount])/RecordingDuration;
-                BurstInformationTopography.Quantity(RecordingIdx, Channel, FrequencyIdx) = CyclesPerMinute;
+            if numel(BurstsTemp)>=10
+                % average amplitude in that channel
+                BurstInformationTopography.Amplitude(RecordingIdx, Channel) = ...
+                    mean([BurstsTemp.Amplitude]);
 
-                % amplitude per channels
-                Amplitude = mean([BurstsTemp.Amplitude]);
-                BurstInformationTopography.Amplitude(RecordingIdx, Channel, FrequencyIdx) = Amplitude;
+                % average quantity of bursts in that channel (as % duration recording)
+                BurstInformationTopography.Quantity(RecordingIdx, Channel) = ...
+                    sum([BurstsTemp.DurationPoints])/EEGMetadata.pnts;
+
+                % average frequency of burst in that channel
+                BurstInformationTopography.Frequency(RecordingIdx, Channel) = ...
+                    mean([BurstsTemp.BurstFrequency]);
+            end
+        end
+
+        %%% load in data for spectrogram
+        BurstFrequencies = discretize([Bursts.BurstFrequency], Frequencies);
+        for FrequencyIdx = 1:nFrequencies
+            BurstIdx = BurstFrequencies==FrequencyIdx;
+            BurstsTemp = Bursts(BurstIdx);
+
+            if numel(BurstsTemp)<10
+                continue
             end
 
-            % average frequency of burst in that channel
-            BurstTemp = Bursts([Bursts.ChannelIndex]==Channel);
-            if numel(BurstTemp)>=5
-                Frequency = mean([BurstTemp.BurstFrequency]);
-                 BurstInformationTopography.Amplitude(RecordingIdx, Channel, FrequencyIdx) = Frequency;
-            end
+            % how many cycles in that channel
+            BurstInformationClusters.Quantity(RecordingIdx,FrequencyIdx) = ...
+                sum([BurstsTemp.CyclesCount])/RecordingDuration;
+
+            % amplitude per channels
+            BurstInformationClusters.Amplitude(RecordingIdx, FrequencyIdx) = ...
+                mean([BurstsTemp.Amplitude]);
         end
     end
     disp(num2str(RecordingIdx))
 end
 
-
-
-% reduce to only datasets that exist
-Metadata(~Metadata.Exists, :) = [];
-BurstInformationClusters(~Metadata.Exists, :, :) = [];
-BurstInformationTopography(~Metadata.Exists, :, :, :) = [];
+Metadata = TaskMetadata;
+Frequencies(end) = []; % remove last edge;
 
 % save
 save(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopography', ...
