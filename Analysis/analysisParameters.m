@@ -14,16 +14,6 @@ Parameters.Tasks = {}; % if is empty, will do all of them
 Parameters.Participants = 156;
 Parameters.Hours = {'eve', 'mor'};
 
-% Parameters.Tasks.ADHD = {'1Oddball', '3Oddball'};
-% Parameters.Tasks.BMS = {'1GoNoGo', '2Alertness', '3Fixation', '4Fixation'};
-% Parameters.Tasks.BMSSL = {'1GoNoGo', '2Alertness', '3Fixation'};
-% Parameters.Tasks.SleepLearning = {'1Oddball', '3Oddball'};
-% 
-% Parameters.Sessions.ADHD = {'Session1'};
-% Parameters.Sessions.BMS = {'Session1', 'Session2'};
-% Parameters.Sessions.BMSSL = {'Session1', 'Session2'};
-% Parameters.Sessions.SleepLearning = {'Session11', 'Session12', 'Session2', 'Session3'};
-
 Parameters.Tasks.ADHD = {'1Oddball', '3Oddball'};
 Parameters.Tasks.BMS = {'1GoNoGo', '2Alertness', '3Fixation', '4Fixation'};
 Parameters.Tasks.BMSSL = {'1GoNoGo', '2Alertness', '3Fixation'};
