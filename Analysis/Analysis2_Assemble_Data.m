@@ -29,7 +29,7 @@ end
 
 Metadata = readtable(fullfile(Paths.Metadata, 'Metadata.csv'));
 Metadata = Metadata(contains(Metadata.Dataset, Datasets), :);
-nRecordings = size(Metadata, 1);
+nRecordings = size(Metadata, 1); % this does not consider tasks
 Metadata.Task = repmat({''}, nRecordings, 1);
 Metadata.Globality = nan(nRecordings, 1);
 Metadata.Amplitude = nan(nRecordings, 1);
@@ -74,11 +74,12 @@ for RecordingIdx = 1:nRecordings
 
         % load in variables that apply to whole recording
         TaskMetadata = cat(1, TaskMetadata, Metadata(RecordingIdx, :));
-        TaskMetadata.Task{end} = Task;
-        TaskMetadata.Globality(end) = mean([BurstClusters.ClusterGlobality]);
-        TaskMetadata.Amplitude(end) = mean([BurstClusters.ClusterAmplitude]);
-        TaskMetadata.Duration(end) = mean([BurstClusters.ClusterEnd]-[BurstClusters.ClusterStart])/SampleRate;
-        TaskMetadata.Frequency(end) = mean([BurstClusters.BurstFrequency]);
+        NewIdx = size(TaskMetadata, 1);
+        TaskMetadata.Task{NewIdx} = Task;
+        TaskMetadata.Globality(NewIdx) = mean([BurstClusters.ClusterGlobality]);
+        TaskMetadata.Amplitude(NewIdx) = mean([BurstClusters.ClusterAmplitude]);
+        TaskMetadata.Duration(NewIdx) = mean([BurstClusters.ClusterEnd]-[BurstClusters.ClusterStart])/SampleRate;
+        TaskMetadata.Frequency(NewIdx) = mean([BurstClusters.BurstFrequency]);
 
 
         %%% load in data for topographies
@@ -87,15 +88,15 @@ for RecordingIdx = 1:nRecordings
 
             if numel(BurstsTemp)>=10
                 % average amplitude in that channel
-                BurstInformationTopography.Amplitude(RecordingIdx, Channel) = ...
+                BurstInformationTopography.Amplitude(NewIdx, Channel) = ...
                     mean([BurstsTemp.Amplitude]);
 
                 % average quantity of bursts in that channel (as % duration recording)
-                BurstInformationTopography.Quantity(RecordingIdx, Channel) = ...
+                BurstInformationTopography.Quantity(NewIdx, Channel) = ...
                     sum([BurstsTemp.DurationPoints])/EEGMetadata.pnts;
 
                 % average frequency of burst in that channel
-                BurstInformationTopography.Frequency(RecordingIdx, Channel) = ...
+                BurstInformationTopography.Frequency(NewIdx, Channel) = ...
                     mean([BurstsTemp.BurstFrequency]);
             end
         end
@@ -111,11 +112,11 @@ for RecordingIdx = 1:nRecordings
             end
 
             % how many cycles in that channel
-            BurstInformationClusters.Quantity(RecordingIdx,FrequencyIdx) = ...
+            BurstInformationClusters.Quantity(NewIdx, FrequencyIdx) = ...
                 sum([BurstsTemp.CyclesCount])/RecordingDuration;
 
             % amplitude per channels
-            BurstInformationClusters.Amplitude(RecordingIdx, FrequencyIdx) = ...
+            BurstInformationClusters.Amplitude(NewIdx, FrequencyIdx) = ...
                 mean([BurstsTemp.Amplitude]);
         end
     end

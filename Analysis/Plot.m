@@ -20,10 +20,10 @@ end
 CacheDir = Paths.Cache;
 CacheName = 'AllBursts.mat';
 
-% load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopography', ...
-%     "BurstInformationClusters", 'Frequencies', 'Chanlocs')
+load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopography', ...
+    "BurstInformationClusters", 'Frequencies', 'Chanlocs')
 
-load(fullfile(CacheDir, CacheName), 'Metadata')
+% load(fullfile(CacheDir, CacheName), 'Metadata')
 
 OvernightMetadata = overnight_changes(Metadata);
 
@@ -94,10 +94,108 @@ for VariableIdx = 1:numel(YVariables)
                 ylabel('Overnight change', 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
             end
             xlabel('Age')
-                            xlim([8 24])
+            xlim([8 24])
 
         end
     end
 
 end
 chART.save_figure(['BasicScatterAge', Session], ResultsFolder, PlotProps)
+
+
+%% topographies by age, descriptive
+
+Group = 'HC';
+
+Ages = [8, 11;
+    11 14;
+    14 16;
+    16 18];
+nAges = size(Ages, 1);
+Measures = fieldnames(BurstInformationTopography);
+nMeasures = numel(Measures);
+MeasureLabels = {'cyc/min', 'amplitude (\muV)', 'Frequency (Hz)'};
+
+CLims = [0 .4;
+    10, 25;
+    8 11.6];
+
+figure('Units','normalized','OuterPosition',[0 0 .4 .6])
+for MeasureIdx = 1:nMeasures
+    for AgeIdx = 1:nAges
+        Indexes = strcmp(Metadata.Group, Group) & Metadata.Age >= Ages(AgeIdx, 1) & Metadata.Age < Ages(AgeIdx, 2);
+        Data = BurstInformationTopography.(Measures{MeasureIdx})(Indexes, :);
+        AverageData = average_by_column(Metadata(Indexes, :), Data, 'Participant');
+
+        chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, AgeIdx], [], false, '', PlotProps);
+        chART.plot.eeglab_topoplot(mean(AverageData, 1), Chanlocs, [], CLims(MeasureIdx, :), '', 'Linear', PlotProps);
+        if MeasureIdx == 1
+            title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
+        end
+    end
+
+    % plot colorbar
+    chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, nAges+1], [], false, '', PlotProps);
+    chART.plot.pretty_colorbar('Linear', CLims(MeasureIdx, :), MeasureLabels{MeasureIdx}, PlotProps)
+
+end
+
+
+
+
+
+%% topographies by age, overnight changes
+
+Group = 'HC';
+
+Ages = [8, 11;
+    11 14;
+    14 16;
+    16 18];
+nAges = size(Ages, 1);
+Measures = fieldnames(BurstInformationTopography);
+nMeasures = numel(Measures);
+MeasureLabels = {'cyc/min', 'amplitude (\muV)', 'Frequency (Hz)'};
+
+CLims = [0 .4;
+    10, 25;
+    8 11.6];
+
+figure('Units','normalized','OuterPosition',[0 0 .4 .6])
+for MeasureIdx = 1:nMeasures
+    for AgeIdx = 1:nAges
+        Indexes = strcmp(OvernightMetadata.Group, Group) & OvernightMetadata.Age >= Ages(AgeIdx, 1) & OvernightMetadata.Age < Ages(AgeIdx, 2);
+        Evening = BurstInformationTopography.(Measures{MeasureIdx})(OvernightMetadata.EveningIndexes(Indexes), :);
+        Morning = BurstInformationTopography.(Measures{MeasureIdx})(OvernightMetadata.MorningIndexes(Indexes), :);
+        Data = BurstInformationTopography.(Measures{MeasureIdx})(Indexes, :);
+        AverageData = average_by_column(Metadata(Indexes, :), Data, 'Participant');
+
+        chART.sub_plot([], [nMeasures, nAges], [MeasureIdx, AgeIdx], [], false, '', PlotProps);
+        chART.plot.eeglab_topoplot(mean(AverageData, 1), Chanlocs, [], CLims(MeasureIdx, :), '', 'Linear', PlotProps);
+        plot_topography_difference(Evening, Morning, Chanlocs, [], Parameters.Stats, PlotProps) % CLims(MeasureIdx, :)
+        colorbar
+        if MeasureIdx == 1
+            title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
+        end
+    end
+    % 
+    % % plot colorbar
+    % chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, nAges+1], [], false, '', PlotProps);
+    % chART.plot.pretty_colorbar('Linear', CLims(MeasureIdx, :), MeasureLabels{MeasureIdx}, PlotProps)
+
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

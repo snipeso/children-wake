@@ -46,8 +46,11 @@ if exist( 'D:\LSM\Preprocessed', 'dir') % KISPI desktop
     addpath('H:\Code\Matcycle')
     addpath('H:\Code\fooof_mat\fooof_mat')
     addpath('\\nausers01\user\sniso\Dokumente\MATLAB\eeglab2022.0')
-elseif exist( 'X:\Data\Raw', 'dir')
+    elseif exist( 'X:\Data\Raw', 'dir')
     Core = 'X:\Data\';
+
+elseif exist( 'D:\Data\AllWake', 'dir')
+    Core = 'D:\Data\AllWake';
 else
     error('no data disk!')
     % Core = 'E:\'
