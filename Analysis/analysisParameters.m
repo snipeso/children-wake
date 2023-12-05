@@ -1,6 +1,6 @@
 function Parameters = analysisParameters()
 % parameters for detecting bursts
-% Lapses-Causes
+% children-wake
 
 Parameters = struct();
 
@@ -123,11 +123,11 @@ Triggers.RightBlock = 'S 11';
 Triggers.Tones = 'S 12';
 Parameters.Triggers = Triggers;
 
-Parameters.PlotProps.Manuscript = chART.load_plot_properties({'LSM', 'Manuscript'});
+Parameters.PlotProps.Manuscript = chART.load_plot_properties({'Iota', 'Manuscript'});
 Parameters.PlotProps.Manuscript.Figure.Width = 22;
 
-Parameters.PlotProps.Powerpoint = chART.load_plot_properties({'LSM', 'Powerpoint'});
-Parameters.PlotProps.Poster = chART.load_plot_properties({'LSM', 'Poster'});
+Parameters.PlotProps.Powerpoint = chART.load_plot_properties({'Iota', 'Powerpoint'});
+Parameters.PlotProps.Poster = chART.load_plot_properties({'Iota', 'Poster'});
 
 %%% channel clusters
 

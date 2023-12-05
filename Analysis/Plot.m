@@ -109,7 +109,7 @@ for VariableIdx = 1:numel(YVariables)
 
 end
 legend(Groups)
-chART.save_figure(['BasicScatterAge', Session], ResultsFolder, PlotProps)
+chART.save_figure('BasicScatterAge', ResultsFolder, PlotProps)
 
 
 %% correlate measures
@@ -133,7 +133,7 @@ for Idx1 = 1:numel(YVariables)
         end
     end
 end
-chART.save_figure(['CorrelateVariables', Session], ResultsFolder, PlotProps)
+chART.save_figure('CorrelateVariables', ResultsFolder, PlotProps)
 
 
 
