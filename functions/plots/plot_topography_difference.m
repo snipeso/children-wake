@@ -38,7 +38,9 @@ if isempty(CLims)
     CLims = [-Max Max];
 end
 
-chART.plot.eeglab_topoplot(Stats.t, Chanlocs, Stats, CLims, 't-values', 'Divergent', PlotProps)
+% chART.plot.eeglab_topoplot(Stats.t, Chanlocs, Stats, CLims, 't-values', 'Divergent', PlotProps)
+
+chART.plot.eeglab_topoplot(Stats.hedgesg, Chanlocs, Stats, CLims, 'g-values', 'Divergent', PlotProps)
 
 if PlotProps.Stats.PlotN
     text(.4, .5, ['N=', num2str(Stats.N)], 'FontName', PlotProps.Text.FontName, 'FontSize', PlotProps.Text.LegendSize)

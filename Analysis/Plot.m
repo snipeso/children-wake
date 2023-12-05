@@ -34,11 +34,10 @@ PlotProps = Parameters.PlotProps.Manuscript;
 % PlotProps.Axes.yPadding = 30;
 % PlotProps.Axes.xPadding = 30;
 
-% Groups = {'HC', 'ADHD'};
-Groups = {'m', 'f'};
+Groups = {'HC', 'ADHD'};
 
 Tasks = {'Oddball', 'Alertness'};
-YVariables = {'Globality', 'Amplitude', 'Duration', 'Frequency'};
+YVariables = {'Globality', 'Amplitude', 'Duration', 'Frequency', 'Slope', 'Intercept'};
 Grid = [3 numel(YVariables)];
 Session = 'Session_1';
 Colors = chART.color_picker(2);
@@ -47,36 +46,39 @@ Dashes = {':', '-'};
 Limits = [.02 .14;
     7 30;
     .5 1.1;
-    9 13];
+    9 13;
+    1.1 2.1;
+    .5 2.5];
 
 HourLabels = {'Evening', 'Morning'};
 
-figure('Units','normalized','OuterPosition',[0 0 .4 .6])
+figure('Units','normalized','OuterPosition',[0 0 .5 .6])
 for VariableIdx = 1:numel(YVariables)
     for HourIdx = 1:numel(Hours)
         Hour = Hours(HourIdx);
         chART.sub_plot([], Grid, [HourIdx, VariableIdx], [], true, '', PlotProps);
         hold on
         for GroupIdx = 1:numel(Groups)
-            for TaskIdx = 1:numel(Tasks)
-                Indexes = strcmp(Metadata.Sex, Groups{GroupIdx}) & contains(Metadata.Task, Tasks{TaskIdx}) & ...
-                    strcmp(Metadata.Hour, Hour) & contains(Metadata.Session, Session);
-                % Indexes = strcmp(Metadata.Group, Groups{GroupIdx}) & contains(Metadata.Task, Tasks{TaskIdx}) & ...
-                %     strcmp(Metadata.Hour, Hour) & contains(Metadata.Session, Session);
-                scatter(Metadata.Age(Indexes), Metadata.(YVariables{VariableIdx})(Indexes), 10, Markers{TaskIdx}, ...
-                    'MarkerEdgeColor','none', 'MarkerFaceColor', Colors(GroupIdx,:), 'MarkerFaceAlpha',.7)
-                chART.set_axis_properties(PlotProps)
-                h = lsline;
-                set(h(1),'color',Colors(GroupIdx,:), 'LineWidth', 2)
-                if HourIdx==1
-                    title(YVariables{VariableIdx})
-                end
-                if VariableIdx==1
-                    ylabel(HourLabels{HourIdx}, 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
-                end
-                xlim([8 24])
-                ylim(Limits(VariableIdx, :))
+            Indexes = strcmp(Metadata.Group, Groups{GroupIdx}) & ...
+                strcmp(Metadata.Hour, Hour);
+            AverageData = average_by_column(Metadata(Indexes, :),[Metadata.Age(Indexes), Metadata.(YVariables{VariableIdx})(Indexes)], 'Participant');
+
+            scatter(AverageData(:, 1), AverageData(:, 2), 10,  ...
+                'MarkerEdgeColor','none', 'MarkerFaceColor', Colors(GroupIdx,:), 'MarkerFaceAlpha',.7)
+            chART.set_axis_properties(PlotProps)
+
+            if HourIdx==1
+                title(YVariables{VariableIdx})
             end
+            if VariableIdx==1
+                ylabel(HourLabels{HourIdx}, 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
+            end
+            xlim([8 24])
+            ylim(Limits(VariableIdx, :))
+        end
+        h = lsline;
+        for GroupIdx = 1:numel(Groups)
+            set(h(GroupIdx),'color',Colors(numel(Groups)+1-GroupIdx,:), 'LineWidth', 2)
         end
     end
 
@@ -84,27 +86,55 @@ for VariableIdx = 1:numel(YVariables)
 
     hold on
     for GroupIdx = 1:numel(Groups)
-        for TaskIdx = 1:numel(Tasks)
-            Indexes = strcmp(OvernightMetadata.Sex, Groups{GroupIdx}) & contains(OvernightMetadata.Task, Tasks{TaskIdx}) & ...
-                contains(OvernightMetadata.Session, Session);
-            % Indexes = strcmp(OvernightMetadata.Group, Groups{GroupIdx}) & contains(OvernightMetadata.Task, Tasks{TaskIdx}) & ...
-            %     contains(OvernightMetadata.Session, Session);
-            scatter(OvernightMetadata.Age(Indexes), OvernightMetadata.(YVariables{VariableIdx})(Indexes), 10, Markers{TaskIdx}, ...
-                'MarkerEdgeColor','none', 'MarkerFaceColor', Colors(GroupIdx,:), 'MarkerFaceAlpha',.7)
-            chART.set_axis_properties(PlotProps)
-            h = lsline;
-            set(h(1),'color',Colors(GroupIdx,:), 'LineWidth', 2)
-            if VariableIdx==1
-                ylabel('Overnight change', 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
-            end
-            xlabel('Age')
-            xlim([8 24])
+        Indexes = strcmp(OvernightMetadata.Group, Groups{GroupIdx});
 
+        AverageData = average_by_column(OvernightMetadata(Indexes, :), ...
+            [OvernightMetadata.Age(Indexes), OvernightMetadata.(YVariables{VariableIdx})(Indexes)], 'Participant');
+
+        scatter(AverageData(:, 1), AverageData(:, 2), 10, ...
+            'MarkerEdgeColor','none', 'MarkerFaceColor', Colors(GroupIdx,:), 'MarkerFaceAlpha',.7)
+
+        chART.set_axis_properties(PlotProps)
+        if VariableIdx==1
+            ylabel('Overnight change', 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
         end
+        xlabel('Age')
+        xlim([8 24])
+    end
+
+    h = lsline;
+    for GroupIdx = 1:numel(Groups)
+        set(h(GroupIdx),'color',Colors(numel(Groups)+1-GroupIdx,:), 'LineWidth', 2)
     end
 
 end
+legend(Groups)
 chART.save_figure(['BasicScatterAge', Session], ResultsFolder, PlotProps)
+
+
+%% correlate measures
+
+YVariables = {'Globality', 'Amplitude', 'Duration', 'Frequency', 'Slope', 'Intercept'};
+Grid = [numel(YVariables) numel(YVariables)];
+figure('Units','centimeters','OuterPosition',[0 0 30 30])
+for Idx1 = 1:numel(YVariables)
+    for Idx2 = 1:numel(YVariables)
+        chART.sub_plot([], Grid, [Idx2, Idx1], [], true, '', PlotProps);
+
+        scatter(Metadata.(YVariables{Idx1}), Metadata.(YVariables{Idx2}), 10, ...
+            'MarkerEdgeColor','none', 'MarkerFaceColor', Colors(1, :), 'MarkerFaceAlpha',.7)
+        chART.set_axis_properties(PlotProps)
+        lsline;
+        if Idx2 == numel(YVariables)
+                    xlabel(YVariables{Idx1})
+        end
+        if Idx1==1
+            ylabel(YVariables{Idx2})
+        end
+    end
+end
+chART.save_figure(['CorrelateVariables', Session], ResultsFolder, PlotProps)
+
 
 
 %% topographies by age, descriptive
@@ -118,13 +148,15 @@ Ages = [8, 11;
 nAges = size(Ages, 1);
 Measures = fieldnames(BurstInformationTopography);
 nMeasures = numel(Measures);
-MeasureLabels = {'cyc/min', 'amplitude (\muV)', 'Frequency (Hz)'};
+MeasureLabels = Measures;
 
 CLims = [0 .4;
     10, 25;
-    8 11.6];
+    8 11.6;
+    1.3 1.95;
+    .8 1.95];
 
-figure('Units','normalized','OuterPosition',[0 0 .4 .5])
+figure('Units','normalized','OuterPosition',[0 0 .4 .7])
 for MeasureIdx = 1:nMeasures
     for AgeIdx = 1:nAges
         Indexes = strcmp(Metadata.Group, Group) & Metadata.Age >= Ages(AgeIdx, 1) & Metadata.Age < Ages(AgeIdx, 2);
@@ -143,7 +175,7 @@ for MeasureIdx = 1:nMeasures
     chART.plot.pretty_colorbar('Linear', CLims(MeasureIdx, :), MeasureLabels{MeasureIdx}, PlotProps)
 
 end
-chART.save_figure(['AverageTopography', Session], ResultsFolder, PlotProps)
+chART.save_figure('TopographyAverage', ResultsFolder, PlotProps)
 
 
 
@@ -174,9 +206,13 @@ Task = 'Oddball';
 
 CLims = [-1 1;
     -1 1
+    -1 1
+    -1 1
     -1 1];
+% CLims = [-8 8];
+CLims = [-.8 .8];
 
-figure('Units','normalized','OuterPosition',[0 0 .6 .6])
+figure('Units','normalized','OuterPosition',[0 0 .4 .7])
 for MeasureIdx = 1:nMeasures
     for AgeIdx = 1:nAges
         % Indexes = strcmp(OvernightMetadata.Group, Group) & OvernightMetadata.Age >= Ages(AgeIdx, 1) & OvernightMetadata.Age < Ages(AgeIdx, 2);
@@ -187,33 +223,36 @@ for MeasureIdx = 1:nMeasures
         Evening = average_by_column(OvernightMetadata(Indexes, :), Evening, 'Participant');
         Morning = average_by_column(OvernightMetadata(Indexes, :), Morning, 'Participant');
 
-        chART.sub_plot([], [nMeasures, nAges], [MeasureIdx, AgeIdx], [], false, '', PlotProps);
-        plot_topography_difference(Evening, Morning, Chanlocs, [], Parameters.Stats, PlotProps) %
-        % colorbar off
+        chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, AgeIdx], [], false, '', PlotProps);
+        plot_topography_difference(Evening, Morning, Chanlocs, CLims, Parameters.Stats, PlotProps) %
+        colorbar off
         if MeasureIdx == 1
             title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
         end
     end
 end
-chART.save_figure(['TopographyChange', Session], ResultsFolder, PlotProps)
+        chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, AgeIdx+1], [nMeasures, 1], false, '', PlotProps);
+    chART.plot.pretty_colorbar('Divergent', CLims, 'g-values', PlotProps)
+
+chART.save_figure('TopographyChange', ResultsFolder, PlotProps)
 
 
 
 %% plot Freq x Age plot, descriptive
 
 PlotProps = Parameters.PlotProps.Manuscript;
-PlotProps.Figure.Padding = 25;
+PlotProps.Figure.Padding = 30;
 PlotProps.Axes.yPadding = 20;
 
 Measures = fieldnames(BurstInformationClusters);
 nMeasures = numel(Measures);
-MeasureLabels = {'amplitude (\muV)', 'cyc/min'};
+MeasureLabels = {'amplitude (\muV)', 'cyc/min', '% channels', 'log power (\muV^2/Hz)'};
 
 Ages = 8:2:18;
 
 OvernightMetadata.QuantileAge = discretize(OvernightMetadata.Age, Ages);
 
-figure('Units','normalized','OuterPosition',[0 0 .2 .5])
+figure('Units','normalized','OuterPosition',[0 0 .2 .8])
 for MeasureIdx = 1:nMeasures
     % Indexes = strcmp(OvernightMetadata.Group, Group) & OvernightMetadata.Age >= Ages(AgeIdx, 1) & OvernightMetadata.Age < Ages(AgeIdx, 2);
     % TempMetadata = OvernightMetadata(Indexes, :);
@@ -253,12 +292,14 @@ chART.save_figure('FrequencyByAge', ResultsFolder, PlotProps)
 
 
 PlotProps = Parameters.PlotProps.Manuscript;
-PlotProps.Figure.Padding = 25;
+PlotProps.Figure.Padding = 30;
 PlotProps.Axes.yPadding = 20;
 
 CLims = [-4 4;
-    -1.5 1.5];
-figure('Units','normalized','OuterPosition',[0 0 .2 .5])
+    -.08 .08
+      -.08 .08
+    -.15 .15];
+figure('Units','normalized','OuterPosition',[0 0 .2 .8])
 for MeasureIdx = 1:nMeasures
     % Indexes = strcmp(OvernightMetadata.Group, Group) & OvernightMetadata.Age >= Ages(AgeIdx, 1) & OvernightMetadata.Age < Ages(AgeIdx, 2);
     % TempMetadata = OvernightMetadata(Indexes, :);
@@ -272,7 +313,7 @@ for MeasureIdx = 1:nMeasures
 
     %%% difference values
     Change = Morning-Evening;
-  Data = average_by_column(UniqueMetadata, Change, 'QuantileAge');
+    Data = average_by_column(UniqueMetadata, Change, 'QuantileAge');
 
 
     chART.sub_plot([], [nMeasures, 1], [MeasureIdx, 1], [], true, '', PlotProps);
@@ -288,11 +329,11 @@ for MeasureIdx = 1:nMeasures
     ylabel('Frequency (Hz)')
     title([Measures{MeasureIdx}, ' Overnight change'])
 
-        if MeasureIdx == nMeasures
+    if MeasureIdx == nMeasures
         xlabel('Age')
     end
-      h = colorbar;
-      clim(CLims(MeasureIdx, :))
+    h = colorbar;
+    clim(CLims(MeasureIdx, :))
     h.TickLength = 0;
     ylabel(h, 'difference', 'FontName', PlotProps.Text.FontName) % text style needs to be specified for label, because its weird
 end

@@ -20,7 +20,7 @@ nVariables = 3;
 
 Source = fullfile(Paths.AnalyzedData, 'EEG', 'Bursts');
 SourcePower =  fullfile(Paths.AnalyzedData, 'EEG', 'Power');
-Folder = 'window8s_allt';
+Folder = 'window4s_allt';
 
 CacheDir = Paths.Cache;
 CacheName = 'AllBursts.mat';
@@ -134,11 +134,11 @@ for RecordingIdx = 1:nRecordings
         TaskMetadata.Intercept(NewIdx) = Intercept;
 
         %%% load in data for spectrogram
-        BurstFrequencies = discretize([Bursts.BurstFrequency], Frequencies);
+        BurstFrequencies = discretize([BurstClusters.BurstFrequency], Frequencies);
         PowerFrequencies = discretize(FooofFrequencies, Frequencies);
         for FrequencyIdx = 1:nFrequencies
             BurstIdx = BurstFrequencies==FrequencyIdx;
-            BurstsTemp = Bursts(BurstIdx);
+            BurstsTemp = BurstClusters(BurstIdx);
 
             if numel(BurstsTemp)<10
                 continue
