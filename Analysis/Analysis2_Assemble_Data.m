@@ -19,6 +19,8 @@ nChans = 123;
 nVariables = 3;
 
 Source = fullfile(Paths.AnalyzedData, 'EEG', 'Bursts');
+SourcePower =  fullfile(Paths.AnalyzedData, 'EEG', 'Power');
+Folder = 'window8s_allt';
 
 CacheDir = Paths.Cache;
 CacheName = 'AllBursts.mat';
@@ -34,16 +36,24 @@ Metadata.Task = repmat({''}, nRecordings, 1);
 Metadata.Globality = nan(nRecordings, 1);
 Metadata.Amplitude = nan(nRecordings, 1);
 Metadata.Duration =  nan(nRecordings, 1);
-Metadata.Frequency =  nan(nRecordings, 1);
+Metadata.Frequency = nan(nRecordings, 1);
+Metadata.Slope =  nan(nRecordings, 1);
+Metadata.Intercept =  nan(nRecordings, 1);
 
 BurstInformationClusters = struct();
 BurstInformationClusters.Amplitude = nan(nRecordings, nFrequencies);
 BurstInformationClusters.Quantity =nan(nRecordings, nFrequencies);
+BurstInformationClusters.Globality =nan(nRecordings, nFrequencies);
+BurstInformationClusters.Power = nan(nRecordings, nFrequencies);
+
 
 BurstInformationTopography = struct();
 BurstInformationTopography.Quantity = nan(nRecordings, nChans);
 BurstInformationTopography.Amplitude = nan(nRecordings, nChans);
-BurstInformationTopography.Frequency = nan(nRecordings, nChans); % average frequency
+BurstInformationTopography.Frequency = nan(nRecordings, nChans); % peak frequency
+BurstInformationTopography.Slope = nan(nRecordings, nChans);
+BurstInformationTopography.Intercept = nan(nRecordings, nChans);
+
 
 TaskMetadata = table(); % set up new metadata table that also takes into account task
 
@@ -65,6 +75,7 @@ for RecordingIdx = 1:nRecordings
             {'Bursts', 'BurstClusters', 'EEGMetadata'}, '.mat');
         if isempty(DataOut); continue; end
 
+
         Bursts = DataOut{1};
         BurstClusters = DataOut{2};
         EEGMetadata = DataOut{3};
@@ -81,6 +92,14 @@ for RecordingIdx = 1:nRecordings
         TaskMetadata.Duration(NewIdx) = mean([BurstClusters.ClusterEnd]-[BurstClusters.ClusterStart])/SampleRate;
         TaskMetadata.Frequency(NewIdx) = mean([BurstClusters.BurstFrequency]);
 
+        % load in power spectra
+        Path = fullfile(SourcePower, Folder, Dataset, Task);
+
+        DataOut = load_datafile(Path, Participant, Session, Hour, ...
+            {'Power', 'Freqs'}, '.mat');
+        Power = DataOut{1};
+        Freqs = DataOut{2};
+
 
         %%% load in data for topographies
         for Channel = 1:nChans
@@ -95,14 +114,28 @@ for RecordingIdx = 1:nRecordings
                 BurstInformationTopography.Quantity(NewIdx, Channel) = ...
                     sum([BurstsTemp.DurationPoints])/EEGMetadata.pnts;
 
-                % average frequency of burst in that channel
-                BurstInformationTopography.Frequency(NewIdx, Channel) = ...
-                    mean([BurstsTemp.BurstFrequency]);
+                % peak frequency of burst in that channel
+                FrequencyDistribution = [BurstsTemp.BurstFrequency];
+                FrequencyBins = 3:.5:16;
+                FrequencyDistribution = discretize(FrequencyDistribution, FrequencyBins);
+                PeakIdx = mode(FrequencyDistribution);
+                BurstInformationTopography.Frequency(NewIdx, Channel) = FrequencyBins(PeakIdx);
             end
+
+            % slopes and stuff
+            [Slope, Intercept] = fooof_spectrum(Power(Channel, :), Freqs);
+            BurstInformationTopography.Slope(NewIdx, Channel) = Slope;
+            BurstInformationTopography.Intercept(NewIdx, Channel) = Intercept;
         end
+
+        % run fooof
+        [Slope, Intercept, WhitenedPower, FooofFrequencies] = fooof_spectrum(mean(Power, 1), Freqs);
+        TaskMetadata.Slope(NewIdx) = Slope;
+        TaskMetadata.Intercept(NewIdx) = Intercept;
 
         %%% load in data for spectrogram
         BurstFrequencies = discretize([Bursts.BurstFrequency], Frequencies);
+        PowerFrequencies = discretize(FooofFrequencies, Frequencies);
         for FrequencyIdx = 1:nFrequencies
             BurstIdx = BurstFrequencies==FrequencyIdx;
             BurstsTemp = Bursts(BurstIdx);
@@ -111,17 +144,18 @@ for RecordingIdx = 1:nRecordings
                 continue
             end
 
-            % how many cycles in that channel
             BurstInformationClusters.Quantity(NewIdx, FrequencyIdx) = ...
                 sum([BurstsTemp.CyclesCount])/RecordingDuration;
 
-            % amplitude per channels
             BurstInformationClusters.Amplitude(NewIdx, FrequencyIdx) = ...
                 mean([BurstsTemp.Amplitude]);
 
-                        % amplitude per channels
             BurstInformationClusters.Globality(NewIdx, FrequencyIdx) = ...
                 mean([BurstsTemp.ClusterGlobality]);
+
+            % power for that frequency
+            BurstInformationClusters.Power(NewIdx, FrequencyIdx) = ...
+                mean(WhitenedPower(PowerFrequencies==FrequencyIdx));
         end
     end
     disp(num2str(RecordingIdx))
