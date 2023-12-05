@@ -124,7 +124,7 @@ CLims = [0 .4;
     10, 25;
     8 11.6];
 
-figure('Units','normalized','OuterPosition',[0 0 .4 .6])
+figure('Units','normalized','OuterPosition',[0 0 .4 .5])
 for MeasureIdx = 1:nMeasures
     for AgeIdx = 1:nAges
         Indexes = strcmp(Metadata.Group, Group) & Metadata.Age >= Ages(AgeIdx, 1) & Metadata.Age < Ages(AgeIdx, 2);
@@ -143,6 +143,8 @@ for MeasureIdx = 1:nMeasures
     chART.plot.pretty_colorbar('Linear', CLims(MeasureIdx, :), MeasureLabels{MeasureIdx}, PlotProps)
 
 end
+chART.save_figure(['AverageTopography', Session], ResultsFolder, PlotProps)
+
 
 
 %% topographies by age, overnight changes
@@ -193,12 +195,15 @@ for MeasureIdx = 1:nMeasures
         end
     end
 end
+chART.save_figure(['TopographyChange', Session], ResultsFolder, PlotProps)
 
 
 
 %% plot Freq x Age plot, descriptive
 
-
+PlotProps = Parameters.PlotProps.Manuscript;
+PlotProps.Figure.Padding = 25;
+PlotProps.Axes.yPadding = 20;
 
 Measures = fieldnames(BurstInformationClusters);
 nMeasures = numel(Measures);
@@ -226,26 +231,30 @@ for MeasureIdx = 1:nMeasures
     chART.sub_plot([], [nMeasures, 1], [MeasureIdx, 1], [], true, '', PlotProps);
 
     contourf(Ages(1:end-1), Frequencies, Data', 100, 'linecolor','none')
+    chART.set_axis_properties(PlotProps)
     colormap(PlotProps.Color.Maps.Linear)
     xticks(8:2:20)
     yticks(5:2:15)
     h = colorbar;
     h.TickLength = 0;
-    ylabel(h, MeasureLabels{MeasureIdx}, 'FontName', PlotProps.Text.FontName, ...
-        'FontSize', PlotProps.Text.LegendSize) % text style needs to be specified for label, because its weird
+    ylabel(h, MeasureLabels{MeasureIdx}, 'FontName', PlotProps.Text.FontName) % text style needs to be specified for label, because its weird
 
     title([Measures{MeasureIdx}, ' Evening'])
     ylabel('Frequency (Hz)')
     if MeasureIdx == nMeasures
         xlabel('Age')
     end
-chART.set_axis_properties(PlotProps)
-
 end
+
+chART.save_figure('FrequencyByAge', ResultsFolder, PlotProps)
 
 
 %%
 
+
+PlotProps = Parameters.PlotProps.Manuscript;
+PlotProps.Figure.Padding = 25;
+PlotProps.Axes.yPadding = 20;
 
 CLims = [-4 4;
     -1.5 1.5];
@@ -269,6 +278,8 @@ for MeasureIdx = 1:nMeasures
     chART.sub_plot([], [nMeasures, 1], [MeasureIdx, 1], [], true, '', PlotProps);
 
     contourf(Ages(1:end-1), Frequencies, Data', 100, 'linecolor','none')
+    chART.set_axis_properties(PlotProps)
+
     colormap(PlotProps.Color.Maps.Divergent)
     xticks(8:2:20)
     yticks(5:2:15)
@@ -283,10 +294,10 @@ for MeasureIdx = 1:nMeasures
       h = colorbar;
       clim(CLims(MeasureIdx, :))
     h.TickLength = 0;
-    ylabel(h, 'difference', 'FontName', PlotProps.Text.FontName, ...
-        'FontSize', PlotProps.Text.LegendSize) % text style needs to be specified for label, because its weird
-chART.set_axis_properties(PlotProps)
+    ylabel(h, 'difference', 'FontName', PlotProps.Text.FontName) % text style needs to be specified for label, because its weird
 end
+chART.save_figure('FrequencyByAgeChange', ResultsFolder, PlotProps)
+
 
 
 

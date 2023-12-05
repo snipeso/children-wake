@@ -118,6 +118,10 @@ for RecordingIdx = 1:nRecordings
             % amplitude per channels
             BurstInformationClusters.Amplitude(NewIdx, FrequencyIdx) = ...
                 mean([BurstsTemp.Amplitude]);
+
+                        % amplitude per channels
+            BurstInformationClusters.Globality(NewIdx, FrequencyIdx) = ...
+                mean([BurstsTemp.ClusterGlobality]);
         end
     end
     disp(num2str(RecordingIdx))
