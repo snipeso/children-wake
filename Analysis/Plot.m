@@ -146,34 +146,47 @@ end
 
 %% topographies by age, overnight changes
 
-Group = 'HC';
+% Group = 'HC';
+PlotProps.Stats.PlotN= true;
 
-Ages = [8, 11;
-    11 14;
+% Ages = [8, 11;
+%     11 14;
+%     14 17;
+%     17 20];
+Ages = [8, 10;
+    10 12;
+    12 14;
     14 16;
     16 18];
 nAges = size(Ages, 1);
 Measures = fieldnames(BurstInformationTopography);
 nMeasures = numel(Measures);
 MeasureLabels = {'cyc/min', 'amplitude (\muV)', 'Frequency (Hz)'};
+Task = 'Oddball';
 
-CLims = [0 .4;
-    10, 25;
-    8 11.6];
+% CLims = [-6 6;
+%     -10 10
+%     -10 10];
 
-figure('Units','normalized','OuterPosition',[0 0 .4 .6])
+CLims = [-1 1;
+    -1 1
+    -1 1];
+
+figure('Units','normalized','OuterPosition',[0 0 .6 .6])
 for MeasureIdx = 1:nMeasures
     for AgeIdx = 1:nAges
-        Indexes = strcmp(OvernightMetadata.Group, Group) & OvernightMetadata.Age >= Ages(AgeIdx, 1) & OvernightMetadata.Age < Ages(AgeIdx, 2);
+        % Indexes = strcmp(OvernightMetadata.Group, Group) & OvernightMetadata.Age >= Ages(AgeIdx, 1) & OvernightMetadata.Age < Ages(AgeIdx, 2);
+                Indexes = OvernightMetadata.Age >= Ages(AgeIdx, 1) & OvernightMetadata.Age < Ages(AgeIdx, 2);
+
         Evening = BurstInformationTopography.(Measures{MeasureIdx})(OvernightMetadata.EveningIndexes(Indexes), :);
         Morning = BurstInformationTopography.(Measures{MeasureIdx})(OvernightMetadata.MorningIndexes(Indexes), :);
         Data = BurstInformationTopography.(Measures{MeasureIdx})(Indexes, :);
-        AverageData = average_by_column(Metadata(Indexes, :), Data, 'Participant');
+        Evening = average_by_column(OvernightMetadata(Indexes, :), Evening, 'Participant');
+        Morning = average_by_column(OvernightMetadata(Indexes, :), Morning, 'Participant');
 
         chART.sub_plot([], [nMeasures, nAges], [MeasureIdx, AgeIdx], [], false, '', PlotProps);
-        chART.plot.eeglab_topoplot(mean(AverageData, 1), Chanlocs, [], CLims(MeasureIdx, :), '', 'Linear', PlotProps);
-        plot_topography_difference(Evening, Morning, Chanlocs, [], Parameters.Stats, PlotProps) % CLims(MeasureIdx, :)
-        colorbar
+        plot_topography_difference(Evening, Morning, Chanlocs, [], Parameters.Stats, PlotProps) % 
+        % colorbar off
         if MeasureIdx == 1
             title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
         end

@@ -1,4 +1,4 @@
-function plot_topography_difference(Data1, Data2, Chanlocs, CLims, StatsP, PlotProps)
+function plot_topography_difference(Data1, Data2, Chanlocs, CLims, StatParameters, PlotProps)
 % plots the t-values (color) and significant channels (white dots) of
 % Data2 vs Data1 using chART plots.
 % Data are P x Ch matrices.
@@ -10,9 +10,9 @@ function plot_topography_difference(Data1, Data2, Chanlocs, CLims, StatsP, PlotP
 % in 2process_Bursts.
 
 %%% Statistics
-Stats = paired_ttest(Data1, Data2, StatsP);
+Stats = paired_ttest(Data1, Data2, StatParameters);
 
-ES = Stats.(StatsP.Paired.ES);
+ES = Stats.(StatParameters.Paired.ES);
 Sig =  Stats.sig;
 t_values = Stats.t;
 
@@ -20,10 +20,14 @@ t_values = Stats.t;
 % G>1
 Stats.ES_top1 = nnz(ES >= 1);
 
-ES(~Sig) = nan; % only consider significant channels for rest
+ES(Sig==0) = nan; % only consider significant channels for rest
 [Stats.ES_maxG, Indx] = max(ES);
 Stats.ES_maxGch = Chanlocs(Indx).labels;
 Stats.sigtot = nnz(Sig);
+
+if all(isnan(Sig))
+    return
+end
 
 
 %%% Plot
@@ -35,5 +39,12 @@ if isempty(CLims)
 end
 
 chART.plot.eeglab_topoplot(Stats.t, Chanlocs, Stats, CLims, 't-values', 'Divergent', PlotProps)
+
+if PlotProps.Stats.PlotN
+    text(.4, .5, ['N=', num2str(Stats.N)], 'FontName', PlotProps.Text.FontName, 'FontSize', PlotProps.Text.LegendSize)
+end
+
+
+
 
 
