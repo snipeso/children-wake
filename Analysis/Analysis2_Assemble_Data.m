@@ -47,10 +47,12 @@ BurstInformationClusters.Globality =nan(nRecordings, nFrequencies);
 BurstInformationClusters.Power = nan(nRecordings, nFrequencies);
 
 
+Bands = Parameters.Bands;
+BandLabels = fieldnames(Bands);
+nBands = numel(BandLabels);
 BurstInformationTopography = struct();
-BurstInformationTopography.Quantity = nan(nRecordings, nChans);
-BurstInformationTopography.Amplitude = nan(nRecordings, nChans);
-BurstInformationTopography.Frequency = nan(nRecordings, nChans); % peak frequency
+BurstInformationTopography.Quantity = nan(nRecordings, nChans, nBands);
+BurstInformationTopography.Amplitude = nan(nRecordings, nChans, nBands);
 BurstInformationTopography.Slope = nan(nRecordings, nChans);
 BurstInformationTopography.Intercept = nan(nRecordings, nChans);
 
@@ -102,30 +104,28 @@ for RecordingIdx = 1:nRecordings
 
 
         %%% load in data for topographies
-        for Channel = 1:nChans
-            BurstsTemp = Bursts([Bursts.ChannelIndex]==Channel);
+        for ChannelIdx = 1:nChans
+            for BandIdx = 1:nBands
+                Band = Bands.(BandLabels{BandIdx});
+                BurstsTemp = Bursts([Bursts.ChannelIndex]==ChannelIdx & ...
+                    [Bursts.BurstFrequency]>=Band(1) & [Bursts.BurstFrequency]<Band(2));
 
-            if numel(BurstsTemp)>=10
+                if numel(BurstsTemp)<10
+                    continue
+                end
                 % average amplitude in that channel
-                BurstInformationTopography.Amplitude(NewIdx, Channel) = ...
+                BurstInformationTopography.Amplitude(NewIdx, ChannelIdx, BandIdx) = ...
                     mean([BurstsTemp.Amplitude]);
 
                 % average quantity of bursts in that channel (as % duration recording)
-                BurstInformationTopography.Quantity(NewIdx, Channel) = ...
+                BurstInformationTopography.Quantity(NewIdx, ChannelIdx, BandIdx) = ...
                     sum([BurstsTemp.DurationPoints])/EEGMetadata.pnts;
-
-                % peak frequency of burst in that channel
-                FrequencyDistribution = [BurstsTemp.BurstFrequency];
-                FrequencyBins = 3:.5:16;
-                FrequencyDistribution = discretize(FrequencyDistribution, FrequencyBins);
-                PeakIdx = mode(FrequencyDistribution);
-                BurstInformationTopography.Frequency(NewIdx, Channel) = FrequencyBins(PeakIdx);
             end
 
             % slopes and stuff
-            [Slope, Intercept] = fooof_spectrum(Power(Channel, :), Freqs);
-            BurstInformationTopography.Slope(NewIdx, Channel) = Slope;
-            BurstInformationTopography.Intercept(NewIdx, Channel) = Intercept;
+            [Slope, Intercept] = fooof_spectrum(Power(ChannelIdx, :), Freqs);
+            BurstInformationTopography.Slope(NewIdx, ChannelIdx) = Slope;
+            BurstInformationTopography.Intercept(NewIdx, ChannelIdx) = Intercept;
         end
 
         % run fooof

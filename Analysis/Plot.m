@@ -39,7 +39,6 @@ Groups = {'HC', 'ADHD'};
 Tasks = {'Oddball', 'Alertness'};
 YVariables = {'Globality', 'Amplitude', 'Duration', 'Frequency', 'Slope', 'Intercept'};
 Grid = [3 numel(YVariables)];
-Session = 'Session_1';
 Colors = chART.color_picker(2);
 Markers = {'o', '^'};
 Dashes = {':', '-'};
@@ -237,6 +236,8 @@ end
 chART.save_figure('TopographyChange', ResultsFolder, PlotProps)
 
 
+%% TODO
+% front to occipital ratio for amplitudes
 
 %% plot Freq x Age plot, descriptive
 
