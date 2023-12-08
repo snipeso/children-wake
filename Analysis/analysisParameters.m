@@ -105,8 +105,8 @@ Narrowbands.Sigma = [12 16];
 Parameters.Narrowbands = Narrowbands;
 
 Bands.Theta = [4 8]; % up to but not including the second edge
-Bands.Alpha = [8 11];
-Bands.Sigma = [11 15];
+Bands.Alpha = [8 12];
+Bands.Sigma = [12 15];
 Parameters.Bands = Bands;
 
 

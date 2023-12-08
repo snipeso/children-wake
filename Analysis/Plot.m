@@ -9,6 +9,8 @@ PlotProps = Parameters.PlotProps.Manuscript;
 Paths = Parameters.Paths;
 Datasets = Parameters.Datasets;
 Hours = Parameters.Hours;
+Bands = Parameters.Bands;
+BandLabels = fieldnames(Bands);
 
 ResultsFolder = fullfile(Paths.Results, 'Main');
 if ~exist(ResultsFolder,'dir')
@@ -113,7 +115,7 @@ chART.save_figure('BasicScatterAge', ResultsFolder, PlotProps)
 
 %% correlate measures
 
-YVariables = {'Globality', 'Amplitude', 'Duration', 'Frequency', 'Slope', 'Intercept'};
+YVariables = {'Globality', 'Amplitude', 'Duration', 'Slope', 'Intercept'};
 Grid = [numel(YVariables) numel(YVariables)];
 figure('Units','centimeters','OuterPosition',[0 0 30 30])
 for Idx1 = 1:numel(YVariables)
@@ -125,7 +127,7 @@ for Idx1 = 1:numel(YVariables)
         chART.set_axis_properties(PlotProps)
         lsline;
         if Idx2 == numel(YVariables)
-                    xlabel(YVariables{Idx1})
+            xlabel(YVariables{Idx1})
         end
         if Idx1==1
             ylabel(YVariables{Idx2})
@@ -138,43 +140,59 @@ chART.save_figure('CorrelateVariables', ResultsFolder, PlotProps)
 
 %% topographies by age, descriptive
 
+% TODO, split by burst frequency
 Group = 'HC';
 
 Ages = [8, 11;
     11 14;
     14 16;
-    16 18];
+    16 20; 
+    20 25];
 nAges = size(Ages, 1);
 Measures = fieldnames(BurstInformationTopography);
 nMeasures = numel(Measures);
 MeasureLabels = Measures;
 
-CLims = [0 .4;
-    10, 25;
-    8 11.6;
-    1.3 1.95;
-    .8 1.95];
+CLims = struct();
+CLims.Quantity = [0.005 .07; 0.03 .27; 0.01 .11];
+CLims.Amplitude = [2, 20; 10, 25; 8, 18];
+CLims.Slope = [1.3 2];
+CLims.Intercept = [.8 2];
 
-figure('Units','normalized','OuterPosition',[0 0 .4 .7])
+Labels = struct();
+Labels.Quantity = append( '# ', BandLabels);
+Labels.Amplitude = append(BandLabels, ' amp');
+Labels.Slope = "Slope";
+Labels.Intercept = "Intercept";
+
+%%
+
 for MeasureIdx = 1:nMeasures
-    for AgeIdx = 1:nAges
-        Indexes = strcmp(Metadata.Group, Group) & Metadata.Age >= Ages(AgeIdx, 1) & Metadata.Age < Ages(AgeIdx, 2);
-        Data = BurstInformationTopography.(Measures{MeasureIdx})(Indexes, :);
-        AverageData = average_by_column(Metadata(Indexes, :), Data, 'Participant');
+    Topographies = BurstInformationTopography.(Measures{MeasureIdx});
+    nBands = size(Topographies, 3);
 
-        chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, AgeIdx], [], false, '', PlotProps);
-        chART.plot.eeglab_topoplot(mean(AverageData, 1), Chanlocs, [], CLims(MeasureIdx, :), '', 'Linear', PlotProps);
-        if MeasureIdx == 1
-            title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
+    figure('Units','normalized','Position', [0 0 .4 .15*nBands])
+    for BandIdx = 1:nBands
+        for AgeIdx = 1:nAges
+            % Indexes = strcmp(Metadata.Group, Group) & Metadata.Age >= Ages(AgeIdx, 1) & Metadata.Age < Ages(AgeIdx, 2);
+            Indexes = Metadata.Age >= Ages(AgeIdx, 1) & Metadata.Age < Ages(AgeIdx, 2);
+            Data = Topographies(Indexes, :, BandIdx);
+            AverageData = mean(average_by_column(Metadata(Indexes, :), Data, 'Participant'), 1, 'omitnan');
+
+            chART.sub_plot([], [nBands, nAges+1], [BandIdx, AgeIdx], [], false, '', PlotProps);
+            chART.plot.eeglab_topoplot(AverageData, Chanlocs, [], CLims.(Measures{MeasureIdx})(BandIdx, :), '', 'Linear', PlotProps);
+            if BandIdx == 1
+                title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
+            end
         end
+
+        % plot colorbar
+        chART.sub_plot([], [nBands, nAges+1], [BandIdx, nAges+1], [], false, '', PlotProps);
+        chART.plot.pretty_colorbar('Linear', CLims.(Measures{MeasureIdx})(BandIdx, :), Labels.(Measures{MeasureIdx}){BandIdx}, PlotProps)
+
     end
-
-    % plot colorbar
-    chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, nAges+1], [], false, '', PlotProps);
-    chART.plot.pretty_colorbar('Linear', CLims(MeasureIdx, :), MeasureLabels{MeasureIdx}, PlotProps)
-
+    chART.save_figure(['TopographyAverage_', Measures{MeasureIdx}], ResultsFolder, PlotProps)
 end
-chART.save_figure('TopographyAverage', ResultsFolder, PlotProps)
 
 
 
@@ -183,57 +201,37 @@ chART.save_figure('TopographyAverage', ResultsFolder, PlotProps)
 % Group = 'HC';
 PlotProps.Stats.PlotN= true;
 
-Ages = [8, 11;
-    11 14;
-    14 16;
-    16 20];
-% Ages = [8, 10;
-%     10 12;
-%     12 14;
-%     14 16;
-%     16 18];
 
-nAges = size(Ages, 1);
-Measures = fieldnames(BurstInformationTopography);
-nMeasures = numel(Measures);
-MeasureLabels = {'cyc/min', 'amplitude (\muV)', 'Frequency (Hz)'};
-Task = 'Oddball';
+CLims = [-1 1];
 
-% CLims = [-6 6;
-%     -10 10
-%     -10 10];
-
-CLims = [-1 1;
-    -1 1
-    -1 1
-    -1 1
-    -1 1];
-% CLims = [-8 8];
-CLims = [-.8 .8];
-
-figure('Units','normalized','OuterPosition',[0 0 .4 .7])
 for MeasureIdx = 1:nMeasures
-    for AgeIdx = 1:nAges
-        % Indexes = strcmp(OvernightMetadata.Group, Group) & OvernightMetadata.Age >= Ages(AgeIdx, 1) & OvernightMetadata.Age < Ages(AgeIdx, 2);
-        Indexes = OvernightMetadata.Age >= Ages(AgeIdx, 1) & OvernightMetadata.Age < Ages(AgeIdx, 2);
+    Topographies = BurstInformationTopography.(Measures{MeasureIdx});
+    nBands = size(Topographies, 3);
 
-        Evening = BurstInformationTopography.(Measures{MeasureIdx})(OvernightMetadata.EveningIndexes(Indexes), :);
-        Morning = BurstInformationTopography.(Measures{MeasureIdx})(OvernightMetadata.MorningIndexes(Indexes), :);
-        Evening = average_by_column(OvernightMetadata(Indexes, :), Evening, 'Participant');
-        Morning = average_by_column(OvernightMetadata(Indexes, :), Morning, 'Participant');
+    figure('Units','normalized','Position', [0 0 .4 .15*nBands])
+    for BandIdx = 1:nBands
+        for AgeIdx = 1:nAges
+            % Indexes = strcmp(OvernightMetadata.Group, Group) & OvernightMetadata.Age >= Ages(AgeIdx, 1) & OvernightMetadata.Age < Ages(AgeIdx, 2);
+            Indexes = OvernightMetadata.Age >= Ages(AgeIdx, 1) & OvernightMetadata.Age < Ages(AgeIdx, 2);
 
-        chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, AgeIdx], [], false, '', PlotProps);
-        plot_topography_difference(Evening, Morning, Chanlocs, CLims, Parameters.Stats, PlotProps) %
-        colorbar off
-        if MeasureIdx == 1
-            title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
+            Evening = Topographies(OvernightMetadata.EveningIndexes(Indexes), :, BandIdx);
+            Morning = Topographies(OvernightMetadata.MorningIndexes(Indexes), :, BandIdx);
+            Evening = average_by_column(OvernightMetadata(Indexes, :), Evening, 'Participant');
+            Morning = average_by_column(OvernightMetadata(Indexes, :), Morning, 'Participant');
+
+            chART.sub_plot([], [nBands, nAges+1], [BandIdx, AgeIdx], [], false, '', PlotProps);
+            plot_topography_difference(Evening, Morning, Chanlocs, CLims, Parameters.Stats, PlotProps) %
+            colorbar off
+             if BandIdx == 1
+                title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
+            end
         end
     end
-end
-        chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, AgeIdx+1], [nMeasures, 1], false, '', PlotProps);
+    chART.sub_plot([], [nBands, nAges+1], [BandIdx, AgeIdx+1], [nBands, 1], false, '', PlotProps);
     chART.plot.pretty_colorbar('Divergent', CLims, 'g-values', PlotProps)
 
-chART.save_figure('TopographyChange', ResultsFolder, PlotProps)
+    chART.save_figure(['TopographyChange_', Measures{MeasureIdx}], ResultsFolder, PlotProps)
+end
 
 
 %% TODO
@@ -249,7 +247,7 @@ Measures = fieldnames(BurstInformationClusters);
 nMeasures = numel(Measures);
 MeasureLabels = {'amplitude (\muV)', 'cyc/min', '% channels', 'log power (\muV^2/Hz)'};
 
-Ages = 8:2:18;
+Ages = 8:3:20;
 
 OvernightMetadata.QuantileAge = discretize(OvernightMetadata.Age, Ages);
 
@@ -269,15 +267,19 @@ for MeasureIdx = 1:nMeasures
 
     %%% evening values
     chART.sub_plot([], [nMeasures, 1], [MeasureIdx, 1], [], true, '', PlotProps);
-
-    contourf(Ages(1:end-1), Frequencies, Data', 100, 'linecolor','none')
+    Colors = chART.color_picker([1, size(Data, 1)]);
+    hold on
+    for AgeIdx = 1:size(Data, 1)
+    plot(Frequencies, Data(AgeIdx, :), 'Color', Colors(AgeIdx, :), 'LineWidth',1.5)
+    end
+    % contourf(Ages(1:end-1), Frequencies, Data', 100, 'linecolor','none')
     chART.set_axis_properties(PlotProps)
-    colormap(PlotProps.Color.Maps.Linear)
-    xticks(8:2:20)
-    yticks(5:2:15)
-    h = colorbar;
-    h.TickLength = 0;
-    ylabel(h, MeasureLabels{MeasureIdx}, 'FontName', PlotProps.Text.FontName) % text style needs to be specified for label, because its weird
+    % colormap(PlotProps.Color.Maps.Linear)
+    % xticks(8:2:20)
+    % yticks(5:2:15)
+    % h = colorbar;
+    % h.TickLength = 0;
+    % ylabel(h, MeasureLabels{MeasureIdx}, 'FontName', PlotProps.Text.FontName) % text style needs to be specified for label, because its weird
 
     title([Measures{MeasureIdx}, ' Evening'])
     ylabel('Frequency (Hz)')
@@ -298,7 +300,7 @@ PlotProps.Axes.yPadding = 20;
 
 CLims = [-4 4;
     -.08 .08
-      -.08 .08
+    -.08 .08
     -.15 .15];
 figure('Units','normalized','OuterPosition',[0 0 .2 .8])
 for MeasureIdx = 1:nMeasures
@@ -318,25 +320,30 @@ for MeasureIdx = 1:nMeasures
 
 
     chART.sub_plot([], [nMeasures, 1], [MeasureIdx, 1], [], true, '', PlotProps);
-
-    contourf(Ages(1:end-1), Frequencies, Data', 100, 'linecolor','none')
+    Colors = chART.color_picker([1, size(Data, 1)], '', 'red');
+    hold on
+    for AgeIdx = 1:size(Data, 1)
+    plot(Frequencies, Data(AgeIdx, :), 'Color', Colors(AgeIdx, :), 'LineWidth',1.5)
+    end
+    % contourf(Ages(1:end-1), Frequencies, Data', 100, 'linecolor','none')
     chART.set_axis_properties(PlotProps)
 
-    colormap(PlotProps.Color.Maps.Divergent)
-    xticks(8:2:20)
-    yticks(5:2:15)
-    h = colorbar;
-    h.TickLength = 0;
+    % colormap(PlotProps.Color.Maps.Divergent)
+    % xticks(8:2:20)
+    % yticks(5:2:15)
+    % h = colorbar;
+    % h.TickLength = 0;
     ylabel('Frequency (Hz)')
     title([Measures{MeasureIdx}, ' Overnight change'])
 
     if MeasureIdx == nMeasures
         xlabel('Age')
+        legend(string(Ages(1:end-1)))
     end
-    h = colorbar;
-    clim(CLims(MeasureIdx, :))
-    h.TickLength = 0;
-    ylabel(h, 'difference', 'FontName', PlotProps.Text.FontName) % text style needs to be specified for label, because its weird
+    % h = colorbar;
+    % clim(CLims(MeasureIdx, :))
+    % h.TickLength = 0;
+    % ylabel(h, 'difference', 'FontName', PlotProps.Text.FontName) % text style needs to be specified for label, because its weird
 end
 chART.save_figure('FrequencyByAgeChange', ResultsFolder, PlotProps)
 

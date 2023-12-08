@@ -13,7 +13,7 @@ Hours = Parameters.Hours;
 Variables = {''};
 VariablesCluster = {};
 
-Frequencies = 5:16;
+Frequencies = 4:16;
 nFrequencies = numel(Frequencies)-1;
 nChans = 123;
 nVariables = 3;
@@ -110,16 +110,16 @@ for RecordingIdx = 1:nRecordings
                 BurstsTemp = Bursts([Bursts.ChannelIndex]==ChannelIdx & ...
                     [Bursts.BurstFrequency]>=Band(1) & [Bursts.BurstFrequency]<Band(2));
 
+                % average quantity of bursts in that channel (as % duration recording)
+                BurstInformationTopography.Quantity(NewIdx, ChannelIdx, BandIdx) = ...
+                    sum([BurstsTemp.DurationPoints])/EEGMetadata.pnts;
+
                 if numel(BurstsTemp)<10
                     continue
                 end
                 % average amplitude in that channel
                 BurstInformationTopography.Amplitude(NewIdx, ChannelIdx, BandIdx) = ...
                     mean([BurstsTemp.Amplitude]);
-
-                % average quantity of bursts in that channel (as % duration recording)
-                BurstInformationTopography.Quantity(NewIdx, ChannelIdx, BandIdx) = ...
-                    sum([BurstsTemp.DurationPoints])/EEGMetadata.pnts;
             end
 
             % slopes and stuff
@@ -140,12 +140,12 @@ for RecordingIdx = 1:nRecordings
             BurstIdx = BurstFrequencies==FrequencyIdx;
             BurstsTemp = BurstClusters(BurstIdx);
 
+                        BurstInformationClusters.Quantity(NewIdx, FrequencyIdx) = ...
+                sum([BurstsTemp.CyclesCount])/RecordingDuration;
+
             if numel(BurstsTemp)<10
                 continue
             end
-
-            BurstInformationClusters.Quantity(NewIdx, FrequencyIdx) = ...
-                sum([BurstsTemp.CyclesCount])/RecordingDuration;
 
             BurstInformationClusters.Amplitude(NewIdx, FrequencyIdx) = ...
                 mean([BurstsTemp.Amplitude]);
