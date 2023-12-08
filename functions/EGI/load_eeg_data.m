@@ -1,7 +1,7 @@
-function [EEG, MAT] = loadData(Filename, Filepath)
+function [EEG, MAT] = load_eeg_data(Filename, Filepath)
 % Reads either EGI or BrainAmp data, saves it into a EEGLAB structure. Uses
 % both Fieldtrip and EEGLAB. Fileformats are a pain.
-% from AllWake, Snipes 2023
+% from children-wake, Snipes 2023
 
 % get channel locations file for 128 channels
 load('StandardChanlocs128.mat', 'StandardChanlocs')
@@ -50,10 +50,10 @@ switch Filetype
         Data = loadEGIBigRaw(fullfile(Filepath, Filename),1:NChan);
         EEG.data = Data(1:128, :);
 
-        % % get events using fieldtrip
-        % events_ft = ft_read_event(fullfile(Filepath, Filename)); % triggers
-        % events_el = fieldtrip2eeglab_events(events_ft);
-        % EEG.event = events_el;
+        % get events using fieldtrip
+        events_ft = ft_read_event(fullfile(Filepath, Filename)); % triggers
+        events_el = fieldtrip2eeglab_events(events_ft); % my function
+        EEG.event = events_el;
 
 
     case 'eeg'

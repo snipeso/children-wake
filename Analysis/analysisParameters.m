@@ -9,7 +9,7 @@ Parameters = struct();
 %%% Analysis paramaters
 
 % Who, what, when
-Parameters.Datasets = {'ADHD', 'BMS', 'BMSSL', 'SleepLearning'};
+Parameters.Datasets = {'ADHD', 'BMS', 'BMSSL', 'SleepLearning', 'Providence', 'BMSAdults'};
 Parameters.Tasks = {}; % if is empty, will do all of them
 Parameters.Participants = 156;
 Parameters.Hours = {'eve', 'mor'};

@@ -37,7 +37,7 @@ for Indx_D = 1:numel(Datasets)
         Template, false, Ignore);
 
     % Consider only relevant subfolders
-    Subfolders(contains(Subfolders, 'Old_Export')) = [];
+    Subfolders(~contains(Subfolders, 'New_Export')) = [];
 
 
     for Indx_P = 1:numel(Participants) % loop through participants
@@ -62,7 +62,7 @@ for Indx_D = 1:numel(Datasets)
 
 
             for Indx_SF = 1:size(Subfolders, 1) % loop through all subfolders
-%                             parfor Indx_SF = 1:size(Subfolders, 1) % loop through all subfolders
+                %                             parfor Indx_SF = 1:size(Subfolders, 1) % loop through all subfolders
 
                 %%%%%%%%%%%%%%%%%%%%%%%%
                 %%% Check if data exists
@@ -85,20 +85,20 @@ for Indx_D = 1:numel(Datasets)
                 Task = Levels{end-1}; % task is assumed to be the first folder in the sequence
 
                 % if does not contain EEG, then skip
-                Content = getContent(Path);
+                Content = list_filenames(Path);
                 MAT = Content(contains(string(Content), '.mat'));
                 MAT(strcmp(MAT, '.mat')) = []; % weird bug that had some files without anything??
 
                 if numel(MAT)<1
-                    warning([Path, ' is missing SET file'])
+                    warning([Path, ' is missing MAT file'])
 
                     % see if there's an old one
                     Path = replace(Path, 'New_Export', 'Old_Export');
 
-                    Content = getContent(Path);
+                    Content = list_filenames(Path);
                     MAT = Content(contains(string(Content), '.mat'));
                     if numel(MAT)<1
-                        warning([Path, ' is missing SET file'])
+                        warning([Path, ' is missing MAT file'])
                         continue
                     end
 
@@ -111,6 +111,8 @@ for Indx_D = 1:numel(Datasets)
                     mkdir(Destination)
                 end
 
+                % load all mat files in folder, merging them
+                ALLEEG = struct();
                 for Indx_F = 1:numel(MAT)
 
                     Filename_MAT = MAT(Indx_F);
@@ -140,37 +142,45 @@ for Indx_D = 1:numel(Datasets)
                         warning(['Not enough data for ' char(fullfile(Path, Filename_MAT))])
                         continue
                     end
-
-                    % low-pass filter
-                    EEG = pop_eegfiltnew(EEG, [], lowpass); % this is a form of antialiasing, but it not really needed because usually we use 40hz with 256 srate
-
-                    % notch filter for line noise
-                    EEG = lineFilter(EEG, 50, false);
-
-                    % resample
-                    if EEG.srate ~= new_fs
-                        EEG = pop_resample(EEG, new_fs);
-                    end
-
-                    % high-pass filter
-                    % NOTE: this is after resampling, otherwise crazy slow.
-                    EEG = hpEEG(EEG, highpass, hp_stopband);
-
-
-                    % save preprocessing info in eeg structure
-                    EEG.setname = Filename_Core;
-                    EEG.filename = Filename_Destination;
-                    EEG.original.filename = Filename_MAT;
-                    EEG.original.filepath = Path;
-                    EEG.originl.participant = Participant;
-                    EEG.filtering = Params;
-
-                    EEG = eeg_checkset(EEG);
-
-                    % save EEG
-                    Filepath = fullfile(Destination, Filename_Destination);
-                    parsave(Filepath, EEG)
+                    ALLEEG = cat_struct(AllEEG, EEG);
                 end
+
+                if numel(ALLEEG)>1
+                    EEG = pop_mergeset(ALLEEG);
+                else
+                    EEG = ALLEEG;
+                end
+
+                % low-pass filter
+                EEG = pop_eegfiltnew(EEG, [], lowpass); % this is a form of antialiasing, but it not really needed because usually we use 40hz with 256 srate
+
+                % notch filter for line noise
+                EEG = line_filter(EEG, Parameters.LineNoise(Indx_D), false);
+
+                % resample
+                if EEG.srate ~= new_fs
+                    EEG = pop_resample(EEG, new_fs);
+                end
+
+                % high-pass filter
+                % NOTE: this is after resampling, otherwise crazy slow.
+                EEG = highpass_eeg(EEG, highpass, hp_stopband);
+
+
+                % save preprocessing info in eeg structure
+                EEG.setname = Filename_Core;
+                EEG.filename = Filename_Destination;
+                EEG.original.filename = Filename_MAT;
+                EEG.original.filepath = Path;
+                EEG.originl.participant = Participant;
+                EEG.filtering = Params;
+
+                EEG = eeg_checkset(EEG);
+
+                % save EEG
+                Filepath = fullfile(Destination, Filename_Destination);
+                parsave(Filepath, EEG)
+
             end
         end
         disp(['************** Finished ',  Participant, '***************'])
