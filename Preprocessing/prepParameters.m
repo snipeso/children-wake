@@ -20,6 +20,7 @@ Paths.Datasets = fullfile(Core, 'Raw');
 Paths.Preprocessed = fullfile(Core, 'Preprocessed');
 Paths.Final = fullfile(Core, 'Final'); % where data gets saved once its been turned into something else
 Paths.Core = Core;
+Paths.Metadata = fullfile(Core, 'Metadata');
 
 P.Paths = Paths;
 

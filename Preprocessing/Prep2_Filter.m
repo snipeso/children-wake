@@ -10,7 +10,8 @@ clear
 
 P = prepParameters();
 Paths = P.Paths;
-Datasets = P.Datasets;
+% Datasets = P.Datasets;
+Datasets = {'Providence'};
 Parameters = P.Parameters;
 
 Refresh = false;
@@ -22,31 +23,44 @@ Destination_Formats = {'Cutting', 'ICA', 'Power'}; % chooses which filtering to 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-ParticipantID = 1;
-
 Dataset_Path = Paths.Datasets;
 Preprocessed_Path = Paths.Preprocessed;
 
-DataStruct = struct(); % keep track of participant codes
+if exist(fullfile(Paths.Metadata, 'ParticipantCodes.csv'), 'file')
+    OldTable = readtable(fullfile(Paths.Metadata, 'ParticipantCodes.csv'));
+    DataStruct = table2struct(OldTable);
+    ParticipantIDs = max(str2double(extractAfter(OldTable.NewName, 'P'))); % largest code previously assigned
+else
+    ParticipantIDs = 0; % creates new sequential code for all participants if first time running
+    DataStruct = struct(); % keep track of participant codes
+end
+
 
 for Indx_D = 1:numel(Datasets)
 
     % Folders where raw data is located
     Dataset = Datasets{Indx_D};
-    [Subfolders, Participants] = AllFolderPaths(fullfile(Paths.Datasets, Dataset), ...
+    [Subfolders, Participants] = gather_folder_paths(fullfile(Paths.Datasets, Dataset), ...
         Template, false, Ignore);
 
     % Consider only relevant subfolders
-    Subfolders(~contains(Subfolders, 'New_Export')) = [];
+    Subfolders(~(contains(Subfolders, 'New_Export')| contains(Subfolders, 'NewExport'))) = []; % start from new export, will check old if its empty
 
 
     for Indx_P = 1:numel(Participants) % loop through participants
         Participant = Participants{Indx_P};
 
-        Participant_NewID = ['P', num2str(ParticipantID, '%03.f')];
-        DataStruct(ParticipantID).OldName = Participant;
-        DataStruct(ParticipantID).NewName = Participant_NewID;
-        DataStruct(ParticipantID).Dataset = Dataset;
+        if exist("OldTable", 'var') && any(strcmpi(OldTable.OldName, Participant)) % find existing code
+            Index = find(strcmpi(OldTable.OldName, Participant));
+            Participant_NewID = OldTable.NewName{Index};
+        else % create new code
+            ParticipantIDs = ParticipantIDs + 1; % get a new ID number.
+            Participant_NewID = ['P', num2str(ParticipantIDs, '%03.f')];
+
+            DataStruct(ParticipantIDs).OldName = Participant;
+            DataStruct(ParticipantIDs).NewName = Participant_NewID;
+            DataStruct(ParticipantIDs).Dataset = Dataset;
+        end
 
 
 
@@ -54,15 +68,9 @@ for Indx_D = 1:numel(Datasets)
             Destination_Format = Destination_Formats{Indx_DF};
             Params =  Parameters.(Destination_Format);
 
-            % set selected parameters
-            new_fs = Parameters.(Destination_Format).fs;
-            lowpass = Parameters.(Destination_Format).lp;
-            highpass = Parameters.(Destination_Format).hp;
-            hp_stopband = Parameters.(Destination_Format).hp_stopband;
-
 
             for Indx_SF = 1:size(Subfolders, 1) % loop through all subfolders
-                %                             parfor Indx_SF = 1:size(Subfolders, 1) % loop through all subfolders
+                %   parfor Indx_SF = 1:size(Subfolders, 1) % loop through all subfolders
 
                 %%%%%%%%%%%%%%%%%%%%%%%%
                 %%% Check if data exists
@@ -94,12 +102,15 @@ for Indx_D = 1:numel(Datasets)
 
                     % see if there's an old one
                     Path = replace(Path, 'New_Export', 'Old_Export');
+                    Path = replace(Path, 'NewExport', 'OldExport');
 
                     Content = list_filenames(Path);
                     MAT = Content(contains(string(Content), '.mat'));
                     if numel(MAT)<1
                         warning([Path, ' is missing MAT file'])
                         continue
+                    else
+                        warning([Path ' using old export'])
                     end
 
                     Levels{end} = 'o'; % indicate that its old
@@ -111,19 +122,22 @@ for Indx_D = 1:numel(Datasets)
                     mkdir(Destination)
                 end
 
+
+                Filename_Core = strjoin([Participant_NewID, Dataset, Levels(:)', num2str(numel(MAT))], '_');
+                Filename_Destination = [Filename_Core, '.mat'];
+
+                % skip filtering if file already exists
+                if ~Refresh && exist(fullfile(Destination, Filename_Destination), 'file')
+                    disp(['***********', 'Already did ', Filename_Core, '***********'])
+                    continue
+                end
+
+
                 % load all mat files in folder, merging them
                 ALLEEG = struct();
                 for Indx_F = 1:numel(MAT)
 
                     Filename_MAT = MAT(Indx_F);
-                    Filename_Core = strjoin([Participant_NewID, Dataset, Levels(:)', num2str(Indx_F)], '_');
-                    Filename_Destination = [Filename_Core, '.mat'];
-
-                    % skip filtering if file already exists
-                    if ~Refresh && exist(fullfile(Destination, Filename_Destination), 'file')
-                        disp(['***********', 'Already did ', Filename_Core, '***********'])
-                        continue
-                    end
 
 
                     %%%%%%%%%%%%%%%%%%%
@@ -142,29 +156,20 @@ for Indx_D = 1:numel(Datasets)
                         warning(['Not enough data for ' char(fullfile(Path, Filename_MAT))])
                         continue
                     end
+
+                    EEG = preprocess_eeg(EEG,  Parameters.(Destination_Format));
+
                     ALLEEG = cat_struct(AllEEG, EEG);
                 end
 
+                % merge together multiple files in same folder
                 if numel(ALLEEG)>1
                     EEG = pop_mergeset(ALLEEG);
                 else
                     EEG = ALLEEG;
                 end
 
-                % low-pass filter
-                EEG = pop_eegfiltnew(EEG, [], lowpass); % this is a form of antialiasing, but it not really needed because usually we use 40hz with 256 srate
 
-                % notch filter for line noise
-                EEG = line_filter(EEG, Parameters.LineNoise(Indx_D), false);
-
-                % resample
-                if EEG.srate ~= new_fs
-                    EEG = pop_resample(EEG, new_fs);
-                end
-
-                % high-pass filter
-                % NOTE: this is after resampling, otherwise crazy slow.
-                EEG = highpass_eeg(EEG, highpass, hp_stopband);
 
 
                 % save preprocessing info in eeg structure
@@ -184,12 +189,12 @@ for Indx_D = 1:numel(Datasets)
             end
         end
         disp(['************** Finished ',  Participant, '***************'])
-        ParticipantID = ParticipantID+1;
+        ParticipantIDs = ParticipantIDs+1;
     end
 end
 
 DataTable = struct2table(DataStruct);
-writetable(DataTable, fullfile(Paths.Analysis, 'ParticipantCodes.csv'))
+writetable(DataTable, fullfile(Paths.Metadata, 'ParticipantCodes.csv'))
 
 
 function parsave(Filepath, EEG)
