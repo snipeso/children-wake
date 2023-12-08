@@ -9,7 +9,8 @@ clc
 
 P = prepParameters();
 Paths = P.Paths;
-Datasets = P.Datasets;
+% Datasets = P.Datasets;
+Datasets = {};
 
 Refresh = false;
 

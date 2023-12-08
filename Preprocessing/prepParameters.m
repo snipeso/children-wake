@@ -2,7 +2,7 @@ function P = prepParameters()
 % Here is located all the common variables, paths, and parameters that get
 % repeatedly called by more than one preprocessing script.
 
-P.Datasets = {'ADHD', 'BMS', 'BMSSL', 'Koffein', 'SleepLearning'};
+P.Datasets = {'ADHD', 'BMS', 'BMSSL', 'BMSAdults', 'SleepLearning', 'Providence'};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Locations
