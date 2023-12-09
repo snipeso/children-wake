@@ -1,11 +1,12 @@
 function EEG = preprocess_eeg(EEG, Parameters)
-% Parameters should have .fs, .lp, .hp, .hp_stopband
+% Parameters should have .fs, .lp, .hp, .hp_stopband, .line
 
 % set selected parameters
 new_fs = Parameters.fs;
 lowpass = Parameters.lp;
 highpass = Parameters.hp;
 hp_stopband = Parameters.hp_stopband;
+line_noise = Parameters.line;
 
 
 % center each channel to its mean
@@ -15,7 +16,7 @@ EEG = center_eeg(EEG);
 EEG = pop_eegfiltnew(EEG, [], lowpass); % this is a form of antialiasing, but it not really needed because usually we use 40hz with 256 srate
 
 % notch filter for line noise
-EEG = line_filter(EEG, Parameters.LineNoise(Indx_D), false);
+EEG = line_filter(EEG, line_noise, false);
 
 % resample
 if EEG.srate ~= new_fs

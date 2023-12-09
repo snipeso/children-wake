@@ -10,15 +10,15 @@ clear
 
 P = prepParameters();
 Paths = P.Paths;
-% Datasets = P.Datasets;
-Datasets = {'Providence'};
-Parameters = P.Parameters;
+Datasets = P.Datasets;
+AllParameters = P.Parameters;
+OverheadLinenoise = P.LineNoise;
 
 Refresh = false;
 
 Template = '000';
 Ignore = {};
-Destination_Formats = {'Cutting', 'ICA', 'Power'}; % chooses which filtering to do
+Destination_Formats = {'ICA', 'Power'}; % chooses which filtering to do
 % options: 'Scoring', 'Cutting', 'ICA', 'Power'
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -26,15 +26,7 @@ Destination_Formats = {'Cutting', 'ICA', 'Power'}; % chooses which filtering to 
 Dataset_Path = Paths.Datasets;
 Preprocessed_Path = Paths.Preprocessed;
 
-if exist(fullfile(Paths.Metadata, 'ParticipantCodes.csv'), 'file')
-    OldTable = readtable(fullfile(Paths.Metadata, 'ParticipantCodes.csv'));
-    DataStruct = table2struct(OldTable);
-    ParticipantIDs = max(str2double(extractAfter(OldTable.NewName, 'P'))); % largest code previously assigned
-else
-    ParticipantIDs = 0; % creates new sequential code for all participants if first time running
-    DataStruct = struct(); % keep track of participant codes
-end
-
+DataTable = assemble_codes(Paths, Datasets, Template, Ignore);
 
 for Indx_D = 1:numel(Datasets)
 
@@ -46,31 +38,24 @@ for Indx_D = 1:numel(Datasets)
     % Consider only relevant subfolders
     Subfolders(~(contains(Subfolders, 'New_Export')| contains(Subfolders, 'NewExport'))) = []; % start from new export, will check old if its empty
 
-
-    for Indx_P = 1:numel(Participants) % loop through participants
+    for Indx_P = 1:numel(Participants)
+    % parfor Indx_P = 1:numel(Participants) % loop through participants
         Participant = Participants{Indx_P};
+        DT = DataTable;
 
-        if exist("OldTable", 'var') && any(strcmpi(OldTable.OldName, Participant)) % find existing code
-            Index = find(strcmpi(OldTable.OldName, Participant));
-            Participant_NewID = OldTable.NewName{Index};
-        else % create new code
-            ParticipantIDs = ParticipantIDs + 1; % get a new ID number.
-            Participant_NewID = ['P', num2str(ParticipantIDs, '%03.f')];
-
-            DataStruct(ParticipantIDs).OldName = Participant;
-            DataStruct(ParticipantIDs).NewName = Participant_NewID;
-            DataStruct(ParticipantIDs).Dataset = Dataset;
-        end
-
-
+        Index = find(strcmpi(DT.OldName, Participant));
+        Participant_NewID = DT.NewName{Index};
 
         for Indx_DF = 1:numel(Destination_Formats)
             Destination_Format = Destination_Formats{Indx_DF};
-            Params =  Parameters.(Destination_Format);
 
 
             for Indx_SF = 1:size(Subfolders, 1) % loop through all subfolders
-                %   parfor Indx_SF = 1:size(Subfolders, 1) % loop through all subfolders
+
+                AllParams = AllParameters;
+                LineNoise = OverheadLinenoise;
+                Parameters =  AllParams.(Destination_Format);
+                Parameters.line = LineNoise.(Dataset);
 
                 %%%%%%%%%%%%%%%%%%%%%%%%
                 %%% Check if data exists
@@ -132,7 +117,6 @@ for Indx_D = 1:numel(Datasets)
                     continue
                 end
 
-
                 % load all mat files in folder, merging them
                 ALLEEG = struct();
                 for Indx_F = 1:numel(MAT)
@@ -157,19 +141,22 @@ for Indx_D = 1:numel(Datasets)
                         continue
                     end
 
-                    EEG = preprocess_eeg(EEG,  Parameters.(Destination_Format));
+                    EEG = preprocess_eeg(EEG,  Parameters);
+                    EEG.roi = []; % weird problem at some point
 
-                    ALLEEG = cat_struct(AllEEG, EEG);
+
+                    ALLEEG = cat_struct(ALLEEG, EEG);
+
                 end
 
                 % merge together multiple files in same folder
-                if numel(ALLEEG)>1
-                    EEG = pop_mergeset(ALLEEG);
+                if isempty(ALLEEG)
+                    continue
+                elseif numel(ALLEEG)>1
+                    EEG = pop_mergeset(ALLEEG, 1:numel(ALLEEG));
                 else
                     EEG = ALLEEG;
                 end
-
-
 
 
                 % save preprocessing info in eeg structure
@@ -178,25 +165,77 @@ for Indx_D = 1:numel(Datasets)
                 EEG.original.filename = Filename_MAT;
                 EEG.original.filepath = Path;
                 EEG.originl.participant = Participant;
-                EEG.filtering = Params;
+                EEG.filtering = Parameters;
 
                 EEG = eeg_checkset(EEG);
 
                 % save EEG
                 Filepath = fullfile(Destination, Filename_Destination);
                 parsave(Filepath, EEG)
-
             end
         end
         disp(['************** Finished ',  Participant, '***************'])
-        ParticipantIDs = ParticipantIDs+1;
+    end
+end
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% functions
+
+function DataTable = assemble_codes(Paths, Datasets, Template, Ignore)
+
+% check if there's already a table
+if exist(fullfile(Paths.Metadata, 'ParticipantCodes.csv'), 'file')
+    OldTable = readtable(fullfile(Paths.Metadata, 'ParticipantCodes.csv'));
+    DataStruct = table2struct(OldTable);
+    ParticipantIDs = max(str2double(extractAfter(OldTable.NewName, 'P'))); % largest code previously assigned
+else
+    ParticipantIDs = 0; % creates new sequential code for all participants if first time running
+    DataStruct = struct(); % keep track of participant codes
+end
+
+
+% gather all the participants for the current dataset
+AllParticipants = [];
+AllDatasets = [];
+for Indx_D = 1:numel(Datasets)
+
+    % Folders where raw data is located
+    Dataset = Datasets{Indx_D};
+
+    [~, Participants] = gather_folder_paths(fullfile(Paths.Datasets, Dataset), ...
+        Template, false, Ignore);
+
+    AllParticipants = cat(1, AllParticipants, Participants);
+    AllDatasets = cat(1, AllDatasets, repmat(string(Dataset), numel(Participants), 1));
+end
+
+for Indx_P = 1:numel(AllParticipants)
+
+    if exist("OldTable", 'var') && any(strcmpi(OldTable.OldName, AllParticipants{Indx_P})) % find existing code
+        continue
+    else % create new code
+        ParticipantIDs = ParticipantIDs + 1; % get a new ID number.
+        Participant_NewID = ['P', num2str(ParticipantIDs, '%03.f')];
+
+        DataStruct(ParticipantIDs).OldName = AllParticipants{Indx_P};
+        DataStruct(ParticipantIDs).NewName = Participant_NewID;
+        DataStruct(ParticipantIDs).Dataset = AllDatasets{Indx_P};
     end
 end
 
 DataTable = struct2table(DataStruct);
 writetable(DataTable, fullfile(Paths.Metadata, 'ParticipantCodes.csv'))
+end
+
+
 
 
 function parsave(Filepath, EEG)
+clc
 save(Filepath, 'EEG')
+disp(['saving ', Filepath])
 end
+
+

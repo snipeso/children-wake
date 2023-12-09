@@ -3,7 +3,12 @@ function P = prepParameters()
 % repeatedly called by more than one preprocessing script.
 
 P.Datasets = {'ADHD', 'BMS', 'BMSSL', 'SleepLearning', 'Providence', 'BMSAdults'};
-P.LineNoise = [50 50 50 50 60 50];
+P.LineNoise.ADHD = 50;
+P.LineNoise.BMS = 50;
+P.LineNoise.BMSSL = 50;
+P.LineNoise.SleepLearning = 50;
+P.LineNoise.Providence = 60;
+P.LineNoise.BMSAdults = 50;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Locations
