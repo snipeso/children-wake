@@ -46,7 +46,7 @@ FinalChanlocs(end+1) = CZ;
 for Indx_D = 1:numel(Datasets)
 
     Dataset = Datasets{Indx_D};
-    Tasks = getContent(fullfile(Source_Power, Dataset));
+    Tasks = list_filenames(fullfile(Source_Power, Dataset));
 
     for Indx_T = 1:numel(Tasks)
 
@@ -64,7 +64,7 @@ for Indx_D = 1:numel(Datasets)
             mkdir(Destination_Rejects)
         end
 
-        Files = getContent(Source);
+        Files = list_filenames(Source);
         Files(~contains(Files, '.mat'))=  [];
 
         for Indx_F = 1:numel(Files)
@@ -142,7 +142,7 @@ for Indx_D = 1:numel(Datasets)
 
 
             % re-check for bad channels (in lower frequencies)
-            [~, BadChannels, BadWindows] = findBadSegments(NewEEG, 5, MinNeighborCorrelation, ...
+            [~, BadChannels, BadWindows] = find_bad_segments(NewEEG, 5, MinNeighborCorrelation, ...
                 EEG_Channels.notEEG, true, MinDataKeep);
             NewEEG.data(:, BadWindows) = [];
             NewEEG = pop_select(NewEEG, 'nochannel', BadChannels);

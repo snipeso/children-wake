@@ -11,14 +11,14 @@ clear
 P = prepParameters();
 Paths = P.Paths;
 Datasets = P.Datasets;
-Datasets = {'SleepLearning'};
+Datasets = {'Providence', 'BMSAdults'};
 Parameters = P.Parameters;
 EEG_Channels = P.EEG_Channels;
 
 MinNeighborCorrelation = .5;
 MinDataKeep = .15; % proportion of noise in data as either channel or segment, above which the channel/segment is tossed
 MinChannels = 25; % maximum number of channels that can be removed
-MinTime = 60; % ninimum file durationin seconds
+MinTime = 60; % ninimum file duration in seconds
 
 Refresh = false;
  
@@ -30,7 +30,7 @@ Destination_All = fullfile(Paths.Preprocessed, 'ICA', 'Components');
 
 for Indx_D = 1:numel(Datasets)
     Dataset = Datasets{Indx_D};
-    Tasks = getContent(fullfile(Source_All, Dataset));
+    Tasks = list_filenames(fullfile(Source_All, Dataset));
 
     for Indx_T = 1:numel(Tasks)
         Task = Tasks{Indx_T};
@@ -42,7 +42,7 @@ for Indx_D = 1:numel(Datasets)
             mkdir(Destination)
         end
 
-        Files = getContent(Source);
+        Files = list_filenames(Source);
         Files(~contains(Files, '.mat'))=  [];
 
         for Indx_F = 1:numel(Files)
@@ -62,7 +62,7 @@ for Indx_D = 1:numel(Datasets)
             EEG.data = double(EEG.data);
 
             % remove bad channels and really bad timepoints
-            [~, BadChannels, BadWindows] = findBadSegments(EEG, 5, MinNeighborCorrelation, ...
+            [~, BadChannels, BadWindows] = find_bad_segments(EEG, 5, MinNeighborCorrelation, ...
                 EEG_Channels.notEEG, true, MinDataKeep);
             EEG.data(:, BadWindows) = [];
             EEG = eeg_checkset(EEG);
@@ -118,7 +118,7 @@ for Indx_D = 1:numel(Datasets)
             end
 
             % add Cz
-            EEG = addCz(EEG);
+            EEG = add_cz(EEG);
 
             % rereference to average
             EEG = pop_reref(EEG, []);
