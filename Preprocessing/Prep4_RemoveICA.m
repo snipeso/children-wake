@@ -11,7 +11,7 @@ clear
 P = prepParameters();
 Paths = P.Paths;
 Datasets = P.Datasets;
-Datasets = {'SleepLearning'};
+Datasets = {'Providence', 'BMSAdults'};
 Parameters = P.Parameters;
 EEG_Channels = P.EEG_Channels;
 
@@ -20,11 +20,13 @@ Refresh = false;
 Spread = 0; % how many times more the main component has to be larger than the next largest component
 SlopeRange = [8 30];
 MuscleSlopeMin = -.5;
+WindowLength = 3; % s, bad time windows
 RemoveComps = [2, 3, 4, 6]; % 1:Brain, 2:Muscle, 3:Eye, 4:Heart, 5:Line Noise, 6:Channel Noise, 7:Other
 MinTime = 60; % minimum time to keep data in seconds
-MinNeighborCorrelation = .5;
-MinDataKeep = .15; % proportion of noise in data as either channel or segment, above which the channel/segment is tossed
+MinNeighborCorrelation = .3;
+MinDataKeep = .2; % proportion of noise in data as either channel or segment, above which the channel/segment is tossed
 MinChannels = 25; % maximum number of channels that can be removed
+CorrelationFrequencyRange = [1 40];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -89,30 +91,27 @@ for Indx_D = 1:numel(Datasets)
             load(Filepath_ICA, 'EEG')
 
 
-
             %%% preprocess data
 
             % remove bad channels
             Data = pop_select(Data, 'nochannel', ...
-                labels2indexes([EEG_Channels.notEEG, EEG.badchans], Data.chanlocs));
+                labels2indexes(EEG.badchans, Data.chanlocs));
 
             % add CZ
-            Data.data(end+1, :) = zeros(1, size(Data.data, 2));
-            Data.chanlocs(end+1) = CZ;
+           Data = add_cz(Data);
 
             % rereference to average
             Data = pop_reref(Data, []);
 
 
             %%% remove major artifact components
-
             Components = EEG.etc.ic_classification.ICLabel.classifications;
 
             % assign one category to each component
-            Top = topComp(Components, Spread);
+            Top = top_components_by_category(Components, Spread);
 
             % identify slope in beta-gamma range
-            [Slopes, ~] = getSlopes(EEG, SlopeRange, 'ICA', 'fooof');
+            Slopes = channel_slopes(EEG, SlopeRange, 'ICA', 'fooof');
 
             % if anything classified as noise or other that has a flat
             % slope, or tilts positive, then its muscle activity.
@@ -142,8 +141,8 @@ for Indx_D = 1:numel(Datasets)
 
 
             % re-check for bad channels (in lower frequencies)
-            [~, BadChannels, BadWindows] = find_bad_segments(NewEEG, 5, MinNeighborCorrelation, ...
-                EEG_Channels.notEEG, true, MinDataKeep);
+            [~, BadChannels, BadWindows] = find_bad_segments(NewEEG, WindowLength, MinNeighborCorrelation, ...
+                EEG_Channels.notEEG, true, MinDataKeep, CorrelationFrequencyRange);
             NewEEG.data(:, BadWindows) = [];
             NewEEG = pop_select(NewEEG, 'nochannel', BadChannels);
 

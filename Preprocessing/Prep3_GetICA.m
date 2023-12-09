@@ -10,14 +10,16 @@ clear
 P = prepParameters();
 Paths = P.Paths;
 Datasets = P.Datasets;
-Datasets = {'Providence', 'BMSAdults'};
+% Datasets = {'Providence', 'BMSAdults'};
 Parameters = P.Parameters;
 EEG_Channels = P.EEG_Channels;
 
-MinNeighborCorrelation = .5;
+MinNeighborCorrelation = .3;
+WindowLength = 3;
 MinDataKeep = .15; % proportion of noise in data as either channel or segment, above which the channel/segment is tossed
 MinChannels = 25; % maximum number of channels that can be removed
 MinTime = 60; % ninimum file duration in seconds
+CorrelationFrequencyRange = [4 40];
 
 Refresh = false;
 
@@ -55,13 +57,14 @@ for Indx_D = 1:numel(Datasets)
 
             % load data
             load(fullfile(Source, File), 'EEG')
+            EEGOld = EEG;
 
             % convert to double
             EEG.data = double(EEG.data);
 
             % remove bad channels and really bad timepoints
-            [~, BadChannels, BadWindows_t] = find_bad_segments(EEG, 5, MinNeighborCorrelation, ...
-                EEG_Channels.notEEG, true, MinDataKeep);
+            [~, BadChannels, BadWindows_t] = find_bad_segments(EEG, WindowLength, MinNeighborCorrelation, ...
+                EEG_Channels.notEEG, true, MinDataKeep, CorrelationFrequencyRange);
             EEG.data(:, BadWindows_t) = [];
             EEG = eeg_checkset(EEG);
 
@@ -75,16 +78,18 @@ for Indx_D = 1:numel(Datasets)
                 continue
             end
 
-
             % remove maybe other noise (flatlines, and little bad windows)
             FlatChannels = find_flat_channels(EEG);
 
             % save info of which are bad channels
-            EEG.badchans = [EEG_Channels.notEEG, BadChannels, FlatChannels];
+            EEG.badchans = unique([BadChannels, FlatChannels]);
             if numel([EEG.badchans])> MinChannels
-                warning(['Removed too many channel in ', File])
+                warning(['Removed too many channels in ', File])
                 continue
             end
+
+            % remove also external electrodes
+            EEG.badchans = unique([EEG_Channels.notEEG, EEG.badchans]);
 
             % remove really bad channels
             EEG = pop_select(EEG, 'nochannel', EEG.badchans);

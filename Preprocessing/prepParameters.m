@@ -19,7 +19,7 @@ Paths = struct(); % I make structs of variables so they don't flood the workspac
 Paths.Analysis = mfilename('fullpath');
 Paths.Analysis = extractBefore(Paths.Analysis, 'Preprocessing');
 
-Core ='E:\Data';
+Core ='D:\Data\AllWake';
 
 Paths.Datasets = fullfile(Core, 'Raw');
 Paths.Preprocessed = fullfile(Core, 'Preprocessed');

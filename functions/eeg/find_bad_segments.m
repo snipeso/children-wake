@@ -1,5 +1,5 @@
 function [BadSegments, BadCh, BadWindows_t, Starts, Ends] = ...
-    find_bad_segments(EEG, Window, MinNeighborCorrelation, NotEEGChannels, CorrectCz, MinDataKeep)
+    find_bad_segments(EEG, Window, MinNeighborCorrelation, NotEEGChannels, CorrectCz, MinDataKeep, CorrelationFrequencyRange)
 % based on correlations with neighboring channels, identifies bad channels
 % and timewindows with artefacts. EEG is an EEGLAB structure. Window is in
 % seconds the duration of windows to check for bad segments (~4 s),
@@ -26,10 +26,17 @@ fs = EEG.srate;
 [nCh, nPnts] = size(EEG.data);
 Chanlocs = EEG.chanlocs;
 
+% filter EEG so correlation not unduely influenced by muscle
+if exist('CorrelationFrequencyRange', 'var')
+EEG = pop_eegfiltnew(EEG, CorrelationFrequencyRange(1), []);
+EEG = pop_eegfiltnew(EEG, [], CorrelationFrequencyRange(2));
+end
+
 NotEEGChannels = labels2indexes(NotEEGChannels, Chanlocs); % don't consider not-eeg channels when determining noise
 AlternateRefEEG = pop_reref(EEG, AlternateRef);
 AlternatePatchIndx = labels2indexes(CZPatch, AlternateRefEEG.chanlocs);
 PatchIndx = labels2indexes(CZPatch, Chanlocs);
+
 
 
 %%% loop through segments of data to find bad windows
@@ -83,7 +90,7 @@ if exist('MinDataKeep', 'var')
     AbsoluteBadSegments = remove_channel_or_window(BadSegments==2, 0);
 
     % remove at all costs bad windows/channels losing more than X% of data
-    BadSegments = remove_channel_or_window(BadSegments~=0, MinDataKeep);
+    BadSegments = remove_channel_or_window(BadSegments, MinDataKeep);
 
     BadSegments(AbsoluteBadSegments) = 1;
 end
