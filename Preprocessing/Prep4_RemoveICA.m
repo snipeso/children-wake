@@ -11,7 +11,7 @@ clear
 P = prepParameters();
 Paths = P.Paths;
 Datasets = P.Datasets;
-Datasets = {'Providence', 'BMSAdults'};
+Datasets = {'Providence'};
 Parameters = P.Parameters;
 EEG_Channels = P.EEG_Channels;
 
@@ -142,7 +142,7 @@ for Indx_D = 1:numel(Datasets)
 
             % re-check for bad channels (in lower frequencies)
             [~, BadChannels, BadWindows] = find_bad_segments(NewEEG, WindowLength, MinNeighborCorrelation, ...
-                EEG_Channels.notEEG, true, MinDataKeep, CorrelationFrequencyRange);
+                EEG_Channels.notEEG, false, MinDataKeep, CorrelationFrequencyRange);
             NewEEG.data(:, BadWindows) = [];
             NewEEG = pop_select(NewEEG, 'nochannel', BadChannels);
 
@@ -161,7 +161,7 @@ for Indx_D = 1:numel(Datasets)
                 'BurstRejection', 'off',...
                 'BurstCriterion', 'off', ...
                 'BurstCriterionRefMaxBadChns', 'off', ...
-                'WindowCriterion', .1); % fairly agressively remove bad data
+                'WindowCriterion', .3); % fairly lax remove bad data
 
             if size(NewEEG.data, 2) < NewEEG.srate*MinTime
                 warning(['Removed too many timepoints removed in ', File])

@@ -46,7 +46,7 @@ for Indx_D = 1:numel(Datasets)
         Files = list_filenames(Source);
         Files(~contains(Files, '.mat'))=  [];
 
-        for Indx_F = 1:numel(Files)
+        parfor Indx_F = 1:numel(Files)
             File = Files{Indx_F};
 
             % skip if file already exists
@@ -56,15 +56,16 @@ for Indx_D = 1:numel(Datasets)
             end
 
             % load data
-            load(fullfile(Source, File), 'EEG')
-            EEGOld = EEG;
+            Data = load(fullfile(Source, File), 'EEG')
+            EEG = Data.EEG;
+            Channels =  EEG_Channels;
 
             % convert to double
             EEG.data = double(EEG.data);
 
             % remove bad channels and really bad timepoints
             [~, BadChannels, BadWindows_t] = find_bad_segments(EEG, WindowLength, MinNeighborCorrelation, ...
-                EEG_Channels.notEEG, true, MinDataKeep, CorrelationFrequencyRange);
+                Channels.notEEG, true, MinDataKeep, CorrelationFrequencyRange);
             EEG.data(:, BadWindows_t) = [];
             EEG = eeg_checkset(EEG);
 
@@ -89,7 +90,7 @@ for Indx_D = 1:numel(Datasets)
             end
 
             % remove also external electrodes
-            EEG.badchans = unique([EEG_Channels.notEEG, EEG.badchans]);
+            EEG.badchans = unique([Channels.notEEG, EEG.badchans]);
 
             % remove really bad channels
             EEG = pop_select(EEG, 'nochannel', EEG.badchans);
@@ -128,14 +129,19 @@ for Indx_D = 1:numel(Datasets)
             % classify components
             EEG = iclabel(EEG);
 
-            save(fullfile(Destination, File), 'EEG')
+            parsave(fullfile(Destination, File), 'EEG')
             disp(['***********', 'Finished ', File, '***********'])
         end
     end
 end
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% functions
 
+function parsave(Path, EEG)
+save(Path, 'EEG')
+end
 
 
 
