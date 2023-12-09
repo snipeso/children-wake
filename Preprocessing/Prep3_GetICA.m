@@ -1,6 +1,5 @@
 % script to calculate components used to clean data
 
-
 close all
 clc
 clear
@@ -21,7 +20,7 @@ MinChannels = 25; % maximum number of channels that can be removed
 MinTime = 60; % ninimum file duration in seconds
 
 Refresh = false;
- 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Source_All = fullfile(Paths.Preprocessed, 'ICA', 'MAT');
@@ -56,19 +55,18 @@ for Indx_D = 1:numel(Datasets)
 
             % load data
             load(fullfile(Source, File), 'EEG')
-            Chanlocs = EEG.chanlocs;
 
             % convert to double
             EEG.data = double(EEG.data);
 
             % remove bad channels and really bad timepoints
-            [~, BadChannels, BadWindows] = find_bad_segments(EEG, 5, MinNeighborCorrelation, ...
+            [~, BadChannels, BadWindows_t] = find_bad_segments(EEG, 5, MinNeighborCorrelation, ...
                 EEG_Channels.notEEG, true, MinDataKeep);
-            EEG.data(:, BadWindows) = [];
+            EEG.data(:, BadWindows_t) = [];
             EEG = eeg_checkset(EEG);
 
             if numel(BadChannels)> MinChannels
-                warning(['Removed too many channel in ', File])
+                warning(['Removed too many channels in ', File])
                 continue
             end
 
@@ -79,17 +77,7 @@ for Indx_D = 1:numel(Datasets)
 
 
             % remove maybe other noise (flatlines, and little bad windows)
-            EEGHyperclean = clean_artifacts(EEG, ...
-                'Highpass', 'off', ...
-                'ChannelCriterion', 'off', ...
-                'LineNoiseCriterion', 'off', ...
-                'BurstRejection', 'off',...
-                'BurstCriterion', 'off', ...
-                'BurstCriterionRefMaxBadChns', 'off', ...
-                'WindowCriterion', 'off'); % very agressively remove bad data
-
-            FlatChannels = str2double(setdiff({EEG.chanlocs.labels}, {EEGHyperclean.chanlocs.labels}));
-
+            FlatChannels = find_flat_channels(EEG);
 
             % save info of which are bad channels
             EEG.badchans = [EEG_Channels.notEEG, BadChannels, FlatChannels];
@@ -110,7 +98,7 @@ for Indx_D = 1:numel(Datasets)
                 'BurstRejection', 'off',...
                 'BurstCriterion', 'off', ...
                 'BurstCriterionRefMaxBadChns', 'off', ...
-                'WindowCriterion', .1); % very agressively remove bad data
+                'WindowCriterion', .1);
 
             if size(EEG.data, 2) < EEG.srate*MinTime
                 warning(['Removed too many timepoints removed in ', File])
