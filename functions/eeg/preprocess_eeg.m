@@ -1,4 +1,4 @@
-function EEG = preprocess_eeg(EEG, Parameters)
+function EEG = filter_and_downsample_eeg(EEG, Parameters)
 % Parameters should have .fs, .lp, .hp, .hp_stopband, .line
 
 % set selected parameters

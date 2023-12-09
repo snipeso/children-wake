@@ -141,7 +141,7 @@ for Indx_D = 1:numel(Datasets)
                         continue
                     end
 
-                    EEG = preprocess_eeg(EEG,  Parameters);
+                    EEG = filter_and_downsample_eeg(EEG,  Parameters);
                     EEG.roi = []; % weird problem at some point
 
 
