@@ -9,4 +9,5 @@ load('Cz.mat', 'CZ')
 
 EEG.data(end+1, :) = zeros(1, size(EEG.data, 2));
 EEG.chanlocs(end+1) = CZ;
+EEG.nbchan = size(EEG.data, 1);
 EEG = eeg_checkset(EEG);

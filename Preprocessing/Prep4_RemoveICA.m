@@ -11,7 +11,7 @@ clear
 P = prepParameters();
 Paths = P.Paths;
 Datasets = P.Datasets;
-Datasets = {'Providence'};
+Datasets = {'BMS'};
 Parameters = P.Parameters;
 EEG_Channels = P.EEG_Channels;
 
@@ -27,6 +27,15 @@ MinNeighborCorrelation = .3;
 MinDataKeep = .2; % proportion of noise in data as either channel or segment, above which the channel/segment is tossed
 MinChannels = 25; % maximum number of channels that can be removed
 CorrelationFrequencyRange = [1 40];
+
+% EEGLAB preprocessing
+MinCorrelation =    0.500; % their defaults. Somehow, the function for finding bad channels without using channel locations worked a lot better
+NoLocsChannelCritExcluded =    0.1000; % their defaults
+MinDataKeep =  0.3000; %  this should be between .1 or .3, with smaller being stricter cleaning
+WindowCriteriaTolerances = [-Inf, 12]; % their defaults
+% WindowCriteriaTolerances = [-3.5 5];
+ChannelCriteriaMaxBadTime =    0.5000;
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -94,15 +103,13 @@ for Indx_D = 1:numel(Datasets)
             %%% preprocess data
 
             % remove bad channels
-            Data = pop_select(Data, 'nochannel', ...
-                labels2indexes(EEG.badchans, Data.chanlocs));
+            Data = pop_select(Data, 'nochannel', labels2indexes(EEG.badchans, Data.chanlocs));
 
             % add CZ
-           Data = add_cz(Data);
+            Data = add_cz(Data);
 
             % rereference to average
             Data = pop_reref(Data, []);
-
 
             %%% remove major artifact components
             Components = EEG.etc.ic_classification.ICLabel.classifications;
@@ -122,7 +129,7 @@ for Indx_D = 1:numel(Datasets)
             EEG.reject.gcompreject = Rejects';
 
             % save separate location of removed comps
-             save(fullfile(Destination_Rejects, File), 'EEG')
+            save(fullfile(Destination_Rejects, File), 'EEG')
 
 
             % create new data structure with ICA metadata, and EEG data
@@ -140,31 +147,19 @@ for Indx_D = 1:numel(Datasets)
             NewEEG = pop_subcomp(NewEEG, badcomps);
 
 
-            % re-check for bad channels (in lower frequencies)
-            [~, BadChannels, BadWindows] = find_bad_segments(NewEEG, WindowLength, MinNeighborCorrelation, ...
-                EEG_Channels.notEEG, false, MinDataKeep, CorrelationFrequencyRange);
-            NewEEG.data(:, BadWindows) = [];
-            NewEEG = pop_select(NewEEG, 'nochannel', BadChannels);
+            % last cleaning of data
+                        NewEEG = clean_windows(NewEEG,MinDataKeep,WindowCriteriaTolerances);
+            [NewEEG,removed_channels] = clean_channels_nolocs(NewEEG,...
+                MinCorrelation,NoLocsChannelCritExcluded,[],ChannelCriteriaMaxBadTime);
 
-            if size(NewEEG.data, 1)< 122-MinChannels % min channels other than external ones
-                warning(['Removed too many channel in ', File])
-                continue
-            end
-
-
-            % strict cleaning of data
-            NewEEG = clean_artifacts(NewEEG, ...
-                'FlatlineCriterion', 'off', ...
-                'Highpass', 'off', ...
-                'ChannelCriterion', 'off', ...
-                'LineNoiseCriterion', 'off', ...
-                'BurstRejection', 'off',...
-                'BurstCriterion', 'off', ...
-                'BurstCriterionRefMaxBadChns', 'off', ...
-                'WindowCriterion', .3); % fairly lax remove bad data
 
             if size(NewEEG.data, 2) < NewEEG.srate*MinTime
                 warning(['Removed too many timepoints removed in ', File])
+                continue
+            end
+
+            if size(NewEEG.data, 1) < 128-numel(EEG_Channels.notEEG)-MinChannels
+                warning(['Removed too many channels removed in ', File])
                 continue
             end
 
