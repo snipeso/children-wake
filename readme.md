@@ -32,4 +32,7 @@ Orginal repo was AllWake
 - run preprocessing (maybe rerun) on all data + adults
 - Make sure I have all the function dependencies, especially from AllWake for preprocessing
 - if time: run FOOOF, show change in slopes
+- get Koffein metadata
 - quality check: plot all participants and their sessions in one plot (see how differnt mor/eve can be), and use to exclude bad participants
+- handedness of BMSSL
+- finish loading in birthdates BMSSLL!!

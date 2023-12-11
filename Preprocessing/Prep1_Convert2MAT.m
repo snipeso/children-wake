@@ -9,7 +9,8 @@ clc
 
 P = prepParameters();
 Paths = P.Paths;
-Datasets = P.Datasets;
+% Datasets = P.Datasets;
+Datasets = {'Providence', 'BMSAdults'};
 
 Refresh = false;
 
@@ -22,7 +23,7 @@ Ignore = {};
 for Indx_D = 1:numel(Datasets)
 
     % Folders where raw data is located
-    [Subfolders, Participants] = AllFolderPaths(fullfile(Paths.Datasets, P.Datasets{Indx_D}), ...
+    [Subfolders, Participants] = gather_folder_paths(fullfile(Paths.Datasets, Datasets{Indx_D}), ...
         Template, false, Ignore);
 
 
@@ -31,7 +32,7 @@ for Indx_D = 1:numel(Datasets)
         for Indx_S = 1:size(Subfolders, 1) % loop through all subfolders
 
             % get path
-            Path = fullfile(Paths.Datasets, P.Datasets{Indx_D}, ...
+            Path = fullfile(Paths.Datasets, Datasets{Indx_D}, ...
                 Participants{Indx_P}, Subfolders{Indx_S});
 
             % skip rest if path not found
@@ -41,7 +42,7 @@ for Indx_D = 1:numel(Datasets)
             end
 
             % if does not contain EEG, then skip
-            Content = getContent(Path);
+            Content = list_filenames(Path);
             RAW = Content(contains(Content, '.raw'));
             if numel(RAW) < 1
                 warning([Path, ' is missing EEG files'])
@@ -57,7 +58,7 @@ for Indx_D = 1:numel(Datasets)
                 end
 
                 % convert EEG file
-                [EEG, MAT] = loadData(RAW(Indx_F, :), Path);
+                [EEG, MAT] = load_eeg_data(RAW(Indx_F, :), Path);
 
                 % save
                 try

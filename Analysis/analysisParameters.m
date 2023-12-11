@@ -1,6 +1,6 @@
 function Parameters = analysisParameters()
 % parameters for detecting bursts
-% Lapses-Causes
+% children-wake
 
 Parameters = struct();
 
@@ -9,11 +9,20 @@ Parameters = struct();
 %%% Analysis paramaters
 
 % Who, what, when
-Parameters.Datasets = {'ADHD', 'BMS', 'BMSSL', 'Koffein', 'SleepLearning'};
+Parameters.Datasets = {'ADHD', 'BMS', 'BMSSL', 'SleepLearning', 'Providence', 'BMSAdults'};
 Parameters.Tasks = {}; % if is empty, will do all of them
-% Parameters.Datasets = {'BMS'};
-% Parameters.Tasks = {'1GoNoGo'};
-% Folder structure: Preprocessed > Power > Clean > ADHD > 1Oddball
+Parameters.Participants = 156;
+Parameters.Hours = {'eve', 'mor'};
+
+Parameters.Tasks.ADHD = {'1Oddball', '3Oddball'};
+Parameters.Tasks.BMS = {'1GoNoGo', '2Alertness', '3Fixation', '4Fixation'};
+Parameters.Tasks.BMSSL = {'1GoNoGo', '2Alertness', '3Fixation'};
+Parameters.Tasks.SleepLearning = {'1Oddball', '3Oddball'};
+
+Parameters.Sessions.ADHD = {'Session1'};
+Parameters.Sessions.BMS = {'Session1', 'Session2'};
+Parameters.Sessions.BMSSL = {'Session1', 'Session2'};
+Parameters.Sessions.SleepLearning = {'Session11', 'Session12', 'Session2', 'Session3'};
 
 %%% labels
 Parameters.Labels.logBands = [1 2 4 8 16 32]; % x markers for plot on log scale
@@ -37,8 +46,11 @@ if exist( 'D:\LSM\Preprocessed', 'dir') % KISPI desktop
     addpath('H:\Code\Matcycle')
     addpath('H:\Code\fooof_mat\fooof_mat')
     addpath('\\nausers01\user\sniso\Dokumente\MATLAB\eeglab2022.0')
-elseif exist( 'X:\Data\Raw', 'dir')
+    elseif exist( 'X:\Data\Raw', 'dir')
     Core = 'X:\Data\';
+
+elseif exist( 'D:\Data\AllWake', 'dir')
+    Core = 'D:\Data\AllWake';
 else
     error('no data disk!')
     % Core = 'E:\'
@@ -51,7 +63,7 @@ Paths.Core = Core;
 Paths.AnalyzedData  = fullfile(Core, 'Final'); % where data gets saved once its been turned into something else
 Paths.Cache = fullfile(Core, 'Cache', 'children-wake');
 Paths.Results = fullfile(Core, 'Results', 'children-wake');
-
+Paths.Metadata = fullfile(Core, 'Metadata');
 if ~exist(Paths.Results, 'dir')
     mkdir(Paths.Results)
 end
@@ -93,7 +105,8 @@ Narrowbands.Sigma = [12 16];
 Parameters.Narrowbands = Narrowbands;
 
 Bands.Theta = [4 8]; % up to but not including the second edge
-Bands.Alpha = [8 14]; 
+Bands.Alpha = [8 12];
+Bands.Sigma = [12 15];
 Parameters.Bands = Bands;
 
 
@@ -111,11 +124,11 @@ Triggers.RightBlock = 'S 11';
 Triggers.Tones = 'S 12';
 Parameters.Triggers = Triggers;
 
-Parameters.PlotProps.Manuscript = chART.load_plot_properties({'LSM', 'Manuscript'});
-Parameters.Manuscript.Figure.Width = 22;
+Parameters.PlotProps.Manuscript = chART.load_plot_properties({'Iota', 'Manuscript'});
+Parameters.PlotProps.Manuscript.Figure.Width = 22;
 
-Parameters.PlotProps.Powerpoint = chART.load_plot_properties({'LSM', 'Powerpoint'});
-Parameters.PlotProps.Poster = chART.load_plot_properties({'LSM', 'Poster'});
+Parameters.PlotProps.Powerpoint = chART.load_plot_properties({'Iota', 'Powerpoint'});
+Parameters.PlotProps.Poster = chART.load_plot_properties({'Iota', 'Poster'});
 
 %%% channel clusters
 
