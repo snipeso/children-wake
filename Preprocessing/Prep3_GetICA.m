@@ -46,6 +46,7 @@ for Indx_D = 1:numel(Datasets)
         Files = list_filenames(Source);
         Files(~contains(Files, '.mat'))=  [];
 
+        % for Indx_F = 1:numel(Files)
         parfor Indx_F = 1:numel(Files)
             File = Files{Indx_F};
 
@@ -56,8 +57,12 @@ for Indx_D = 1:numel(Datasets)
             end
 
             % load data
-            Data = load(fullfile(Source, File), 'EEG')
+            Data = load(fullfile(Source, File), 'EEG');
             EEG = Data.EEG;
+            if ~isfield(EEG, 'data')
+                parsave(fullfile(Paths.Errors, File), 'EEG')
+                continue
+            end
             Channels =  EEG_Channels;
 
             % convert to double
@@ -140,7 +145,7 @@ end
 %%% functions
 
 function parsave(Path, EEG)
-save(Path, 'EEG')
+save(Path, EEG)
 end
 
 
