@@ -1,5 +1,5 @@
 function [BadSegments, BadCh, BadWindows_t, Starts, Ends] = ...
-    find_bad_segments(EEG, Window, MinNeighborCorrelation, NotEEGChannels, CorrectCz, MinDataKeep, CorrelationFrequencyRange)
+    find_bad_segments(EEG, Window, MinNeighborCorrelation, NotEEGChannels, CorrectCz, MinDataKeep, CorrelationFrequencyRange, AmplitudeThreshold)
 % based on correlations with neighboring channels, identifies bad channels
 % and timewindows with artefacts. EEG is an EEGLAB structure. Window is in
 % seconds the duration of windows to check for bad segments (~4 s),
@@ -17,7 +17,9 @@ function [BadSegments, BadCh, BadWindows_t, Starts, Ends] = ...
 % BadWindows_t is a vector the length of the data to indicate which are bad
 % timepoints
 
+if ~exist("AmplitudeThreshold", 'var')
 AmplitudeThreshold = 500; % maximum microvolts before give up entirely on the channel/window
+end
 
 AlternateRef = 16; % different reference to evaluate correlations of channels near the reference
 CZPatch = [7 55 106 31 80]; % channels to re-evaluate with different reference

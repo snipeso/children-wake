@@ -100,7 +100,7 @@ for Indx_D = 1:numel(Datasets)
             % remove really bad channels
             EEG = pop_select(EEG, 'nochannel', EEG.badchans);
 
-            % remove mildly bad timepoints
+            % remove bad timepoints
             EEG = clean_artifacts(EEG, ...
                 'FlatlineCriterion', 'off', ...
                 'Highpass', 'off', ...
@@ -109,7 +109,7 @@ for Indx_D = 1:numel(Datasets)
                 'BurstRejection', 'off',...
                 'BurstCriterion', 'off', ...
                 'BurstCriterionRefMaxBadChns', 'off', ...
-                'WindowCriterion', .1);
+                'WindowCriterion', .1); % quite strict
 
             if size(EEG.data, 2) < EEG.srate*MinTime
                 warning(['Removed too many timepoints removed in ', File])
@@ -134,7 +134,7 @@ for Indx_D = 1:numel(Datasets)
             % classify components
             EEG = iclabel(EEG);
 
-            parsave(fullfile(Destination, File), 'EEG')
+            parsave(fullfile(Destination, File), EEG)
             disp(['***********', 'Finished ', File, '***********'])
         end
     end
@@ -145,7 +145,7 @@ end
 %%% functions
 
 function parsave(Path, EEG)
-save(Path, EEG)
+save(Path, 'EEG')
 end
 
 

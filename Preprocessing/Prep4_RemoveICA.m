@@ -24,7 +24,6 @@ WindowLength = 3; % s, bad time windows
 RemoveComps = [2, 3, 4, 6]; % 1:Brain, 2:Muscle, 3:Eye, 4:Heart, 5:Line Noise, 6:Channel Noise, 7:Other
 MinTime = 60; % minimum time to keep data in seconds
 MinNeighborCorrelation = .3;
-MinDataKeep = .2; % proportion of noise in data as either channel or segment, above which the channel/segment is tossed
 MinChannels = 25; % maximum number of channels that can be removed
 CorrelationFrequencyRange = [1 40];
 
@@ -148,7 +147,17 @@ for Indx_D = 1:numel(Datasets)
 
 
             % last cleaning of data
-                        NewEEG = clean_windows(NewEEG,MinDataKeep,WindowCriteriaTolerances);
+            NewEEG = clean_windows(NewEEG,MinDataKeep,WindowCriteriaTolerances); % EEGLABs (veeery lax)
+
+            [~, BadCh, BadWindows_t] = ...
+                find_bad_segments(NewEEG, WindowLength, -inf, EEG_Channels.notEEG, false, MinDataKeep, CorrelationFrequencyRange, 150); % mine; just a quick check
+            NewEEG.data(:, BadWindows_t) = [];
+            disp(['Removing ', num2str(nnz(BadWindows_t)/numel(BadWindows_t)*100), '% data in time'])
+            NewEEG = pop_select(NewEEG, 'nochannel', BadCh);
+            disp(['Removing ', num2str(numel(BadCh)), ' channels'])
+            NewEEG = eeg_checkset(NewEEG);
+
+
             [NewEEG,removed_channels] = clean_channels_nolocs(NewEEG,...
                 MinCorrelation,NoLocsChannelCritExcluded,[],ChannelCriteriaMaxBadTime);
 
