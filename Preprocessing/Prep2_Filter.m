@@ -11,6 +11,7 @@ clear
 P = prepParameters();
 Paths = P.Paths;
 Datasets = P.Datasets;
+Datasets = {'Providence'};
 AllParameters = P.Parameters;
 OverheadLinenoise = P.LineNoise;
 
@@ -18,7 +19,7 @@ Refresh = false;
 
 Template = '000';
 Ignore = {};
-Destination_Formats = {'ICA', 'Power'}; % chooses which filtering to do
+Destination_Formats = {'ICA', 'Power', 'Cutting'}; % chooses which filtering to do
 % options: 'Scoring', 'Cutting', 'ICA', 'Power'
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
