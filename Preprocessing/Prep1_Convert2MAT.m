@@ -10,9 +10,9 @@ clc
 P = prepParameters();
 Paths = P.Paths;
 % Datasets = P.Datasets;
-Datasets = {'Providence', 'BMSAdults'};
+Datasets = {'Providence'};
 
-Refresh = false;
+Refresh = true;
 
 Template = '000';
 Ignore = {};
@@ -60,6 +60,12 @@ for Indx_D = 1:numel(Datasets)
                 % convert EEG file
                 [EEG, MAT] = load_eeg_data(RAW(Indx_F, :), Path);
 
+                % fix very stupid channel indexing mistake
+                if strcmp(Datasets{Indx_D}, 'Providence')
+                    NewData = [EEG.data(1:64, :); EEG.data(97:128, :); EEG.data(65:96, :)];
+                    EEG.data = NewData;
+                end
+
                 % save
                 try
                     save(fullfile(Path, MAT), 'EEG')
@@ -70,5 +76,5 @@ for Indx_D = 1:numel(Datasets)
         end
         disp(['Finished ',  Participants{Indx_P}])
     end
-    disp(['Finished ' P.Datasets{Indx_D}])
+    disp(['Finished ' Datasets{Indx_D}])
 end
