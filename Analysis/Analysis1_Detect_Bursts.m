@@ -8,7 +8,7 @@ close all
 %%% load in and set parameters for analysis
 
 % set parameters for how you want to run the script this time
-RunParallelBurstDetection = true; % true for faster processing
+RunParallelBurstDetection = false; % true for faster processing
 RerunAnalysis = false; % false to skip files already analyzed
 
 %%% criteria to find bursts in single channels
@@ -59,14 +59,7 @@ Bands = Parameters.Narrowbands;
 
 for DatasetCell = Datasets
         Dataset = DatasetCell{1};
-
-    if isempty(TaskList)
-        Tasks = list_filenames(fullfile(Paths.CleanEEG, Dataset))';
-        Tasks(contains(Tasks, '.')) = [];
-    else
-        Tasks = TaskList;
-     
-    end
+        Tasks = TaskList.(Dataset);
 
     for TaskCell = Tasks
         Task = TaskCell{1};
@@ -124,20 +117,4 @@ for DatasetCell = Datasets
             disp(['Finished ', Filename])
         end
     end
-end
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% functions
-
-function CleanTimepoints = identify_clean_timepoints(CutsPath, EEG)
-TimepointsCount = size(EEG.data, 2);
-
-if exist(CutsPath, 'file')
-    NoiseEEG = remove_noise(EEG, CutsPath);
-    CleanTimepoints = ~isnan(NoiseEEG.data(1, :));
-else
-    CleanTimepoints = ones(1, TimepointsCount);
-end
 end

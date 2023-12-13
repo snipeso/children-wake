@@ -11,13 +11,14 @@ Parameters = struct();
 % Who, what, when
 Parameters.Datasets = {'ADHD', 'BMS', 'BMSSL', 'SleepLearning', 'Providence', 'BMSAdults'};
 Parameters.Tasks = {}; % if is empty, will do all of them
-Parameters.Participants = 156;
 Parameters.Hours = {'eve', 'mor'};
 
-Parameters.Tasks.ADHD = {'1Oddball', '3Oddball'};
+Parameters.Tasks.ADHD = {'1Oddball', '2Learning', '3Oddball'};
 Parameters.Tasks.BMS = {'1GoNoGo', '2Alertness', '3Fixation', '4Fixation'};
 Parameters.Tasks.BMSSL = {'1GoNoGo', '2Alertness', '3Fixation'};
-Parameters.Tasks.SleepLearning = {'1Oddball', '3Oddball'};
+Parameters.Tasks.SleepLearning = {'1Oddball', '2Learning','3Oddball'};
+Parameters.Tasks.Providence = {'Oddball'};
+Parameters.Tasks.BMSAdults = {'Oddball'};
 
 Parameters.Sessions.ADHD = {'Session1'};
 Parameters.Sessions.BMS = {'Session1', 'Session2'};
