@@ -350,7 +350,46 @@ chART.save_figure('FrequencyByAgeChange', ResultsFolder, PlotProps)
 
 
 
+%% ADHD vs HC
 
+OvernightMetadata = overnight_changes(Metadata);
+
+OvernightMetadata.Subgroup(strcmp(OvernightMetadata.Group, 'HC')) = 5;
+[Participants, UniqueIndx] = unique(OvernightMetadata.Participant);
+UniqueMetadata = OvernightMetadata(UniqueIndx, :);
+
+MetadataPatients = UniqueMetadata(ismember(UniqueMetadata.Subgroup, [1, 2]), :);
+
+MetadataControls = OvernightMetadata(OvernightMetadata.Subgroup==5, :);
+
+ [MetadataPatients] = match_participants(MetadataPatients, MetadataControls);
+ % 
+ % MetadataControls = OvernightMetadata(contains(OvernightMetadata.Participant, MetadataPatients.ControlParticipant), :);
+
+ MetadataControls = UniqueMetadata(contains(UniqueMetadata.Participant, MetadataPatients.ControlParticipant), :);
+
+
+ [~, p, ci, stats] = ttest2(MetadataPatients.Amplitude, MetadataControls.Amplitude);
+
+
+ OvernightMetadata = OvernightMetadata(contains(OvernightMetadata.Participant, [MetadataPatients.ControlParticipant, MetadataPatients.Participant]), :);
+
+ Measures = fieldnames(BurstInformationTopography);
+ MeasureIdx = 3;
+ BandIdx = 1;
+     Evening = BurstInformationTopography.(Measures{MeasureIdx})(OvernightMetadata.EveningIndexes, :, BandIdx);
+    Morning = BurstInformationTopography.(Measures{MeasureIdx})(OvernightMetadata.MorningIndexes, :, BandIdx);
+    [Evening, UniqueMetadata] = average_by_column(OvernightMetadata, Evening, 'Participant');
+    Morning = average_by_column(OvernightMetadata, Morning, 'Participant');
+    % Change = Morning-Evening;
+    Change = Evening;z
+
+    Patients = strcmp(UniqueMetadata.Group, 'ADHD');
+    Controls = strcmp(UniqueMetadata.Group, 'HC'); 
+
+figure
+Parameters.Stats.Unpaired = true;
+ plot_topography_difference(Change(Patients, :), Change(Controls, :), Chanlocs, [], Parameters.Stats, PlotProps) %
 
 
 

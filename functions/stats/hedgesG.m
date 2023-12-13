@@ -58,14 +58,12 @@ elseif nargin == 3 % if two matrices are provided
                 if StatsP.ANOVA.nBoot < 100
                     stats = mes(D, BL, StatsP.Paired.ES, 'isDep', 1);
                 else
-                stats = mes(D, BL, StatsP.Paired.ES, 'isDep', 1, 'nBoot', StatsP.ANOVA.nBoot);
+                    stats = mes(D, BL, StatsP.Paired.ES, 'isDep', 1, 'nBoot', StatsP.ANOVA.nBoot);
                 end
                 gValues(Indx_S, Indx_T) = stats.hedgesg;
                 CI(Indx_S, Indx_T, :) = stats.hedgesgCi;
             end
         end
-
-
     elseif numel(Dims1) == 2
 
         gValues = nan(Dims1(2), 1);
@@ -78,8 +76,6 @@ elseif nargin == 3 % if two matrices are provided
             gValues(Indx1) = stats.hedgesg;
             CI(Indx1, :) = stats.hedgesgCi;
         end
-
-
     end
 else
     error('Too few inputs')
