@@ -12,19 +12,18 @@ nMeasures = numel(Measures);
 TempMetadata = Metadata;
 TempMetadata.GroupAge = discretize(TempMetadata.Age, [8 15 25]);
 
-% [Participants, UniqueIndx] = unique(Metadata.Participant);
-% UniqueMetadata = Metadata(UniqueIndx, :);
-% MetadataPatients = UniqueMetadata(ismember(UniqueMetadata.Subgroup, [1, 2 3 4]), :);
-%
-% MetadataControls = OvernightMetadata(OvernightMetadata.Subgroup==5, :);
-%
-% [MetadataPatients] = match_participants(MetadataPatients, MetadataControls);
 
 OvernightMetadata = overnight_changes(TempMetadata);
+% [OvernightMetadataPatients, OvernightMetadataControls] = match_participants(OvernightMetadata, strcmp(OvernightMetadata.Group, 'ADHD'));
+OvernightMetadataPatients = OvernightMetadata(OvernightMetadata.GroupAge ==1, :);
+OvernightMetadataControls = OvernightMetadata(OvernightMetadata.GroupAge ==2, :);
+
 Groups = {'HC', 'ADHD'};
 HourLabels = {'Evening', 'Morning'};
 CLims = [-1 1];
 PlotProps.Stats.PlotN = true;
+StatsParameters = Parameters.Stats;
+StatsParameters.Unpaired = true;
 
 figure('Units','normalized','Position', [0 0 .35 .15*nMeasures])
 for MeasuresIdx = 1:nMeasures
@@ -33,9 +32,9 @@ for MeasuresIdx = 1:nMeasures
 
     % group differences at each hour
     for HourIdx = 1:numel(Hours)
-        
+
         HourMetadata = TempMetadata(strcmp(TempMetadata.Hour, Hours{HourIdx}), :);
-        
+
         % [MetadataPatients, MetadataControls] = match_participants(HourMetadata, strcmp(HourMetadata.Group, 'ADHD'));
         MetadataPatients = HourMetadata(HourMetadata.GroupAge==1, :);
          MetadataControls = HourMetadata(HourMetadata.GroupAge==2, :);
@@ -47,11 +46,8 @@ for MeasuresIdx = 1:nMeasures
         Control = average_by_column(MetadataControls, MetadataControls.Index, Control, 'Participant');
 
         chART.sub_plot([], [nMeasures, 3], [MeasuresIdx, HourIdx], [], false, '', PlotProps);
-        StatsParameters = Parameters.Stats;
-        StatsParameters.Unpaired = true;
         plot_topography_difference(Control, ADHD, Chanlocs, CLims, StatsParameters, PlotProps)
         colorbar off
-
 
         X = get(gca, 'XLim');
         Y = get(gca, 'YLim');
@@ -66,6 +62,15 @@ for MeasuresIdx = 1:nMeasures
     end
 
 
+    % overnight differences patients and controls
+    ChangeADHD = Topographies(OvernightMetadataPatients.MorningIndexes, :)-Topographies(OvernightMetadataPatients.EveningIndexes, :);
+    ChangeControls = Topographies(OvernightMetadataControls.MorningIndexes, :)-Topographies(OvernightMetadataControls.EveningIndexes, :);
 
 
+    ADHD = average_by_column(OvernightMetadataPatients, OvernightMetadataPatients.Index, ChangeADHD, 'Participant');
+    Control = average_by_column(OvernightMetadataControls, OvernightMetadataControls.Index, ChangeControls, 'Participant');
+
+    chART.sub_plot([], [nMeasures, 3], [MeasuresIdx, 3], [], false, '', PlotProps);
+    plot_topography_difference(Control, ADHD, Chanlocs, CLims, StatsParameters, PlotProps)
+    colorbar off
 end
