@@ -2,8 +2,8 @@ clear
 clc
 close all
 
-MetadataPath = 'X:\Data\Metadata';
-Datasets = {'ADHD', 'BMS', 'BMSSL', 'SleepLearning'};
+MetadataPath = 'D:\Data\AllWake\Metadata';
+Datasets = {'ADHD', 'BMS', 'BMSSL', 'SleepLearning', 'Providence', 'BMSAdults'};
 
 
 Metadata = assemble_metadata(MetadataPath, Datasets);

@@ -17,6 +17,8 @@ else
 Stats = paired_ttest(Data1, Data2, StatParameters);
 end
 
+Stats.sig(isnan(Stats.sig)) = 0;
+
 ES = Stats.(StatParameters.Paired.ES);
 Sig =  Stats.sig;
 t_values = Stats.t;

@@ -24,6 +24,9 @@ Parameters.Sessions.ADHD = {'Session1'};
 Parameters.Sessions.BMS = {'Session1', 'Session2'};
 Parameters.Sessions.BMSSL = {'Session1', 'Session2'};
 Parameters.Sessions.SleepLearning = {'Session11', 'Session12', 'Session2', 'Session3'};
+Parameters.Sessions.Providence = {'Session1'};
+Parameters.Sessions.BMSAdults = {'Session1'};
+
 
 %%% labels
 Parameters.Labels.logBands = [1 2 4 8 16 32]; % x markers for plot on log scale
@@ -105,9 +108,9 @@ Narrowbands.Sigma = [12 16];
 
 Parameters.Narrowbands = Narrowbands;
 
-Bands.Theta = [4 8]; % up to but not including the second edge
-Bands.Alpha = [8 12];
-Bands.Sigma = [12 15];
+Bands.Theta = [4 7]; % add little gaps toavoid capturing edges
+Bands.Alpha = [8 11];
+Bands.Sigma = [12 16];
 Parameters.Bands = Bands;
 
 
@@ -140,6 +143,8 @@ Centerspot = [129 7 106 80 55 31 30 37 54 79 87 105 36 42 53 61 62 78 86 93 104 
 Channels.PreROI.Front = Frontspot;
 Channels.PreROI.Center = Centerspot;
 Channels.PreROI.Back = Backspot;
+Channels.NotEdge = 1:128;
+Channels.NotEdge([1 8 14 17 21 25 32 128 38 44 43 48 63 68 73 81 88 94 99 107 113 120 119 114 121 125 49 56 126 127]) = [];
 
 Parameters.Channels = Channels;
 

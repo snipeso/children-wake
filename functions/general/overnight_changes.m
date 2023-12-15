@@ -3,13 +3,17 @@ function OvernightMetadata = overnight_changes(Metadata)
 
 OvernightMetadata = table();
 
-Metadata.EveningIndexes = [1:size(Metadata, 1)]';
+OutcomeVariables =  {'Globality', 'Amplitude', 'Duration', 'Quantity',  'Slope', 'Intercept','Power', 'PeriodicPower' };
+
+Metadata.EveningIndexes = Metadata.Index;
 Metadata.MorningIndexes = Metadata.EveningIndexes;
 
 EveningMetadata = Metadata(strcmp(Metadata.Hour, 'eve'), :);
 MorningMetadata = Metadata(strcmp(Metadata.Hour, 'mor'), :);
 
 for EveRowIdx = 1:size(EveningMetadata, 1)
+
+    % find a morning recording within the same session and task
     MorRowIdx = strcmp(MorningMetadata.Participant, EveningMetadata.Participant(EveRowIdx)) & ...
         strcmp(MorningMetadata.Session, EveningMetadata.Session(EveRowIdx)) & ...
         strcmp(MorningMetadata.Task, EveningMetadata.Task(EveRowIdx));
@@ -17,10 +21,13 @@ for EveRowIdx = 1:size(EveningMetadata, 1)
         continue
     end
 
+    % add evening data to new metadata table
     OvernightMetadata = cat(1, OvernightMetadata, EveningMetadata(EveRowIdx, :));
-    OvernightMetadata(end, {'Globality', 'Amplitude', 'Duration', 'Frequency' 'Slope', 'Intercept' }) = ...
-        MorningMetadata(MorRowIdx, {'Globality', 'Amplitude', 'Duration', 'Frequency', 'Slope', 'Intercept'}) - ...
-        EveningMetadata(EveRowIdx, {'Globality', 'Amplitude', 'Duration', 'Frequency',  'Slope', 'Intercept'});
 
+    % replace with difference values
+    OvernightMetadata(end, OutcomeVariables) = ...
+        MorningMetadata(MorRowIdx, OutcomeVariables) - EveningMetadata(EveRowIdx, OutcomeVariables);
+
+    % save morning data index
     OvernightMetadata.MorningIndexes(end) = MorningMetadata.MorningIndexes(MorRowIdx);
 end
