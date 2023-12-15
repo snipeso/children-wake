@@ -2,13 +2,15 @@
 
 
 % paired t-tests across channels for ADHD and controls
-Ages = [7.5 14];
+% Ages = [7.5 14];
 
 Measures = fieldnames(BurstInformationTopography);
 
 nMeasures = numel(Measures);
 
-TempMetadata = Metadata(Metadata.Age >=Ages(1) & Metadata.Age<=Ages(2), :);
+% TempMetadata = Metadata(Metadata.Age >=Ages(1) & Metadata.Age<=Ages(2), :);
+TempMetadata = Metadata;
+TempMetadata.GroupAge = discretize(TempMetadata.Age, [8 15 25]);
 
 % [Participants, UniqueIndx] = unique(Metadata.Participant);
 % UniqueMetadata = Metadata(UniqueIndx, :);
@@ -20,6 +22,7 @@ TempMetadata = Metadata(Metadata.Age >=Ages(1) & Metadata.Age<=Ages(2), :);
 
 OvernightMetadata = overnight_changes(TempMetadata);
 Groups = {'HC', 'ADHD'};
+HourLabels = {'Evening', 'Morning'};
 CLims = [-1 1];
 PlotProps.Stats.PlotN = true;
 
@@ -28,12 +31,14 @@ for MeasuresIdx = 1:nMeasures
 
     Topographies = BurstInformationTopography.(Measures{MeasuresIdx});
 
-    % overnight changes
+    % group differences at each hour
     for HourIdx = 1:numel(Hours)
         
         HourMetadata = TempMetadata(strcmp(TempMetadata.Hour, Hours{HourIdx}), :);
         
-        [MetadataPatients, MetadataControls] = match_participants(HourMetadata, strcmp(HourMetadata.Group, 'ADHD'));
+        % [MetadataPatients, MetadataControls] = match_participants(HourMetadata, strcmp(HourMetadata.Group, 'ADHD'));
+        MetadataPatients = HourMetadata(HourMetadata.GroupAge==1, :);
+         MetadataControls = HourMetadata(HourMetadata.GroupAge==2, :);
 
         ADHD = Topographies(MetadataPatients.Index, :);
         Control = Topographies(MetadataControls.Index, :);
@@ -41,7 +46,7 @@ for MeasuresIdx = 1:nMeasures
         ADHD = average_by_column(MetadataPatients, MetadataPatients.Index, ADHD, 'Participant');
         Control = average_by_column(MetadataControls, MetadataControls.Index, Control, 'Participant');
 
-        chART.sub_plot([], [nMeasures, 2], [MeasuresIdx, HourIdx], [], false, '', PlotProps);
+        chART.sub_plot([], [nMeasures, 3], [MeasuresIdx, HourIdx], [], false, '', PlotProps);
         StatsParameters = Parameters.Stats;
         StatsParameters.Unpaired = true;
         plot_topography_difference(Control, ADHD, Chanlocs, CLims, StatsParameters, PlotProps)
@@ -55,6 +60,12 @@ for MeasuresIdx = 1:nMeasures
                 'FontSize', PlotProps.Text.TitleSize, 'FontName', PlotProps.Text.FontName, ...
                 'FontWeight', 'Bold', 'HorizontalAlignment', 'Center', 'Rotation', 90);
         end
+        if MeasuresIdx ==1
+            title(HourLabels{HourIdx})
+        end
     end
+
+
+
 
 end

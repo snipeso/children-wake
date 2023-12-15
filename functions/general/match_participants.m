@@ -15,7 +15,7 @@ MetadataControls = sortrows(MetadataControls, 'Age', 'ascend');
 
 
 for PatientIdx = 1:numel(UniquePatients)
-    
+
     FirstPatientIdx = find(strcmp(MetadataPatients.Participant, UniquePatients{PatientIdx}), 1, 'first');
     AllPatientIndexes = contains(MetadataPatients.Participant, MetadataPatients.Participant(FirstPatientIdx));
 
@@ -28,8 +28,7 @@ for PatientIdx = 1:numel(UniquePatients)
     ControlAge = Controls.Age(ControlIndex);
 
     if abs(PatientAge-ControlAge) > MaxAgeGap
-        warning(['couldnt find control for ', MetadataPatients.Participant{FirstPatientIdx}])
-          MetadataPatients.ControlParticipant(AllPatientIndexes) = repmat({'none'}, nnz(AllPatientIndexes), 1);
+        MetadataPatients.ControlParticipant(AllPatientIndexes) = repmat({'none'}, nnz(AllPatientIndexes), 1);
         continue
     end
 
