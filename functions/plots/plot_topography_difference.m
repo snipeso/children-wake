@@ -10,7 +10,14 @@ function plot_topography_difference(Data1, Data2, Chanlocs, CLims, StatParameter
 % in 2process_Bursts.
 
 %%% Statistics
+
+if isfield(StatParameters, 'Unpaired') && StatParameters.Unpaired
+    Stats = unpaired_ttest(Data1, Data2, StatParameters);
+else
 Stats = paired_ttest(Data1, Data2, StatParameters);
+end
+
+Stats.sig(isnan(Stats.sig)) = 0;
 
 ES = Stats.(StatParameters.Paired.ES);
 Sig =  Stats.sig;

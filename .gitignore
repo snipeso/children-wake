@@ -42,6 +42,7 @@ sccprj/
 
 # Matlab code generation folders
 codegen/
+.cycy_cache_dont_add_to_git
 
 # Simulink autosave extension
 *.autosave

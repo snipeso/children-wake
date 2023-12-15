@@ -20,6 +20,7 @@ Paths.Analysis = mfilename('fullpath');
 Paths.Analysis = extractBefore(Paths.Analysis, 'Preprocessing');
 
 Core ='D:\Data\AllWake';
+% Core ='E:\Data\';
 
 Paths.Datasets = fullfile(Core, 'Raw');
 Paths.Preprocessed = fullfile(Core, 'Preprocessed');

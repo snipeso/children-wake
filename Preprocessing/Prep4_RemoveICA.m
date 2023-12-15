@@ -11,7 +11,7 @@ clear
 P = prepParameters();
 Paths = P.Paths;
 Datasets = P.Datasets;
-Datasets = {'BMS'};
+Datasets = {'BMS', 'BMSAdults', 'BMSSL', 'SleepLearning', 'ADHD'};
 Parameters = P.Parameters;
 EEG_Channels = P.EEG_Channels;
 
@@ -91,6 +91,10 @@ for Indx_D = 1:numel(Datasets)
 
             % load data from which you want to remove components
             Filepath_Power = fullfile(Source_Power, Dataset, Task, File);
+            if ~exist(Filepath_Power, 'file')
+                warning(['Cant find ' Filepath_Power])
+                continue
+            end
             load(Filepath_Power, 'EEG')
             Data = EEG;
 
