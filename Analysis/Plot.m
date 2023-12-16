@@ -368,58 +368,69 @@ for MeasureIdx = 1:nMeasures
 end
 
 
-%% plot Freq x Age plot, descriptive
+%%
+
+%% plot Freq x Age plot
 
 PlotProps = Parameters.PlotProps.Manuscript;
-PlotProps.Figure.Padding = 30;
+PlotProps.Figure.Padding = 25;
 PlotProps.Axes.yPadding = 20;
 
 Measures = fieldnames(BurstInformationClusters);
 nMeasures = numel(Measures);
-MeasureLabels = {'amplitude (\muV)', '%', '% channels', 'log power (\muV^2/Hz)'};
 
-Ages = 8:3:20;
+EquidistantAges = 4:4:25;
 
-OvernightMetadata.QuantileAge = discretize(OvernightMetadata.Age, Ages);
+Metadata.EquispacedAges = discretize(Metadata.Age, EquidistantAges);
+OvernightMetadata = overnight_changes(Metadata);
 
-figure('Units','normalized','OuterPosition',[0 0 .2 .8])
+figure('Units','normalized','OuterPosition',[0 0 .18 1])
 for MeasureIdx = 1:nMeasures
-    % Indexes = strcmp(OvernightMetadata.Group, Group) & OvernightMetadata.Age >= Ages(AgeIdx, 1) & OvernightMetadata.Age < Ages(AgeIdx, 2);
-    % TempMetadata = OvernightMetadata(Indexes, :);
-    TempMetadata = OvernightMetadata;
+    Spectrogram = BurstInformationClusters.(Measures{MeasureIdx});
+    Evening = average_by_column(OvernightMetadata, Spectrogram, 'Participant', [1:size(OvernightMetadata, 1)]');
+    MetadataTemp = unique_metadata(OvernightMetadata, 'Participant');
+    EveningAverage = average_by_column(MetadataTemp, Evening, 'EquispacedAges', []);
 
-    Evening = BurstInformationClusters.(Measures{MeasureIdx})(TempMetadata.EveningIndexes, :);
-    Morning = BurstInformationClusters.(Measures{MeasureIdx})(TempMetadata.MorningIndexes, :);
-    [Evening, UniqueMetadata] = average_by_column(TempMetadata, Evening, 'Participant');
-    Morning = average_by_column(TempMetadata, Morning, 'Participant');
-
-    Data = average_by_column(UniqueMetadata, Evening, 'QuantileAge');
-
-
-    %%% evening values
+    %%% plot average evening values
     chART.sub_plot([], [nMeasures, 1], [MeasureIdx, 1], [], true, '', PlotProps);
-    Colors = chART.color_picker([1, size(Data, 1)]);
-    hold on
-    for AgeIdx = 1:size(Data, 1)
-        plot(Frequencies, Data(AgeIdx, :), 'Color', Colors(AgeIdx, :), 'LineWidth',1.5)
-    end
-    % contourf(Ages(1:end-1), Frequencies, Data', 100, 'linecolor','none')
-    chART.set_axis_properties(PlotProps)
-    % colormap(PlotProps.Color.Maps.Linear)
-    % xticks(8:2:20)
-    % yticks(5:2:15)
-    % h = colorbar;
-    % h.TickLength = 0;
-    % ylabel(h, MeasureLabels{MeasureIdx}, 'FontName', PlotProps.Text.FontName) % text style needs to be specified for label, because its weird
+    plot_age_by_frequency(EveningAverage, EquidistantAges(1:end-1), Frequencies, 'Linear', '', PlotProps)
 
-    title([Measures{MeasureIdx}, ' Evening'])
+    title(Measures{MeasureIdx})
     ylabel('Frequency (Hz)')
     if MeasureIdx == nMeasures
         xlabel('Age')
     end
 end
-
 chART.save_figure('FrequencyByAge', ResultsFolder, PlotProps)
+
+%%
+figure('Units','normalized','OuterPosition',[0 0 .18 1])
+for MeasureIdx = 1:nMeasures
+
+    Spectrogram = BurstInformationClusters.(Measures{MeasureIdx});
+    Evening = average_by_column(OvernightMetadata, Spectrogram, 'Participant', [1:size(OvernightMetadata, 1)]');
+
+    OvernightTemp = OvernightMetadata;
+    OvernightTemp.Index = OvernightMetadata.MorningIndexes;
+    Morning = average_by_column(OvernightTemp, Spectrogram, 'Participant', [1:size(OvernightMetadata, 1)]');
+    Change = Morning-Evening;
+    MetadataTemp = unique_metadata(OvernightMetadata, 'Participant');
+    ChangeAverage = average_by_column(MetadataTemp, Change, 'EquispacedAges', []);
+
+    %%% plot differences
+    chART.sub_plot([], [nMeasures, 1], [MeasureIdx, 1], [], true, '', PlotProps);
+    plot_age_by_frequency(ChangeAverage, EquidistantAges(1:end-1), Frequencies, 'Divergent', 'difference', PlotProps)
+
+    title([Measures{MeasureIdx}])
+    ylabel('Frequency (Hz)')
+    if MeasureIdx == nMeasures
+        xlabel('Age')
+    end
+end
+chART.save_figure('FrequencyByAgeChange', ResultsFolder, PlotProps)
+
+
+
 
 
 %%
