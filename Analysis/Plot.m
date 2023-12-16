@@ -1,8 +1,6 @@
-
 clear
 clc
 close all
-
 
 Parameters = analysisParameters();
 PlotProps = Parameters.PlotProps.Manuscript;
@@ -17,21 +15,27 @@ if ~exist(ResultsFolder,'dir')
     mkdir(ResultsFolder)
 end
 
-
-
 CacheDir = Paths.Cache;
 CacheName = 'AllBursts.mat';
-%
+
 load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopographyBands', ...
     'BurstInformationTopography', "BurstInformationClusters", 'Frequencies', 'Chanlocs')
 
-Metadata.Index = [1:size(Metadata, 1)]'; % add index so can chop up table as needed
+% select data for the paper
+Metadata.Index = [1:size(Metadata, 1)]'; %#ok<NBRAK1> % add index so can chop up table as needed
 Metadata(strcmp(Metadata.Dataset, 'SleepLearning') & ...
     contains(Metadata.Session, {'Session_2', 'Session_3'}), :) = []; % remove repeated measures 1 year later (will average recordings a couple weeks apart)
 Metadata(contains(Metadata.Task, {'3Oddball', '1GoNoGo', '2Learning', '3Fixation', '4Fixation'}), :) = []; % only look at first oddball and alertness task
 Metadata.Subgroup(strcmp(Metadata.Group, 'HC')) = 5;
-
+Metadata.Globality = Metadata.Globality*100;
 OvernightMetadata = overnight_changes(Metadata);
+
+
+%% Demographics
+
+% disp_demographics(unique_metadata(Metadata), 'Dataset')
+table_demographics(unique_metadata(Metadata), 'Dataset', ResultsFolder, 'DatasetDemographics')
+
 
 %% scatterplot of basic information
 close all
@@ -155,6 +159,8 @@ Ages = [2, 5;
     20 25];
 
 nAges = size(Ages, 1);
+
+Measures = fieldnames(BurstInformationTopographyBands);
 nMeasures = numel(Measures);
 MeasureLabels = Measures;
 Tasks = {'Oddball', 'Alertness'};
@@ -177,9 +183,12 @@ Labels.Intercept = "Intercept";
 Labels.Power =  append( 'Power (log) ', BandLabels);
 Labels.PeriodicPower = append( 'Periodic Power (log) ', BandLabels);
 
-%%
+%% save demographic data for each age range
 
-Measures = fieldnames(BurstInformationTopographyBands);
+Metadata.AgeGroups = string(discretize(Metadata.Age, [Ages(:, 1); Ages(end, 2)]));
+ table_demographics(unique_metadata(Metadata), 'AgeGroups', ResultsFolder, 'AgeGroupDemographics')
+
+%%
 
 
 for MeasureIdx = 1:nMeasures
