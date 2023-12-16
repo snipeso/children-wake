@@ -8,16 +8,30 @@ Paths = Parameters.Paths;
 Datasets = Parameters.Datasets;
 Hours = Parameters.Hours;
 Bands = Parameters.Bands;
-BandLabels = fieldnames(Bands);
+BandLabels = {'Theta', 'Low Alpha', 'High Alpha'};
 
-Ages = [2, 5; % 3 year age jumps, like Kurth et al. 2010
-    5 8;
-    8, 11;
-    11 14;
-    14 17;
-    17, 20;
-    20 25];
 
+% Topography plotprops
+TopoPlotProps = Parameters.PlotProps.Manuscript;
+TopoPlotProps.Text.LegendSize = 10;
+TopoPlotProps.Text.AxisSize = 10;
+TopoPlotProps.Axes.xPadding = 8;
+TopoPlotProps.Axes.yPadding = 5;
+TopoPlotProps.Figure.Padding = 20;
+TopoPlotProps.Stats.PlotN= true;
+TopoFigureSizes = [.4, .11];
+
+% Ages = [2 8; % too few little kids
+%     8, 11;% 3 year age jumps, like Kurth et al. 2010
+%     11 14;
+%     14 17;
+%     17, 20;
+%     20 25];
+Ages = [3 7;
+    7 10;
+    10 14;
+    14 18;
+    18 25];
 
 ResultsFolder = fullfile(Paths.Results, 'Main');
 if ~exist(ResultsFolder,'dir')
@@ -164,8 +178,6 @@ chART.save_figure('CorrelateVariables', ResultsFolder, PlotProps)
 
 
 
-%% topographies by age, descriptive
-
 
 %% save demographic data for each age range
 
@@ -174,16 +186,54 @@ table_demographics(unique_metadata(Metadata), 'AgeGroups', ResultsFolder, 'Demog
 
 %% Average topographies
 
+CLims = struct();
+CLims.Quantity = [5 40];
+CLims.Amplitude = [10, 35];
+CLims.Power = [-1 1.7];
+CLims.PeriodicPower = [0.04 .44];
+CLims.Slope = [1.3 2.1];
+CLims.Intercept = [.8 2.3];
 
 
+Measures = fieldnames(BurstInformationTopography);
+Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
+nMeasures = numel(Measures);
+
+figure('Units','normalized','Position', [0 0 TopoFigureSizes(1) TopoFigureSizes(2)*nMeasures])
+for MeasureIdx = 1:nMeasures
+    Topographies = BurstInformationTopography.(Measures{MeasureIdx});
+    for AgeIdx = 1:nAges
+        Indexes = ismember(Metadata.AgeGroups, string(AgeIdx));
+        AverageSessions = average_by_column(Metadata, Topographies, 'Participant', Indexes);
+        AverageData = mean(AverageSessions, 1, 'omitnan'); % average across participants since its not a stat.
+
+        chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, AgeIdx], [], false, '', TopoPlotProps);
+        chART.plot.eeglab_topoplot(AverageData, Chanlocs, [], CLims.(Measures{MeasureIdx}), '', 'Linear', TopoPlotProps);
+        if MeasureIdx == 1
+            title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
+        end
+
+                if AgeIdx ==1
+            X = get(gca, 'XLim');
+            Y = get(gca, 'YLim');
+            text(X(1)-diff(X)*.15, Y(1)+diff(Y)*.5, Measures{MeasureIdx}, ...
+                'FontSize', TopoPlotProps.Text.TitleSize, 'FontName', TopoPlotProps.Text.FontName, ...
+                'FontWeight', 'Bold', 'HorizontalAlignment', 'Center', 'Rotation', 90);
+                end
+
+        text(.4, .5, ['N=', num2str(size(AverageSessions, 1))], 'FontName', TopoPlotProps.Text.FontName, 'FontSize', TopoPlotProps.Text.LegendSize)
+    end
+
+    % plot colorbar
+    chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, nAges+1], [], false, '', TopoPlotProps);
+    chART.plot.pretty_colorbar('Linear', CLims.(Measures{MeasureIdx}), Measures{MeasureIdx}, TopoPlotProps)
+
+end
+chART.save_figure(['TopographyAverage_', Measures{MeasureIdx}], ResultsFolder, TopoPlotProps)
 
 
 %% Average topographies, split by band
 
-Parameters = analysisParameters();
-PlotProps = Parameters.PlotProps.Manuscript;
-PlotProps.Text.LegendSize = 10;
-PlotProps.Stats.PlotN= true;
 CLims = struct();
 CLims.Quantity = [0 5; 3 30; 0 7];
 CLims.Amplitude = [-1, 18; 10, 30; 1, 16];
@@ -197,7 +247,7 @@ for MeasureIdx = 1:nMeasures
     Topographies = BurstInformationTopographyBands.(Measures{MeasureIdx});
     nBands = size(Topographies, 3);
 
-    figure('Units','normalized','Position', [0 0 .55 .13*nBands])
+figure('Units','normalized','Position', [0 0 TopoFigureSizes(1) TopoFigureSizes(2)*nMeasures])
     for BandIdx = 1:nBands
         for AgeIdx = 1:nAges
             Indexes = ismember(Metadata.AgeGroups, string(AgeIdx));
@@ -205,76 +255,118 @@ for MeasureIdx = 1:nMeasures
                 Topographies(:, :, BandIdx), 'Participant', Indexes);
             AverageData = mean(AverageSessions, 1, 'omitnan'); % average across participants since its not a stat.
 
-            chART.sub_plot([], [nBands, nAges+1], [BandIdx, AgeIdx], [], false, '', PlotProps);
-            chART.plot.eeglab_topoplot(AverageData, Chanlocs, [], CLims.(Measures{MeasureIdx})(BandIdx, :), '', 'Linear', PlotProps);
+            chART.sub_plot([], [nBands, nAges+1], [BandIdx, AgeIdx], [], false, '', TopoPlotProps);
+            chART.plot.eeglab_topoplot(AverageData, Chanlocs, [], CLims.(Measures{MeasureIdx})(BandIdx, :), '', 'Linear', TopoPlotProps);
             if BandIdx == 1
                 title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
             end
-                text(.4, .5, ['N=', num2str(size(AverageSessions, 1))], 'FontName', PlotProps.Text.FontName, 'FontSize', PlotProps.Text.LegendSize)
+
+              if AgeIdx ==1
+            X = get(gca, 'XLim');
+            Y = get(gca, 'YLim');
+            text(X(1)-diff(X)*.1, Y(1)+diff(Y)*.5, BandLabels{BandIdx}, ...
+                'FontSize', TopoPlotProps.Text.TitleSize, 'FontName', TopoPlotProps.Text.FontName, ...
+                'FontWeight', 'Bold', 'HorizontalAlignment', 'Center', 'Rotation', 90);
+                end
+            
+            text(.4, .5, ['N=', num2str(size(AverageSessions, 1))], 'FontName', TopoPlotProps.Text.FontName, 'FontSize', TopoPlotProps.Text.LegendSize)
         end
 
         % plot colorbar
-        chART.sub_plot([], [nBands, nAges+1], [BandIdx, nAges+1], [], false, '', PlotProps);
-        chART.plot.pretty_colorbar('Linear', CLims.(Measures{MeasureIdx})(BandIdx, :), [BandLabels{BandIdx}, ' ' Measures{MeasureIdx}], PlotProps)
+        chART.sub_plot([], [nBands, nAges+1], [BandIdx, nAges+1], [], false, '', TopoPlotProps);
+        chART.plot.pretty_colorbar('Linear', CLims.(Measures{MeasureIdx})(BandIdx, :), Measures{MeasureIdx}, TopoPlotProps)
     end
-    chART.save_figure(['TopographyBandAverage_', Measures{MeasureIdx}], ResultsFolder, PlotProps)
+    chART.save_figure(['TopographyBandAverage_', Measures{MeasureIdx}], ResultsFolder, TopoPlotProps)
 end
 
 
-
-
-
-%% topographies by age, overnight changes
-
-close all
-
-% Group = 'HC';
-PlotProps.Stats.PlotN= true;
-
-% Measures = fieldnames(BurstInformationTopographyBands);
-Measures = fieldnames(BurstInformationTopography);
+%% topography differences
 
 CLims = [-1 1];
 
-for MeasureIdx =  1:nMeasures
-    % Topographies = BurstInformationTopographyBands.(Measures{MeasureIdx});
+EveningMetadata = overnight_changes(Metadata);
+MorningMetadata = EveningMetadata;
+MorningMetadata.Index = EveningMetadata.MorningIndexes;
+
+Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
+nMeasures = numel(Measures);
+
+figure('Units','normalized','Position', [0 0 TopoFigureSizes(1) TopoFigureSizes(2)*nMeasures])
+for MeasureIdx = 1:nMeasures
     Topographies = BurstInformationTopography.(Measures{MeasureIdx});
+    for AgeIdx = 1:nAges
+        Indexes = ismember(EveningMetadata.AgeGroups, string(AgeIdx));
+
+        Evening = average_by_column(EveningMetadata, Topographies, 'Participant', Indexes);
+        Morning = average_by_column(MorningMetadata, Topographies, 'Participant', Indexes);
+
+        chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, AgeIdx], [], false, '', TopoPlotProps);
+        plot_topography_difference(Evening, Morning, Chanlocs, CLims, Parameters.Stats, TopoPlotProps) %
+        colorbar off
+
+        if MeasureIdx == 1
+            title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
+        end
+
+        if AgeIdx ==1
+            X = get(gca, 'XLim');
+            Y = get(gca, 'YLim');
+            text(X(1)-diff(X)*.15, Y(1)+diff(Y)*.5, Measures{MeasureIdx}, ...
+                'FontSize', TopoPlotProps.Text.TitleSize, 'FontName', TopoPlotProps.Text.FontName, ...
+                'FontWeight', 'Bold', 'HorizontalAlignment', 'Center', 'Rotation', 90);
+        end
+    end
+end
+
+chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, AgeIdx+1], [nMeasures, 1], false, '', TopoPlotProps);
+chART.plot.pretty_colorbar('Divergent', CLims, 'g-values', TopoPlotProps)
+
+chART.save_figure('TopographyChange', ResultsFolder, TopoPlotProps)
+
+
+%% Overnight topographies split by band
+
+CLims = [-1.2 1];
+
+Measures = fieldnames(BurstInformationTopographyBands);
+nMeasures = numel(Measures);
+
+for MeasureIdx = 1:nMeasures
+    Topographies = BurstInformationTopographyBands.(Measures{MeasureIdx});
     nBands = size(Topographies, 3);
-    nBands = 1;
 
-    figure('Units','normalized','Position', [0 0 .5 .15*nBands])
-    % figure('Units','normalized', 'Position',[0 0 1 1])
-
+    figure('Units','normalized','Position', [0 0 TopoFigureSizes(1) TopoFigureSizes(2)*nMeasures])
     for BandIdx = 1:nBands
         for AgeIdx = 1:nAges
-            % Indexes = strcmp(OvernightMetadata.Group, Group) & OvernightMetadata.Age >= Ages(AgeIdx, 1) & OvernightMetadata.Age < Ages(AgeIdx, 2);
-            % Indexes = OvernightMetadata.Age >= Ages(AgeIdx, 1) & OvernightMetadata.Age < Ages(AgeIdx, 2);
-            Indexes =  contains(OvernightMetadata.Task, Tasks) & ...
-                OvernightMetadata.Age >= Ages(AgeIdx, 1) & OvernightMetadata.Age < Ages(AgeIdx, 2) ...
-                & strcmp(OvernightMetadata.Group, Group);
+            Indexes = ismember(EveningMetadata.AgeGroups, string(AgeIdx));
 
-            Evening = Topographies(OvernightMetadata.EveningIndexes(Indexes), :, BandIdx);
-            Morning = Topographies(OvernightMetadata.MorningIndexes(Indexes), :, BandIdx);
-            Evening = average_by_column(OvernightMetadata(Indexes, :), Evening, 'Participant');
-            Morning = average_by_column(OvernightMetadata(Indexes, :), Morning, 'Participant');
+            Evening = average_by_column(EveningMetadata, Topographies(:, :, BandIdx), 'Participant', Indexes);
+            Morning = average_by_column(MorningMetadata, Topographies(:, :, BandIdx), 'Participant', Indexes);
 
-            chART.sub_plot([], [nBands, nAges+1], [BandIdx, AgeIdx], [], false, '', PlotProps);
-            plot_topography_difference(Evening, Morning, Chanlocs, CLims, Parameters.Stats, PlotProps) %
+            chART.sub_plot([], [nBands, nAges+1], [BandIdx, AgeIdx], [], false, '', TopoPlotProps);
+            plot_topography_difference(Evening, Morning, Chanlocs, CLims, Parameters.Stats, TopoPlotProps) %
             colorbar off
+
             if BandIdx == 1
                 title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
             end
+
+            if AgeIdx ==1
+                X = get(gca, 'XLim');
+                Y = get(gca, 'YLim');
+                text(X(1)-diff(X)*.1, Y(1)+diff(Y)*.5, BandLabels{BandIdx}, ...
+                    'FontSize', TopoPlotProps.Text.TitleSize, 'FontName', TopoPlotProps.Text.FontName, ...
+                    'FontWeight', 'Bold', 'HorizontalAlignment', 'Center', 'Rotation', 90);
+            end
         end
     end
-    chART.sub_plot([], [nBands, nAges+1], [BandIdx, AgeIdx+1], [nBands, 1], false, '', PlotProps);
-    chART.plot.pretty_colorbar('Divergent', CLims, [Measures{MeasureIdx} 'g-values'], PlotProps)
 
-    % chART.save_figure(['TopographyChange_', Measures{MeasureIdx}], ResultsFolder, PlotProps)
+    chART.sub_plot([], [nBands, nAges+1], [BandIdx, AgeIdx+1], [nBands, 1], false, '', TopoPlotProps);
+    chART.plot.pretty_colorbar('Divergent', CLims, [Measures{MeasureIdx}, ' g-values'], TopoPlotProps)
+
+    chART.save_figure(['TopographyBandChange_', Measures{MeasureIdx}], ResultsFolder, TopoPlotProps)
 end
 
-
-%% TODO
-% front to occipital ratio for amplitudes
 
 %% plot Freq x Age plot, descriptive
 
@@ -436,9 +528,9 @@ for MeasuresIdx = 1:nMeasures
         plot_topography_difference(Control, ADHD, Chanlocs, CLims, StatsParameters, PlotProps)
         colorbar off
 
-        X = get(gca, 'XLim');
-        Y = get(gca, 'YLim');
         if HourIdx ==1
+            X = get(gca, 'XLim');
+            Y = get(gca, 'YLim');
             text(X(1)-diff(X)*.15, Y(1)+diff(Y)*.5, Measures{MeasuresIdx}, ...
                 'FontSize', PlotProps.Text.TitleSize, 'FontName', PlotProps.Text.FontName, ...
                 'FontWeight', 'Bold', 'HorizontalAlignment', 'Center', 'Rotation', 90);
@@ -470,5 +562,6 @@ end
 chART.save_figure('ADHDvsControls', ResultsFolder, PlotProps)
 
 
-
+%% front to back overnight change index
+% TODO
 
