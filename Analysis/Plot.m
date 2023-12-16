@@ -102,7 +102,7 @@ for VariableIdx = 1:numel(YVariables)
     end
     xlabel('Age')
 end
-% chART.save_figure(['BasicScatterAge', GroupColumn], ResultsFolder, PlotProps)
+chART.save_figure(['BasicScatterAge', GroupColumn], ResultsFolder, PlotProps)
 
 
 %% correlate measures
@@ -113,11 +113,8 @@ figure('Units','centimeters','OuterPosition',[0 0 30 30])
 for Idx1 = 1:numel(YVariables)
     for Idx2 = 1:numel(YVariables)
         chART.sub_plot([], Grid, [Idx2, Idx1], [], true, '', PlotProps);
+        plot_scattercloud(Metadata, YVariables{Idx1}, YVariables{Idx2}, PlotProps, '', false)
 
-        scatter(Metadata.(YVariables{Idx1}), Metadata.(YVariables{Idx2}), 10, ...
-            'MarkerEdgeColor','none', 'MarkerFaceColor', Colors(1, :), 'MarkerFaceAlpha',.7)
-        chART.set_axis_properties(PlotProps)
-        lsline;
         if Idx2 == numel(YVariables)
             xlabel(YVariables{Idx1})
         end
