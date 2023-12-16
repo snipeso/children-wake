@@ -65,10 +65,10 @@ BurstInformationTopographyBands.PeriodicPower = nan(nRecordings, nChans, nBands)
 
 BurstInformationTopography.Slope = nan(nRecordings, nChans);
 BurstInformationTopography.Intercept = nan(nRecordings, nChans);
-BurstInformationTopography.Quantity = nan(nRecordings, nChans, nBands);
-BurstInformationTopography.Amplitude = nan(nRecordings, nChans, nBands);
-BurstInformationTopography.Power = nan(nRecordings, nChans, nBands);
-BurstInformationTopography.PeriodicPower = nan(nRecordings, nChans, nBands);
+BurstInformationTopography.Quantity = nan(nRecordings, nChans);
+BurstInformationTopography.Amplitude = nan(nRecordings, nChans);
+BurstInformationTopography.Power = nan(nRecordings, nChans);
+BurstInformationTopography.PeriodicPower = nan(nRecordings, nChans);
 
 TaskMetadata = table(); % set up new metadata table that also takes into account task
 

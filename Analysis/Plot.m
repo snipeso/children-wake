@@ -10,6 +10,15 @@ Hours = Parameters.Hours;
 Bands = Parameters.Bands;
 BandLabels = fieldnames(Bands);
 
+Ages = [2, 5; % 3 year age jumps, like Kurth et al. 2010
+    5 8;
+    8, 11;
+    11 14;
+    14 17;
+    17, 20;
+    20 25];
+
+
 ResultsFolder = fullfile(Paths.Results, 'Main');
 if ~exist(ResultsFolder,'dir')
     mkdir(ResultsFolder)
@@ -28,6 +37,9 @@ Metadata(strcmp(Metadata.Dataset, 'SleepLearning') & ...
 Metadata(contains(Metadata.Task, {'3Oddball', '1GoNoGo', '2Learning', '3Fixation', '4Fixation'}), :) = []; % only look at first oddball and alertness task
 Metadata.Subgroup(strcmp(Metadata.Group, 'HC')) = 5;
 Metadata.Globality = Metadata.Globality*100; % make it percentage instead of proportion
+Metadata.AgeGroups = string(discretize(Metadata.Age, [Ages(:, 1); Ages(end, 2)]));
+
+nAges = size(Ages, 1);
 
 
 %% Demographics
@@ -154,22 +166,19 @@ chART.save_figure('CorrelateVariables', ResultsFolder, PlotProps)
 
 %% topographies by age, descriptive
 
-Ages = [2, 5; % 3 year age jumps, like Kurth et al. 2010
-    5 8;
-    8, 11;
-    11 14;
-    14 17;
-    17, 20;
-    20 25];
-Metadata.AgeGroups = string(discretize(Metadata.Age, [Ages(:, 1); Ages(end, 2)]));
-
-nAges = size(Ages, 1);
 
 %% save demographic data for each age range
 
 table_demographics(unique_metadata(Metadata), 'AgeGroups', ResultsFolder, 'DemographicsAgeGroups')
 
-%%
+
+%% Average topographies
+
+
+
+
+
+%% Average topographies, split by band
 
 Parameters = analysisParameters();
 PlotProps = Parameters.PlotProps.Manuscript;
@@ -180,8 +189,6 @@ CLims.Quantity = [0 5; 3 30; 0 7];
 CLims.Amplitude = [-1, 18; 10, 30; 1, 16];
 CLims.Power = [-.5 2.5; -.25 2.25; -1.5 .5];
 CLims.PeriodicPower = [0.05 .3; .2 .8; -.05 .4];
-CLims.Slope = [1.3 2];
-CLims.Intercept = [.8 2];
 
 Measures = fieldnames(BurstInformationTopographyBands);
 nMeasures = numel(Measures);
@@ -210,8 +217,10 @@ for MeasureIdx = 1:nMeasures
         chART.sub_plot([], [nBands, nAges+1], [BandIdx, nAges+1], [], false, '', PlotProps);
         chART.plot.pretty_colorbar('Linear', CLims.(Measures{MeasureIdx})(BandIdx, :), [BandLabels{BandIdx}, ' ' Measures{MeasureIdx}], PlotProps)
     end
-    chART.save_figure(['TopographyAverage_', Measures{MeasureIdx}], ResultsFolder, PlotProps)
+    chART.save_figure(['TopographyBandAverage_', Measures{MeasureIdx}], ResultsFolder, PlotProps)
 end
+
+
 
 
 
