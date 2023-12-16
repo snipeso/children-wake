@@ -1,22 +1,22 @@
-function AverageData = average_by_column(Metadata, Data, ColumnName, ExternalIndexes)
+function AverageData = average_by_column(Metadata, Data, ColumnName, MetadataIndexes)
 % Averages data rows based on whether information in ColunmnName is the
 % same in the Metadata table. So for example you can have participants with
 % multiple recordings that you want to average together.
 % Can either use ExternalIndexes, which is when Data is larger than
 % Metadata, and so relies on the indices in the column Index of metadata,
 % or indexes Data based on the positions of rows in the Metadata table.
+% ExternalIndexes are the indexes in Metadata, from which the indexes in
+% Data are derived from the column Index.
 % Sorry for the confusion. 
 
 DimsData = size(Data);
 
-if isempty(ExternalIndexes) && DimsData(1) ~=size(Metadata, 1)
+if isempty(MetadataIndexes) && DimsData(1) ~=size(Metadata, 1)
     error('Mismatch of Metadata and Data, need to provide external indices')
-elseif ~isempty(ExternalIndexes)
-    % only consider metadata information that applies to rows indicated in
-    % the external indices
-    % Metadata = Metadata(ismember(Metadata.Index, ExternalIndexes), :);
-    % TODO
-    error('TODO')
+elseif ~isempty(MetadataIndexes)
+    % Will rely on the pre-existing Metadata.Index column to know what data
+    % to select.
+    Metadata = Metadata(MetadataIndexes, :); % exlude metadata of whatever didnt make it into the index
 else
     Metadata.Index = [1:DimsData(1)]'; %#ok<NBRAK1> % just use the normal indexing the metadata table
 end

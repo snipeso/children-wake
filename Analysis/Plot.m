@@ -120,7 +120,7 @@ PlotProps.Scatter.Alpha = .4;
 
 YVariables = {'Amplitude', 'Quantity', 'Globality',  'Duration', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 Grid = [numel(YVariables) numel(YVariables)];
-figure('Units','centimeters','InnerPosition',[0 0 20 20])
+figure('Units','centimeters','InnerPosition',[0 0 18 18])
 for Idx1 = 1:numel(YVariables)
     for Idx2 = 1:numel(YVariables)
         chART.sub_plot([], Grid, [Idx2, Idx1], [], false, '', PlotProps);
@@ -154,79 +154,63 @@ chART.save_figure('CorrelateVariables', ResultsFolder, PlotProps)
 
 %% topographies by age, descriptive
 
-% TODO, split by burst frequency
-Group = 'HC';
-
-Ages = [2, 5;
+Ages = [2, 5; % 3 year age jumps, like Kurth et al. 2010
     5 8;
     8, 11;
     11 14;
     14 17;
     17, 20;
     20 25];
+Metadata.AgeGroups = string(discretize(Metadata.Age, [Ages(:, 1); Ages(end, 2)]));
 
 nAges = size(Ages, 1);
 
-Measures = fieldnames(BurstInformationTopographyBands);
-nMeasures = numel(Measures);
-MeasureLabels = Measures;
-Tasks = {'Oddball', 'Alertness'};
-
-
-CLims = struct();
-% CLims.Quantity = [0.005 .07; 0.03 .27; 0.01 .11];
-CLims.Quantity = [0 4.2; 5 30; .5 6];
-CLims.Amplitude = [-1, 18; 7, 30; 2, 16];
-CLims.Power = [-.5 2.5; -.5 2.5; -1.6 1.2];
-CLims.PeriodicPower = [0.05 .3; .2 .8; 0 .4];
-CLims.Slope = [1.3 2];
-CLims.Intercept = [.8 2];
-
-Labels = struct();
-Labels.Quantity = append( '% ', BandLabels);
-Labels.Amplitude = append(BandLabels, ' amp');
-Labels.Slope = "Slope";
-Labels.Intercept = "Intercept";
-Labels.Power =  append( 'Power (log) ', BandLabels);
-Labels.PeriodicPower = append( 'Periodic Power (log) ', BandLabels);
-
 %% save demographic data for each age range
 
-Metadata.AgeGroups = string(discretize(Metadata.Age, [Ages(:, 1); Ages(end, 2)]));
 table_demographics(unique_metadata(Metadata), 'AgeGroups', ResultsFolder, 'DemographicsAgeGroups')
 
 %%
 
+Parameters = analysisParameters();
+PlotProps = Parameters.PlotProps.Manuscript;
+PlotProps.Text.LegendSize = 10;
+PlotProps.Stats.PlotN= true;
+CLims = struct();
+CLims.Quantity = [0 5; 3 30; 0 7];
+CLims.Amplitude = [-1, 18; 10, 30; 1, 16];
+CLims.Power = [-.5 2.5; -.25 2.25; -1.5 .5];
+CLims.PeriodicPower = [0.05 .3; .2 .8; -.05 .4];
+CLims.Slope = [1.3 2];
+CLims.Intercept = [.8 2];
+
+Measures = fieldnames(BurstInformationTopographyBands);
+nMeasures = numel(Measures);
 
 for MeasureIdx = 1:nMeasures
     Topographies = BurstInformationTopographyBands.(Measures{MeasureIdx});
     nBands = size(Topographies, 3);
 
-    % figure('Units','normalized','Position', [0 0 .4 .15*nBands])
-    figure('Units','normalized', 'Position',[0 0 1 1])
+    figure('Units','normalized','Position', [0 0 .55 .13*nBands])
     for BandIdx = 1:nBands
         for AgeIdx = 1:nAges
-            Indexes = contains(Metadata.Task, Tasks) & Metadata.Age >= Ages(AgeIdx, 1) & Metadata.Age < Ages(AgeIdx, 2) ...
-                & strcmp(Metadata.Group, 'HC');
-            % Indexes = Metadata.Age >= Ages(AgeIdx, 1) & Metadata.Age < Ages(AgeIdx, 2);
-            Data = Topographies(Indexes, :, BandIdx);
-            AverageData = mean(average_by_column(Metadata(Indexes, :), Data, 'Participant'), 1, 'omitnan');
+            Indexes = ismember(Metadata.AgeGroups, string(AgeIdx));
+            AverageSessions = average_by_column(Metadata, ...
+                Topographies(:, :, BandIdx), 'Participant', Indexes);
+            AverageData = mean(AverageSessions, 1, 'omitnan'); % average across participants since its not a stat.
 
             chART.sub_plot([], [nBands, nAges+1], [BandIdx, AgeIdx], [], false, '', PlotProps);
             chART.plot.eeglab_topoplot(AverageData, Chanlocs, [], CLims.(Measures{MeasureIdx})(BandIdx, :), '', 'Linear', PlotProps);
-            % chART.plot.eeglab_topoplot(AverageData, Chanlocs, [], [], '', 'Linear', PlotProps);
-            % colorbar
             if BandIdx == 1
                 title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
             end
+                text(.4, .5, ['N=', num2str(size(AverageSessions, 1))], 'FontName', PlotProps.Text.FontName, 'FontSize', PlotProps.Text.LegendSize)
         end
 
         % plot colorbar
         chART.sub_plot([], [nBands, nAges+1], [BandIdx, nAges+1], [], false, '', PlotProps);
-        chART.plot.pretty_colorbar('Linear', CLims.(Measures{MeasureIdx})(BandIdx, :), Labels.(Measures{MeasureIdx}){BandIdx}, PlotProps)
-
+        chART.plot.pretty_colorbar('Linear', CLims.(Measures{MeasureIdx})(BandIdx, :), [BandLabels{BandIdx}, ' ' Measures{MeasureIdx}], PlotProps)
     end
-    % chART.save_figure(['TopographyAverage_', Measures{MeasureIdx}], ResultsFolder, PlotProps)
+    chART.save_figure(['TopographyAverage_', Measures{MeasureIdx}], ResultsFolder, PlotProps)
 end
 
 
