@@ -27,19 +27,19 @@ Metadata(strcmp(Metadata.Dataset, 'SleepLearning') & ...
     contains(Metadata.Session, {'Session_2', 'Session_3'}), :) = []; % remove repeated measures 1 year later (will average recordings a couple weeks apart)
 Metadata(contains(Metadata.Task, {'3Oddball', '1GoNoGo', '2Learning', '3Fixation', '4Fixation'}), :) = []; % only look at first oddball and alertness task
 Metadata.Subgroup(strcmp(Metadata.Group, 'HC')) = 5;
-Metadata.Globality = Metadata.Globality*100;
-OvernightMetadata = overnight_changes(Metadata);
+Metadata.Globality = Metadata.Globality*100; % make it percentage instead of proportion
 
 
 %% Demographics
 
 % disp_demographics(unique_metadata(Metadata), 'Dataset')
-table_demographics(unique_metadata(Metadata), 'Dataset', ResultsFolder, 'DatasetDemographics')
+table_demographics(unique_metadata(Metadata), 'Dataset', ResultsFolder, 'DemographicsDatasets')
 
 
 %% scatterplot of basic information
 close all
 PlotProps = Parameters.PlotProps.Manuscript;
+PlotProps.Figure.Padding = 20;
 
 % PlotProps.Axes.yPadding = 30;
 % PlotProps.Axes.xPadding = 30;
@@ -56,8 +56,11 @@ Limits = [.02 .14;
     9 13;
     1.1 2.1;
     .5 2.5];
+XLims = [3 25];
 
 HourLabels = {'Evening', 'Morning'};
+OvernightMetadata = overnight_changes(Metadata);
+
 
 figure('Units','normalized','OuterPosition',[0 0 .5 .6])
 for VariableIdx = 1:numel(YVariables)
@@ -66,10 +69,9 @@ for VariableIdx = 1:numel(YVariables)
         chART.sub_plot([], Grid, [HourIdx, VariableIdx], [], true, '', PlotProps);
         hold on
         for GroupIdx = 1:numel(Groups)
-            Indexes = strcmp(Metadata.Group, Groups{GroupIdx}) & ...
-                strcmp(Metadata.Hour, Hour) & contains(Metadata.Task, Tasks);
-            [AverageData, Av] = average_by_column(Metadata(Indexes, :), ...
-                [Metadata.Age(Indexes), Metadata.(YVariables{VariableIdx})(Indexes)], 'Participant'); % average sessions
+            Indexes = Metadata.Index(strcmp(Metadata.Group, Groups{GroupIdx}) & strcmp(Metadata.Hour, Hour));
+            AverageData = average_by_column(Metadata, Indexes, ...
+                [Metadata.Age, Metadata.(YVariables{VariableIdx})], 'Participant'); % average sessions
 
             scatter(AverageData(:, 1), AverageData(:, 2), 10,  ...
                 'MarkerEdgeColor','none', 'MarkerFaceColor', Colors(GroupIdx,:), 'MarkerFaceAlpha',.7)
@@ -81,12 +83,12 @@ for VariableIdx = 1:numel(YVariables)
             if VariableIdx==1
                 ylabel(HourLabels{HourIdx}, 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
             end
-            xlim([3 25])
+            xlim(XLims)
             % ylim(Limits(VariableIdx, :))
         end
         h = lsline;
         for GroupIdx = 1:numel(Groups)
-            set(h(GroupIdx),'color',Colors(numel(Groups)+1-GroupIdx,:), 'LineWidth', 2)
+            set(h(GroupIdx),'color', Colors(numel(Groups)+1-GroupIdx,:), 'LineWidth', 2)
         end
     end
 
@@ -94,10 +96,10 @@ for VariableIdx = 1:numel(YVariables)
 
     hold on
     for GroupIdx = 1:numel(Groups)
-        Indexes = strcmp(OvernightMetadata.Group, Groups{GroupIdx});
+        Indexes = OvernightMetadata.Index(strcmp(OvernightMetadata.Group, Groups{GroupIdx}));
 
-        AverageData = average_by_column(OvernightMetadata(Indexes, :), ...
-            [OvernightMetadata.Age(Indexes), OvernightMetadata.(YVariables{VariableIdx})(Indexes)], 'Participant');
+        AverageData = average_by_column(OvernightMetadata, Indexes, ...
+            [OvernightMetadata.Age, OvernightMetadata.(YVariables{VariableIdx})], 'Participant');
 
         scatter(AverageData(:, 1), AverageData(:, 2), 10, ...
             'MarkerEdgeColor','none', 'MarkerFaceColor', Colors(GroupIdx,:), 'MarkerFaceAlpha',.7)
@@ -107,7 +109,7 @@ for VariableIdx = 1:numel(YVariables)
             ylabel('Overnight change', 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
         end
         xlabel('Age')
-        xlim([3 25])
+        xlim(XLims)
     end
 
     h = lsline;
@@ -117,7 +119,7 @@ for VariableIdx = 1:numel(YVariables)
 
 end
 legend(Groups)
-chART.save_figure('BasicScatterAge', ResultsFolder, PlotProps)
+% chART.save_figure('BasicScatterAge', ResultsFolder, PlotProps)
 
 
 %% correlate measures
@@ -186,7 +188,7 @@ Labels.PeriodicPower = append( 'Periodic Power (log) ', BandLabels);
 %% save demographic data for each age range
 
 Metadata.AgeGroups = string(discretize(Metadata.Age, [Ages(:, 1); Ages(end, 2)]));
- table_demographics(unique_metadata(Metadata), 'AgeGroups', ResultsFolder, 'AgeGroupDemographics')
+ table_demographics(unique_metadata(Metadata), 'AgeGroups', ResultsFolder, 'DemographicsAgeGroups')
 
 %%
 
