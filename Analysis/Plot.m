@@ -69,9 +69,9 @@ for VariableIdx = 1:numel(YVariables)
         chART.sub_plot([], Grid, [HourIdx, VariableIdx], [], true, '', PlotProps);
         hold on
         for GroupIdx = 1:numel(Groups)
-            Indexes = Metadata.Index(strcmp(Metadata.Group, Groups{GroupIdx}) & strcmp(Metadata.Hour, Hour));
-            AverageData = average_by_column(Metadata, Indexes, ...
-                [Metadata.Age, Metadata.(YVariables{VariableIdx})], 'Participant'); % average sessions
+            Indexes = strcmp(Metadata.Group, Groups{GroupIdx}) & strcmp(Metadata.Hour, Hour);
+            AverageData = average_by_column(Metadata(Indexes, :), ...
+                [Metadata.Age(Indexes), Metadata.(YVariables{VariableIdx})(Indexes)], 'Participant', []); % average sessions
 
             scatter(AverageData(:, 1), AverageData(:, 2), 10,  ...
                 'MarkerEdgeColor','none', 'MarkerFaceColor', Colors(GroupIdx,:), 'MarkerFaceAlpha',.7)
@@ -96,10 +96,10 @@ for VariableIdx = 1:numel(YVariables)
 
     hold on
     for GroupIdx = 1:numel(Groups)
-        Indexes = OvernightMetadata.Index(strcmp(OvernightMetadata.Group, Groups{GroupIdx}));
+        Indexes = strcmp(OvernightMetadata.Group, Groups{GroupIdx});
 
-        AverageData = average_by_column(OvernightMetadata, Indexes, ...
-            [OvernightMetadata.Age, OvernightMetadata.(YVariables{VariableIdx})], 'Participant');
+        AverageData = average_by_column(OvernightMetadata(Indexes, :), ...
+            [OvernightMetadata.Age(Indexes), OvernightMetadata.(YVariables{VariableIdx})(Indexes)], 'Participant', []);
 
         scatter(AverageData(:, 1), AverageData(:, 2), 10, ...
             'MarkerEdgeColor','none', 'MarkerFaceColor', Colors(GroupIdx,:), 'MarkerFaceAlpha',.7)
