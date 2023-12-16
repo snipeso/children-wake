@@ -326,6 +326,12 @@ chART.save_figure('TopographyChange', ResultsFolder, TopoPlotProps)
 
 %% Overnight topographies split by band
 
+
+EveningMetadata = overnight_changes(Metadata);
+MorningMetadata = EveningMetadata;
+MorningMetadata.Index = EveningMetadata.MorningIndexes;
+
+
 CLims = [-1.2 1];
 
 Measures = fieldnames(BurstInformationTopographyBands);
@@ -403,7 +409,8 @@ for MeasureIdx = 1:nMeasures
 end
 chART.save_figure('FrequencyByAge', ResultsFolder, PlotProps)
 
-%%
+%% spectrum difference
+
 figure('Units','normalized','OuterPosition',[0 0 .18 1])
 for MeasureIdx = 1:nMeasures
 
@@ -413,6 +420,7 @@ for MeasureIdx = 1:nMeasures
     OvernightTemp = OvernightMetadata;
     OvernightTemp.Index = OvernightMetadata.MorningIndexes;
     Morning = average_by_column(OvernightTemp, Spectrogram, 'Participant', [1:size(OvernightMetadata, 1)]');
+
     Change = Morning-Evening;
     MetadataTemp = unique_metadata(OvernightMetadata, 'Participant');
     ChangeAverage = average_by_column(MetadataTemp, Change, 'EquispacedAges', []);
@@ -431,68 +439,8 @@ chART.save_figure('FrequencyByAgeChange', ResultsFolder, PlotProps)
 
 
 
-
-
-%%
-
-
-PlotProps = Parameters.PlotProps.Manuscript;
-PlotProps.Figure.Padding = 30;
-PlotProps.Axes.yPadding = 20;
-
-CLims = [-4 4;
-    -.08 .08
-    -.08 .08
-    -.15 .15];
-figure('Units','normalized','OuterPosition',[0 0 .2 .8])
-for MeasureIdx = 1:nMeasures
-    % Indexes = strcmp(OvernightMetadata.Group, Group) & OvernightMetadata.Age >= Ages(AgeIdx, 1) & OvernightMetadata.Age < Ages(AgeIdx, 2);
-    % TempMetadata = OvernightMetadata(Indexes, :);
-    TempMetadata = OvernightMetadata;
-
-    Evening = BurstInformationClusters.(Measures{MeasureIdx})(TempMetadata.EveningIndexes, :);
-    Morning = BurstInformationClusters.(Measures{MeasureIdx})(TempMetadata.MorningIndexes, :);
-    [Evening, UniqueMetadata] = average_by_column(TempMetadata, Evening, 'Participant');
-    Morning = average_by_column(TempMetadata, Morning, 'Participant');
-
-
-    %%% difference values
-    Change = Morning-Evening;
-    Data = average_by_column(UniqueMetadata, Change, 'QuantileAge');
-
-
-    chART.sub_plot([], [nMeasures, 1], [MeasureIdx, 1], [], true, '', PlotProps);
-    Colors = chART.color_picker([1, size(Data, 1)], '', 'red');
-    hold on
-    for AgeIdx = 1:size(Data, 1)
-        plot(Frequencies, Data(AgeIdx, :), 'Color', Colors(AgeIdx, :), 'LineWidth',1.5)
-    end
-    % contourf(Ages(1:end-1), Frequencies, Data', 100, 'linecolor','none')
-    chART.set_axis_properties(PlotProps)
-
-    % colormap(PlotProps.Color.Maps.Divergent)
-    % xticks(8:2:20)
-    % yticks(5:2:15)
-    % h = colorbar;
-    % h.TickLength = 0;
-    ylabel('Frequency (Hz)')
-    title([Measures{MeasureIdx}, ' Overnight change'])
-
-    if MeasureIdx == nMeasures
-        xlabel('Age')
-        legend(string(Ages(1:end-1)))
-    end
-    % h = colorbar;
-    % clim(CLims(MeasureIdx, :))
-    % h.TickLength = 0;
-    % ylabel(h, 'difference', 'FontName', PlotProps.Text.FontName) % text style needs to be specified for label, because its weird
-end
-chART.save_figure('FrequencyByAgeChange', ResultsFolder, PlotProps)
-
-
-
-
 %% ADHD vs HC
+
 
 % paired t-tests across channels for ADHD and controls
 Ages = [7.5 14];
@@ -503,6 +451,7 @@ nMeasures = numel(Measures);
 
 % match recordings and participants
 OvernightMetadata = overnight_changes(TempMetadata);
+
 [OvernightMetadataPatients, OvernightMetadataControls] = match_participants(...
     OvernightMetadata, strcmp(OvernightMetadata.Group, 'ADHD'));
 
@@ -527,12 +476,11 @@ for MeasuresIdx = 1:nMeasures
         [MetadataPatients, MetadataControls] = match_participants(...
             HourMetadata, strcmp(HourMetadata.Group, 'ADHD'));
 
-        ADHD = Topographies(MetadataPatients.Index, :);
         Control = Topographies(MetadataControls.Index, :);
 
         % average multiple sessions together
-        ADHD = average_by_column(MetadataPatients, MetadataPatients.Index, ADHD, 'Participant');
-        Control = average_by_column(MetadataControls, MetadataControls.Index, Control, 'Participant');
+        ADHD = average_by_column(MetadataPatients, Topographies, 'Participant', [1:size(MetadataPatients, 1)]');
+        Control = average_by_column(MetadataControls, Topographies, 'Participant',  [1:size(MetadataControls, 1)]');
 
         % plot
         chART.sub_plot([], [nMeasures, 3], [MeasuresIdx, HourIdx], [], false, '', PlotProps);
@@ -552,18 +500,18 @@ for MeasuresIdx = 1:nMeasures
     end
 
     %%% overnight differences patients and controls
-    ChangeADHD = Topographies(OvernightMetadataPatients.MorningIndexes, :)- ...
-        Topographies(OvernightMetadataPatients.EveningIndexes, :);
-    ChangeControls = Topographies(OvernightMetadataControls.MorningIndexes, :)-...
-        Topographies(OvernightMetadataControls.EveningIndexes, :);
+    % ChangeADHD = Topographies(OvernightMetadataPatients.MorningIndexes, :)- ...
+    %     Topographies(OvernightMetadataPatients.EveningIndexes, :);
+    % ChangeControls = Topographies(OvernightMetadataControls.MorningIndexes, :)-...
+    %     Topographies(OvernightMetadataControls.EveningIndexes, :);
+    % 
+    % ADHD = average_by_column(OvernightMetadataPatients, ChangeADHD, 'Participant', [1:size(OvernightMetadataPatients, 1)]');
+    % Control = average_by_column(OvernightMetadataControls, ChangeControls, 'Participant', [1:size(OvernightMetadataPatients, 1)]');
 
-    ADHD = average_by_column(OvernightMetadataPatients, OvernightMetadataPatients.Index, ChangeADHD, 'Participant');
-    Control = average_by_column(OvernightMetadataControls, OvernightMetadataControls.Index, ChangeControls, 'Participant');
 
 
-
-    chART.sub_plot([], [nMeasures, 3], [MeasuresIdx, 3], [], false, '', PlotProps);
-    plot_topography_difference(Control, ADHD, Chanlocs, CLims, StatsParameters, PlotProps)
+    % chART.sub_plot([], [nMeasures, 3], [MeasuresIdx, 3], [], false, '', PlotProps);
+    % plot_topography_difference(Control, ADHD, Chanlocs, CLims, StatsParameters, PlotProps)
     colorbar off
     % plot
     if MeasuresIdx ==1
@@ -571,6 +519,9 @@ for MeasuresIdx = 1:nMeasures
     end
 end
 chART.save_figure('ADHDvsControls', ResultsFolder, PlotProps)
+
+% TODO
+
 
 
 %% front to back overnight change index
