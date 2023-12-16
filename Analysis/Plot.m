@@ -63,60 +63,85 @@ XLim = [3 25];
 HourLabels = {'Evening', 'Morning'};
 OvernightMetadata = overnight_changes(Metadata);
 
-% GroupColumn = 'Group'; % or '';
-GroupColumn = '';
+GroupColumns = {'', 'Group', 'Sex', 'Dataset'};
 
+for GC = GroupColumns
+    GroupColumn = GC{1};
+    figure('Units','normalized','OuterPosition',[0 0 .4 .5])
+    for VariableIdx = 1:numel(YVariables)
 
-figure('Units','normalized','OuterPosition',[0 0 .4 .5])
-for VariableIdx = 1:numel(YVariables)
-    for HourIdx = 1:numel(Hours)
-        Hour = Hours(HourIdx);
+        %%% plot age x v split by evening and morning, averaged across sessions
+        for HourIdx = 1:numel(Hours)
+            Hour = Hours(HourIdx);
 
-        Indexes = strcmp(Metadata.Hour, Hour);
-        TempMetadata = Metadata(Indexes, :);
-        AverageMetadata =  unique_metadata(TempMetadata, 'Participant');
+            Indexes = strcmp(Metadata.Hour, Hour);
+            TempMetadata = Metadata(Indexes, :);
+            AverageMetadata = unique_metadata(TempMetadata, 'Participant');
 
+            chART.sub_plot([], Grid, [HourIdx, VariableIdx], [], true, '', PlotProps);
+            plot_scattercloud(AverageMetadata, 'Age', YVariables{VariableIdx}, ...
+                PlotProps, GroupColumn, false, XLim, YLimits(VariableIdx, :))
+            legend off
 
-        chART.sub_plot([], Grid, [HourIdx, VariableIdx], [], true, '', PlotProps);
+            if HourIdx==1
+                title(YVariables{VariableIdx})
+            end
+            if VariableIdx==1
+                ylabel(HourLabels{HourIdx}, 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
+            end
+        end
+
+        %%% plot overnight change
+        chART.sub_plot([], Grid, [3, VariableIdx], [], true, '', PlotProps);
+        AverageMetadata = unique_metadata(OvernightMetadata, 'Participant');
+
         plot_scattercloud(AverageMetadata, 'Age', YVariables{VariableIdx}, ...
-            PlotProps, GroupColumn, false, XLim, YLimits(VariableIdx, :))
-        legend off
-
-        if HourIdx==1
-            title(YVariables{VariableIdx})
+            PlotProps, GroupColumn, true, XLim)
+        if VariableIdx ~=numel(YVariables)
+            legend off
         end
         if VariableIdx==1
-            ylabel(HourLabels{HourIdx}, 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
+            ylabel('Overnight change', 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
         end
+        xlabel('Age')
     end
-    chART.sub_plot([], Grid, [3, VariableIdx], [], true, '', PlotProps);
-    AverageMetadata = unique_metadata(OvernightMetadata, 'Participant');
-
-    plot_scattercloud(AverageMetadata, 'Age', YVariables{VariableIdx}, ...
-        PlotProps, GroupColumn, true, XLim)
-    if VariableIdx ~=numel(YVariables)
-        legend off
-    end
-    if VariableIdx==1
-        ylabel('Overnight change', 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
-    end
-    xlabel('Age')
+    chART.save_figure(['BasicScatterAge', GroupColumn], ResultsFolder, PlotProps)
 end
-chART.save_figure(['BasicScatterAge', GroupColumn], ResultsFolder, PlotProps)
-
 
 %% correlate measures
 
+PlotProps = Parameters.PlotProps.Manuscript;
+PlotProps.Figure.Padding = 25;
+PlotProps.Text.TitleSize = 10;
+PlotProps.Axes.yPadding = 5;
+PlotProps.Axes.xPadding = 5;
+PlotProps.Scatter.Size = 5;
+PlotProps.Scatter.Alpha = .4;
+
 YVariables = {'Amplitude', 'Quantity', 'Globality',  'Duration', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 Grid = [numel(YVariables) numel(YVariables)];
-figure('Units','centimeters','OuterPosition',[0 0 30 30])
+figure('Units','centimeters','InnerPosition',[0 0 20 20])
 for Idx1 = 1:numel(YVariables)
     for Idx2 = 1:numel(YVariables)
-        chART.sub_plot([], Grid, [Idx2, Idx1], [], true, '', PlotProps);
-        plot_scattercloud(Metadata, YVariables{Idx1}, YVariables{Idx2}, PlotProps, '', false)
+        chART.sub_plot([], Grid, [Idx2, Idx1], [], false, '', PlotProps);
 
+        if Idx1==Idx2
+            if Idx1==1
+                chART.set_axis_properties(PlotProps)
+                title(YVariables{Idx1})
+                ylabel(YVariables{Idx2})
+            end
+            axis off
+            continue
+        end
+
+        plot_scattercloud(correct_for_age(Metadata), YVariables{Idx1}, YVariables{Idx2}, PlotProps, '', false)
+        set(gca, 'XTick' ,[], 'YTick', [])
+        axis square
         if Idx2 == numel(YVariables)
             xlabel(YVariables{Idx1})
+        elseif Idx2==1
+            title(YVariables{Idx1})
         end
         if Idx1==1
             ylabel(YVariables{Idx2})

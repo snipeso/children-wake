@@ -4,10 +4,8 @@ arguments
     Column = 'Participant';
 end
 
-NotOutcomeVariables = {'Dataset', 'Participant', 'Session', 'Sex', 'Handedness', 'Group', 'Subgroup', 'Condition', 'Hour', 'Task', 'Index'};
-AllVariables = Metadata.Properties.VariableNames;
-OutcomeVariables = setdiff(AllVariables, NotOutcomeVariables);
 
+OutcomeVariables = get_outcome_variables(Metadata);
 [UniqueItems, UniqueIndx] = unique(Metadata.(Column));
 
 try
