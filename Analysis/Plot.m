@@ -49,77 +49,60 @@ Groups = {'HC', 'ADHD'};
 Tasks = {'Oddball', 'Alertness'};
 YVariables = {'Amplitude', 'Quantity', 'Globality', 'Duration', 'Slope', 'Intercept', 'PeriodicPower'};
 Grid = [3 numel(YVariables)];
-Colors = chART.color_picker(2);
-Limits = [.02 .14;
-    7 30;
-    .5 1.1;
-    9 13;
-    1.1 2.1;
-    .5 2.5];
-XLims = [3 25];
+
+YLimits = [5, 42; % amplitudes
+    70, 550; % quantities
+    2, 20; % globality
+    .5, 1.45; % duration
+    .7 2.25; % slope
+    .3, 2.5; % intercept
+    -.05, .705; % periodic power
+    ];
+XLim = [3 25];
 
 HourLabels = {'Evening', 'Morning'};
 OvernightMetadata = overnight_changes(Metadata);
 
+% GroupColumn = 'Group'; % or '';
+GroupColumn = '';
 
-figure('Units','normalized','OuterPosition',[0 0 .5 .6])
+
+figure('Units','normalized','OuterPosition',[0 0 .4 .5])
 for VariableIdx = 1:numel(YVariables)
     for HourIdx = 1:numel(Hours)
         Hour = Hours(HourIdx);
+
+        Indexes = strcmp(Metadata.Hour, Hour);
+        TempMetadata = Metadata(Indexes, :);
+        AverageMetadata =  unique_metadata(TempMetadata, 'Participant');
+
+
         chART.sub_plot([], Grid, [HourIdx, VariableIdx], [], true, '', PlotProps);
-        hold on
-        for GroupIdx = 1:numel(Groups)
-            Indexes = strcmp(Metadata.Group, Groups{GroupIdx}) & strcmp(Metadata.Hour, Hour);
-            AverageData = average_by_column(Metadata(Indexes, :), ...
-                [Metadata.Age(Indexes), Metadata.(YVariables{VariableIdx})(Indexes)], 'Participant', []); % average sessions
+        plot_scattercloud(AverageMetadata, 'Age', YVariables{VariableIdx}, ...
+            PlotProps, GroupColumn, false, XLim, YLimits(VariableIdx, :))
+        legend off
 
-            scatter(AverageData(:, 1), AverageData(:, 2), 10,  ...
-                'MarkerEdgeColor','none', 'MarkerFaceColor', Colors(GroupIdx,:), 'MarkerFaceAlpha',.7)
-            chART.set_axis_properties(PlotProps)
-
-            if HourIdx==1
-                title(YVariables{VariableIdx})
-            end
-            if VariableIdx==1
-                ylabel(HourLabels{HourIdx}, 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
-            end
-            xlim(XLims)
-            % ylim(Limits(VariableIdx, :))
+        if HourIdx==1
+            title(YVariables{VariableIdx})
         end
-        h = lsline;
-        for GroupIdx = 1:numel(Groups)
-            set(h(GroupIdx),'color', Colors(numel(Groups)+1-GroupIdx,:), 'LineWidth', 2)
-        end
-    end
-
-    chART.sub_plot([], Grid, [3, VariableIdx], [], true, '', PlotProps);
-
-    hold on
-    for GroupIdx = 1:numel(Groups)
-        Indexes = strcmp(OvernightMetadata.Group, Groups{GroupIdx});
-
-        AverageData = average_by_column(OvernightMetadata(Indexes, :), ...
-            [OvernightMetadata.Age(Indexes), OvernightMetadata.(YVariables{VariableIdx})(Indexes)], 'Participant', []);
-
-        scatter(AverageData(:, 1), AverageData(:, 2), 10, ...
-            'MarkerEdgeColor','none', 'MarkerFaceColor', Colors(GroupIdx,:), 'MarkerFaceAlpha',.7)
-
-        chART.set_axis_properties(PlotProps)
         if VariableIdx==1
-            ylabel('Overnight change', 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
+            ylabel(HourLabels{HourIdx}, 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
         end
-        xlabel('Age')
-        xlim(XLims)
     end
+    chART.sub_plot([], Grid, [3, VariableIdx], [], true, '', PlotProps);
+    AverageMetadata = unique_metadata(OvernightMetadata, 'Participant');
 
-    h = lsline;
-    for GroupIdx = 1:numel(Groups)
-        set(h(GroupIdx),'color',Colors(numel(Groups)+1-GroupIdx,:), 'LineWidth', 2)
+    plot_scattercloud(AverageMetadata, 'Age', YVariables{VariableIdx}, ...
+        PlotProps, GroupColumn, true, XLim)
+    if VariableIdx ~=numel(YVariables)
+        legend off
     end
-
+    if VariableIdx==1
+        ylabel('Overnight change', 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
+    end
+    xlabel('Age')
 end
-legend(Groups)
-% chART.save_figure('BasicScatterAge', ResultsFolder, PlotProps)
+% chART.save_figure(['BasicScatterAge', GroupColumn], ResultsFolder, PlotProps)
 
 
 %% correlate measures
@@ -188,7 +171,7 @@ Labels.PeriodicPower = append( 'Periodic Power (log) ', BandLabels);
 %% save demographic data for each age range
 
 Metadata.AgeGroups = string(discretize(Metadata.Age, [Ages(:, 1); Ages(end, 2)]));
- table_demographics(unique_metadata(Metadata), 'AgeGroups', ResultsFolder, 'DemographicsAgeGroups')
+table_demographics(unique_metadata(Metadata), 'AgeGroups', ResultsFolder, 'DemographicsAgeGroups')
 
 %%
 
@@ -460,14 +443,14 @@ for MeasuresIdx = 1:nMeasures
     Control = average_by_column(OvernightMetadataControls, OvernightMetadataControls.Index, ChangeControls, 'Participant');
 
 
-    
+
     chART.sub_plot([], [nMeasures, 3], [MeasuresIdx, 3], [], false, '', PlotProps);
     plot_topography_difference(Control, ADHD, Chanlocs, CLims, StatsParameters, PlotProps)
     colorbar off
-        % plot
-        if MeasuresIdx ==1
-            title('ADHD vs Controls')
-        end
+    % plot
+    if MeasuresIdx ==1
+        title('ADHD vs Controls')
+    end
 end
 chART.save_figure('ADHDvsControls', ResultsFolder, PlotProps)
 

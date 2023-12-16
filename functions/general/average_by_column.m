@@ -8,6 +8,7 @@ function AverageData = average_by_column(Metadata, Data, ColumnName, ExternalInd
 % Sorry for the confusion. 
 
 DimsData = size(Data);
+
 if isempty(ExternalIndexes) && DimsData(1) ~=size(Metadata, 1)
     error('Mismatch of Metadata and Data, need to provide external indices')
 elseif ~isempty(ExternalIndexes)
