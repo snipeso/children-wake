@@ -66,13 +66,6 @@ table_demographics(unique_metadata(Metadata), 'Dataset', ResultsFolder, 'Demogra
 close all
 PlotProps = Parameters.PlotProps.Manuscript;
 PlotProps.Figure.Padding = 20;
-
-% PlotProps.Axes.yPadding = 30;
-% PlotProps.Axes.xPadding = 30;
-
-Groups = {'HC', 'ADHD'};
-
-Tasks = {'Oddball', 'Alertness'};
 YVariables = {'Amplitude', 'Quantity', 'Globality', 'Duration', 'Slope', 'Intercept', 'PeriodicPower'};
 Grid = [3 numel(YVariables)];
 
