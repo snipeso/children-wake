@@ -62,7 +62,7 @@ plot(t, Wave+16, 'Color', AdultEvening, 'LineWidth',LW)
 
  [Wave, t] = generate_waves(2.25, .15);
 plot(t, Wave, 'Color', AdultMorning, 'LineWidth',LW)
-chART.save_figure('ADHDvsControls', ResultsFolder, PlotProps)
+chART.save_figure('Cartoon', ResultsFolder, PlotProps)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

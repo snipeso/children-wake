@@ -73,7 +73,7 @@ for MeasureIdx = 1:nMeasures
           end
 end
 
-chART.save_figure(['FrontvBachScatterAge', GroupColumn], ResultsFolder, PlotProps)
+chART.save_figure('FrontvBachScatterAge', ResultsFolder, PlotProps)
 
 
 

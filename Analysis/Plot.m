@@ -66,7 +66,7 @@ table_demographics(unique_metadata(Metadata), 'Dataset', ResultsFolder, 'Demogra
 close all
 PlotProps = Parameters.PlotProps.Manuscript;
 PlotProps.Figure.Padding = 20;
-YVariables = {'Amplitude', 'Quantity', 'Globality', 'Duration', 'Slope', 'Intercept', 'PeriodicPower'};
+YVariables = {'Amplitude', 'Quantity', 'Globality', 'Duration', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 Grid = [3 numel(YVariables)];
 
 YLimits = [5, 42; % amplitudes
@@ -75,8 +75,9 @@ YLimits = [5, 42; % amplitudes
     .5, 1.45; % duration
     .7 2.25; % slope
     .3, 2.5; % intercept
+    -1.6, 2; % power
     -.05, .705; % periodic power
-    ];
+  ];
 XLim = [3 25];
 
 HourLabels = {'Evening', 'Morning'};
@@ -436,7 +437,7 @@ chART.save_figure('FrequencyByAgeChange', ResultsFolder, PlotProps)
 
 
 % paired t-tests across channels for ADHD and controls
-Ages = [7.5 14];
+Ages = [8 14];
 TempMetadata = Metadata(Metadata.Age >=Ages(1) & Metadata.Age<=Ages(2), :);
 
 Measures = fieldnames(BurstInformationTopography);
@@ -493,18 +494,16 @@ for MeasuresIdx = 1:nMeasures
     end
 
     %%% overnight differences patients and controls
-    % ChangeADHD = Topographies(OvernightMetadataPatients.MorningIndexes, :)- ...
-    %     Topographies(OvernightMetadataPatients.EveningIndexes, :);
-    % ChangeControls = Topographies(OvernightMetadataControls.MorningIndexes, :)-...
-    %     Topographies(OvernightMetadataControls.EveningIndexes, :);
-    % 
-    % ADHD = average_by_column(OvernightMetadataPatients, ChangeADHD, 'Participant', [1:size(OvernightMetadataPatients, 1)]');
-    % Control = average_by_column(OvernightMetadataControls, ChangeControls, 'Participant', [1:size(OvernightMetadataPatients, 1)]');
+    ChangeADHD = Topographies(OvernightMetadataPatients.MorningIndexes, :)- ...
+        Topographies(OvernightMetadataPatients.EveningIndexes, :);
+    ChangeControls = Topographies(OvernightMetadataControls.MorningIndexes, :)-...
+        Topographies(OvernightMetadataControls.EveningIndexes, :);
 
+    ADHD = average_by_column(OvernightMetadataPatients, ChangeADHD, 'Participant', []);
+    Control = average_by_column(OvernightMetadataControls, ChangeControls, 'Participant', []);
 
-
-    % chART.sub_plot([], [nMeasures, 3], [MeasuresIdx, 3], [], false, '', PlotProps);
-    % plot_topography_difference(Control, ADHD, Chanlocs, CLims, StatsParameters, PlotProps)
+    chART.sub_plot([], [nMeasures, 3], [MeasuresIdx, 3], [], false, '', PlotProps);
+    plot_topography_difference(Control, ADHD, Chanlocs, CLims, StatsParameters, PlotProps)
     colorbar off
     % plot
     if MeasuresIdx ==1
