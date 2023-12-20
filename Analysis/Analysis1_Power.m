@@ -10,7 +10,6 @@ close all
 % set parameters for how you want to run the script this time
 RerunAnalysis = false; % false to skip files already analyzed
 
-
 % load in parameters that are in common across scripts
 Parameters = analysisParameters();
 Paths = Parameters.Paths;
