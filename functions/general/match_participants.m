@@ -25,6 +25,7 @@ for PatientIdx = 1:numel(UniquePatients)
     PatientAge = MetadataPatients.Age(FirstPatientIdx);
 
     ControlIndex = dsearchn(Controls.Age, PatientAge);
+
     ControlAge = Controls.Age(ControlIndex);
 
     if abs(PatientAge-ControlAge) > MaxAgeGap

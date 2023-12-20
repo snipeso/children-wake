@@ -52,7 +52,10 @@ Metadata(contains(Metadata.Task, {'3Oddball', '1GoNoGo', '2Learning', '3Fixation
 Metadata.Subgroup(strcmp(Metadata.Group, 'HC')) = 5;
 Metadata.Globality = Metadata.Globality*100; % make it percentage instead of proportion
 Metadata.AgeGroups = string(discretize(Metadata.Age, [Ages(:, 1); Ages(end, 2)]));
+Metadata.Task(contains(Metadata.Task, 'Alertness')) = {'Alertness'}; % Fix because different order in task
 
+MetadataComplete = Metadata;
+Metadata(contains(Metadata.Group, 'ADHD'), :) 
 nAges = size(Ages, 1);
 
 
@@ -436,9 +439,14 @@ chART.save_figure('FrequencyByAgeChange', ResultsFolder, PlotProps)
 %% ADHD vs HC
 
 
+
 % paired t-tests across channels for ADHD and controls
 Ages = [8 14];
-TempMetadata = Metadata(Metadata.Age >=Ages(1) & Metadata.Age<=Ages(2), :);
+% Group = 'ADHD';
+% GroupingColumn = 'Group';
+Group = 'f';
+GroupingColumn = 'Sex';
+TempMetadata = MetadataComplete(MetadataComplete.Age >=Ages(1) & MetadataComplete.Age<=Ages(2), :);
 
 Measures = fieldnames(BurstInformationTopography);
 nMeasures = numel(Measures);
@@ -447,10 +455,9 @@ nMeasures = numel(Measures);
 OvernightMetadata = overnight_changes(TempMetadata);
 
 [OvernightMetadataPatients, OvernightMetadataControls] = match_participants(...
-    OvernightMetadata, strcmp(OvernightMetadata.Group, 'ADHD'));
+    OvernightMetadata, strcmp(OvernightMetadata.(GroupingColumn), Group));
 
 
-Groups = {'HC', 'ADHD'};
 HourLabels = {'Evening', 'Morning'};
 CLims = [-1 1];
 PlotProps.Stats.PlotN = true;
@@ -468,7 +475,7 @@ for MeasuresIdx = 1:nMeasures
         HourMetadata = TempMetadata(strcmp(TempMetadata.Hour, Hours{HourIdx}), :);
 
         [MetadataPatients, MetadataControls] = match_participants(...
-            HourMetadata, strcmp(HourMetadata.Group, 'ADHD'));
+            HourMetadata, strcmp(HourMetadata.(GroupingColumn), Group));
 
         Control = Topographies(MetadataControls.Index, :);
 
@@ -513,9 +520,5 @@ end
 chART.save_figure('ADHDvsControls', ResultsFolder, PlotProps)
 
 % TODO
-
-
-
 %% front to back overnight change index
 % TODO
-
