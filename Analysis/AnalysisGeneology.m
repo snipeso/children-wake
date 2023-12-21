@@ -98,12 +98,12 @@ PowerAverage = smooth_frequencies(PowerAverage, Freqs, 2);
 close all
 
 figure('Units','centimeters', 'Position', PlotSize)
-plot(Freqs, PowerAverage, 'Color', 'k', 'LineWidth',LW_Plot)
+plot(Freqs, PowerAverage, 'Color', 'k', 'LineWidth',PlotProps.Line.Width)
 chART.set_axis_properties(PlotProps)
 xlabel('Frequency (Hz)')
 ylabel('Power (\muV^2/Hz)')
-xlim([1 20])
-ylim([0 15])
+xlim([2 18])
+ylim([0 10])
 axis square
 box off
 chART.save_figure('Power', ResultsFolder, PlotProps)
@@ -119,17 +119,17 @@ figure('Units','centimeters', 'Position', PlotSize)
 plot_highlighted_spectrum(log(PowerAverage), Freqs, Bands, PlotProps)
 xlabel('Frequency (Hz)')
 ylabel('Log power')
-xlim([4 16])
-legend(flip({'Theta', 'Alpha_{low}','Alpha_{high}'}))
+xlim([2 18])
+legend(flip({'Theta_{ }', 'Alpha_{low}','Alpha_{high}'}))
 
-ylim([-1, 2.5])
+ylim([-1.3, 2.5])
 axis square
 box off
 chART.save_figure('LogPower', ResultsFolder, PlotProps)
 
 
 % FOOOF
-
+  [~, ~, WhitenedPower, FooofFrequencies] = fooof_spectrum(Power(ChannelIdx, :), Freqs);
 
 % periodic power
 
