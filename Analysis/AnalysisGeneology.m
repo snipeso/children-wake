@@ -98,6 +98,7 @@ PowerAverageSmooth = smooth_frequencies(PowerAverage, Freqs, 2);
 
 
 figure('Units','centimeters', 'Position', PlotSize)
+chART.sub_plot([], [1 1], [1 1], [], true, '', PlotProps);
 plot(Freqs, PowerAverageSmooth, 'Color', 'k', 'LineWidth',PlotProps.Line.Width)
 chART.set_axis_properties(PlotProps)
 xlabel('Frequency (Hz)')
@@ -114,23 +115,26 @@ Bands.Theta = [4 7];
 Bands.LowAlpha = [8 11];
 Bands.HighAlpha = [12 16];
 
+
 % log power
 figure('Units','centimeters', 'Position', PlotSize)
+chART.sub_plot([], [1 1], [1 1], [], true, '', PlotProps);
 plot_highlighted_spectrum(log(PowerAverageSmooth), Freqs, Bands, PlotProps)
 xlabel('Frequency (Hz)')
 ylabel('Log power')
 % xlim([2 18])
 xlim([1 20])
-legend(flip({'Theta_{ }', 'Alpha_{low}','Alpha_{high}'}))
+legend(flip({'Theta_{ }', 'Alpha_{low}','Alpha_{high}'}), 'position', [ 0.5887    0.6237    0.3450    0.3125])
 
-ylim([-1.7, 2.5])
+ylim([-1.7, 3])
 axis square
 box off
 chART.save_figure('LogPower', ResultsFolder, PlotProps)
 
-
+%%
 % log log power
 figure('Units','centimeters', 'Position', PlotSize)
+chART.sub_plot([], [1 1], [1 1], [], true, '', PlotProps);
 hold on
 plot(log(Freqs), log(PowerAverageSmooth), 'Color', 'k', 'LineWidth',PlotProps.Line.Width)
 plot([.2 2.9], [2.845, -1.453], 'Color', AperiodicGray, 'LineWidth',PlotProps.Line.Width*3, ...
@@ -147,10 +151,11 @@ chART.save_figure('LogLogPower', ResultsFolder, PlotProps)
 
 
 % FOOOF
-  [~, ~, WhitenedPower, FooofFrequencies] = fooof_spectrum(PowerAverage, Freqs);
+[~, ~, WhitenedPower, FooofFrequencies] = fooof_spectrum(PowerAverage, Freqs);
 
 % periodic power
 figure('Units','centimeters', 'Position', PlotSize)
+chART.sub_plot([], [1 1], [1 1], [], true, '', PlotProps);
 plot_highlighted_spectrum(WhitenedPower, FooofFrequencies, Bands, PlotProps)
 legend off
 xlim([1 20])
@@ -162,6 +167,8 @@ chART.save_figure('WhitePower', ResultsFolder, PlotProps)
 
 % cartoon slope example
 figure('Units','centimeters', 'Position', PlotSize)
+chART.sub_plot([], [1 1], [1 1], [], true, '', PlotProps);
+
 hold on
 X = [0 3];
 Y = [1.5, -1.5];
@@ -181,11 +188,10 @@ box off
 chART.save_figure('Slope', ResultsFolder, PlotProps)
 
 
-%%
-close all
-
 % cartoon intercept example
 figure('Units','centimeters', 'Position', PlotSize)
+chART.sub_plot([], [1 1], [1 1], [], true, '', PlotProps);
+
 hold on
 X = [0 3];
 Y = [1.5, -1.5];
@@ -204,6 +210,38 @@ box off
 chART.save_figure('Intercept', ResultsFolder, PlotProps)
 
 
-
 % histogram quantity and amplitude
+
+
+Frequencies = 4:.333:17;
+nFrequencies = numel(Frequencies)-1;
+DiscreteFrequencies = discretize([Bursts.BurstFrequency], Frequencies);
+ HistogramAmplitude = nan(1, numel(Frequencies)-1);
+ HistogramQuantities = HistogramAmplitude;
+for FreqIdx = 1:nFrequencies
+    BurstTemp = Bursts(DiscreteFrequencies==FreqIdx);
+        HistogramQuantities(FreqIdx) = 100*sum([BurstTemp.DurationPoints])/EEG.pnts;
+            if numel(BurstTemp)<10
+                continue
+            end
+    HistogramAmplitude(FreqIdx) = mean([BurstTemp.Amplitude]);
+end
+
+figure('Units','centimeters', 'Position', PlotSize)
+chART.sub_plot([], [1 1], [1 1], [], true, '', PlotProps);
+plot_multicolored_histogram(HistogramQuantities, Frequencies(1:end-1), Bands, PlotProps)
+xlim([2 18])
+xlabel('Frequency (Hz)')
+ylabel('% recording')
+chART.save_figure('Quantities', ResultsFolder, PlotProps)
+
+
+figure('Units','centimeters', 'Position', PlotSize)
+chART.sub_plot([], [1 1], [1 1], [], true, '', PlotProps);
+
+plot_multicolored_histogram(HistogramAmplitude, Frequencies(1:end-1), Bands, PlotProps)
+xlim([2 18])
+xlabel('Frequency (Hz)')
+ylabel('\muV')
+chART.save_figure('Amplitudes', ResultsFolder, PlotProps)
 
