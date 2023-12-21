@@ -69,13 +69,11 @@ table_demographics(unique_metadata(Metadata), 'Dataset', ResultsFolder, 'Demogra
 close all
 PlotProps = Parameters.PlotProps.Manuscript;
 PlotProps.Figure.Padding = 20;
-YVariables = {'Amplitude', 'Quantity', 'Globality', 'Duration', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
+YVariables = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 Grid = [3 numel(YVariables)];
 
 YLimits = [5, 42; % amplitudes
     70, 550; % quantities
-    2, 20; % globality
-    .5, 1.45; % duration
     .7 2.25; % slope
     .3, 2.5; % intercept
     -1.6, 2; % power
@@ -86,7 +84,7 @@ XLim = [3 25];
 HourLabels = {'Evening', 'Morning'};
 OvernightMetadata = overnight_changes(Metadata);
 
-GroupColumns = {'', 'Group', 'Sex', 'Dataset'};
+GroupColumns = {'', 'Sex', 'Dataset'};
 
 for GC = GroupColumns
     GroupColumn = GC{1};
@@ -141,7 +139,7 @@ PlotProps.Axes.xPadding = 5;
 PlotProps.Scatter.Size = 5;
 PlotProps.Scatter.Alpha = .4;
 
-YVariables = {'Amplitude', 'Quantity', 'Globality',  'Duration', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
+YVariables = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 Grid = [numel(YVariables) numel(YVariables)];
 figure('Units','centimeters','InnerPosition',[0 0 18 18])
 for Idx1 = 1:numel(YVariables)
@@ -371,7 +369,6 @@ for MeasureIdx = 1:nMeasures
 end
 
 
-%%
 
 %% plot Freq x Age plot
 
@@ -380,6 +377,7 @@ PlotProps.Figure.Padding = 25;
 PlotProps.Axes.yPadding = 20;
 
 Measures = fieldnames(BurstInformationClusters);
+Measures = {'Amplitude', 'Quantity', 'Power', 'PeriodicPower'};
 nMeasures = numel(Measures);
 
 EquidistantAges = 4:4:25;
@@ -442,13 +440,11 @@ chART.save_figure('FrequencyByAgeChange', ResultsFolder, PlotProps)
 
 % paired t-tests across channels for ADHD and controls
 Ages = [8 14];
-% Group = 'ADHD';
-% GroupingColumn = 'Group';
-Group = 'f';
-GroupingColumn = 'Sex';
+Group = 'ADHD';
+GroupingColumn = 'Group';
 TempMetadata = MetadataComplete(MetadataComplete.Age >=Ages(1) & MetadataComplete.Age<=Ages(2), :);
 
-Measures = fieldnames(BurstInformationTopography);
+Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 nMeasures = numel(Measures);
 
 % match recordings and participants
