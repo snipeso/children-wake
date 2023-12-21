@@ -34,10 +34,11 @@ DataOut = load_datafile(fullfile(Paths.AnalyzedData, 'EEG', 'Power', 'window4s_a
 Power = DataOut{1};
 Freqs = DataOut{2};
 
-cycy.plot.plot_all_bursts(EEG, 15, Bursts, 'NewBand');
+% cycy.plot.plot_all_bursts(EEG, 15, Bursts, 'NewBand');
 
 %%
 
+AperiodicGray = [.66 .66 .66];
 
 DurationAperiodic = 15;
 Start = 245;
@@ -74,7 +75,7 @@ chART.save_figure('EEG', ResultsFolder, PlotProps)
 LW_Bursts = 2;
 figure('Units','centimeters', 'Position', [0 0 25 3])
 chART.sub_plot([], [1 1], [1 1], [], '', '', PlotProps)
-plot(t, Aperiodic, 'LineWidth', 1.5, 'Color', [.5 .5 .5])
+plot(t, Aperiodic, 'LineWidth', 1.5, 'Color', AperiodicGray)
 hold on
 plot(t(StartTheta:StartTheta+DurationTheta-1), Aperiodic(StartTheta:StartTheta+DurationTheta-1), ...
     'Color',chART.color_picker(1, '', 'yellow'), 'LineWidth', LW_Bursts)
@@ -93,16 +94,15 @@ chART.save_figure('Bursts', ResultsFolder, PlotProps)
 PlotSize = [0 0 5.5 5.5];
 LW_Plot = 1.5;
 PowerAverage = mean(Power(labels2indexes([11, 60, 51, 129], EEG.chanlocs), :), 1);
-PowerAverage = smooth_frequencies(PowerAverage, Freqs, 2);
+PowerAverageSmooth = smooth_frequencies(PowerAverage, Freqs, 2);
 
-close all
 
 figure('Units','centimeters', 'Position', PlotSize)
-plot(Freqs, PowerAverage, 'Color', 'k', 'LineWidth',PlotProps.Line.Width)
+plot(Freqs, PowerAverageSmooth, 'Color', 'k', 'LineWidth',PlotProps.Line.Width)
 chART.set_axis_properties(PlotProps)
 xlabel('Frequency (Hz)')
 ylabel('Power (\muV^2/Hz)')
-xlim([2 18])
+xlim([1 20])
 ylim([0 10])
 axis square
 box off
@@ -116,26 +116,93 @@ Bands.HighAlpha = [12 16];
 
 % log power
 figure('Units','centimeters', 'Position', PlotSize)
-plot_highlighted_spectrum(log(PowerAverage), Freqs, Bands, PlotProps)
+plot_highlighted_spectrum(log(PowerAverageSmooth), Freqs, Bands, PlotProps)
 xlabel('Frequency (Hz)')
 ylabel('Log power')
-xlim([2 18])
+% xlim([2 18])
+xlim([1 20])
 legend(flip({'Theta_{ }', 'Alpha_{low}','Alpha_{high}'}))
 
-ylim([-1.3, 2.5])
+ylim([-1.7, 2.5])
 axis square
 box off
 chART.save_figure('LogPower', ResultsFolder, PlotProps)
 
 
+% log log power
+figure('Units','centimeters', 'Position', PlotSize)
+hold on
+plot(log(Freqs), log(PowerAverageSmooth), 'Color', 'k', 'LineWidth',PlotProps.Line.Width)
+plot([.2 2.9], [2.845, -1.453], 'Color', AperiodicGray, 'LineWidth',PlotProps.Line.Width*3, ...
+    'LineStyle',':')
+chART.set_axis_properties(PlotProps)
+xlabel('Log frequency')
+ylabel('Log power')
+xlim(log([1 20]))
+ylim([-2 3])
+axis square
+box off
+chART.save_figure('LogLogPower', ResultsFolder, PlotProps)
+
+
+
 % FOOOF
-  [~, ~, WhitenedPower, FooofFrequencies] = fooof_spectrum(Power(ChannelIdx, :), Freqs);
+  [~, ~, WhitenedPower, FooofFrequencies] = fooof_spectrum(PowerAverage, Freqs);
 
 % periodic power
-
+figure('Units','centimeters', 'Position', PlotSize)
+plot_highlighted_spectrum(WhitenedPower, FooofFrequencies, Bands, PlotProps)
+legend off
+xlim([1 20])
+ylim([0 .7])
+xlabel('Frequency (Hz)')
+ylabel('Log power')
+chART.save_figure('WhitePower', ResultsFolder, PlotProps)
 
 
 % cartoon slope example
+figure('Units','centimeters', 'Position', PlotSize)
+hold on
+X = [0 3];
+Y = [1.5, -1.5];
+Y2 = Y*2;
+plot(X, Y, 'Color', AperiodicGray, 'LineWidth',PlotProps.Line.Width*3, ...
+    'LineStyle',':')
+chART.set_axis_properties(PlotProps)
+plot(X, Y2, 'Color', [.4 .4 .4], 'LineWidth',PlotProps.Line.Width*3, ...
+    'LineStyle',':')
+xlabel('Log frequency')
+ylabel('Log power')
+xlim(log([0.8 35]))
+ylim([-3 3])
+set(gca, 'XTick', [], 'YTick', [])
+axis square
+box off
+chART.save_figure('Slope', ResultsFolder, PlotProps)
+
+
+%%
+close all
+
+% cartoon intercept example
+figure('Units','centimeters', 'Position', PlotSize)
+hold on
+X = [0 3];
+Y = [1.5, -1.5];
+Y2 = Y+1.5;
+plot(X, Y, 'Color', AperiodicGray, 'LineWidth',PlotProps.Line.Width*3, ...
+    'LineStyle',':')
+chART.set_axis_properties(PlotProps)
+plot(X, Y2, 'Color', [.4 .4 .4], 'LineWidth',PlotProps.Line.Width*3, ...
+    'LineStyle',':')
+xlabel('Log frequency')
+ylabel('Log power')
+xlim(log([0.8 35]))
+ylim([-2 4])
+axis square
+box off
+chART.save_figure('Intercept', ResultsFolder, PlotProps)
+
 
 
 % histogram quantity and amplitude
