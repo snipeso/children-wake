@@ -8,6 +8,11 @@ Paths = Parameters.Paths;
 Bands = Parameters.Bands;
 PlotProps = Parameters.PlotProps.Manuscript;
 
+ResultsFolder = fullfile(Paths.Results, 'Geneology');
+if ~exist(ResultsFolder,'dir')
+    mkdir(ResultsFolder)
+end
+
 % Filename_Core = 'P137_SleepLearning_Session11_eve_1Oddball_n_1.mat';
 Filename_Core = 'P139_SleepLearning_Session11_eve_1Oddball_n_1.mat';
 Levels = split(Filename_Core, '_');
@@ -62,6 +67,8 @@ plot(t, Aperiodic, 'LineWidth', 1.5, 'Color', 'k')
 axis off
 ylim([-40 40])
 xlim([0 15])
+chART.save_figure('EEG', ResultsFolder, PlotProps)
+
 
 % plot single channel snippet (composite?)
 LW_Bursts = 2;
@@ -78,6 +85,8 @@ plot(t(StartHighAlpha:StartHighAlpha+DurationHighAlpha-1), Aperiodic(StartHighAl
 axis off
 ylim([-40 40])
 xlim([2.5 11.5])
+chART.save_figure('Bursts', ResultsFolder, PlotProps)
+
 
 %%
 
@@ -97,8 +106,8 @@ xlim([1 20])
 ylim([0 15])
 axis square
 box off
+chART.save_figure('Power', ResultsFolder, PlotProps)
 
-close all
 
 Bands = struct();
 Bands.Theta = [4 7];
@@ -111,10 +120,12 @@ plot_highlighted_spectrum(log(PowerAverage), Freqs, Bands, PlotProps)
 xlabel('Frequency (Hz)')
 ylabel('Log power')
 xlim([4 16])
+legend(flip({'Theta', 'Alpha_{low}','Alpha_{high}'}))
 
 ylim([-1, 2.5])
 axis square
 box off
+chART.save_figure('LogPower', ResultsFolder, PlotProps)
 
 
 % FOOOF
