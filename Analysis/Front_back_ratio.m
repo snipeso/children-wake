@@ -26,6 +26,8 @@ Metadata(strcmp(Metadata.Dataset, 'SleepLearning') & ...
     contains(Metadata.Session, {'Session_2', 'Session_3'}), :) = []; % remove repeated measures 1 year later (will average recordings a couple weeks apart)
 Metadata(contains(Metadata.Task, {'3Oddball', '1GoNoGo', '2Learning', '3Fixation', '4Fixation'}), :) = []; % only look at first oddball and alertness task
 Metadata.Subgroup(strcmp(Metadata.Group, 'HC')) = 5;
+Metadata(contains(Metadata.Group, 'ADHD'), :) 
+
 Metadata.Globality = Metadata.Globality*100; % make it percentage instead of proportion
 
 Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'PeriodicPower'};
@@ -58,9 +60,9 @@ for MeasureIdx = 1:nMeasures
     % FrontBackRatio = (Front-Back)./Back;
        FrontBackRatio = Front./Back;
        % Threshold = 1+std(FrontBackRatio)*5;
-       % FrontBackRatio(isoutlier(FrontBackRatio)) = nan;
+       FrontBackRatio(isoutlier(FrontBackRatio)) = nan;
           % FrontBackRatio = (Front-Back);
-    FrontBackRatio(abs(FrontBackRatio)>10) = nan;
+    % FrontBackRatio(abs(FrontBackRatio)>10) = nan;
     OvernightMetadata.FrontBackRatio = FrontBackRatio;
      chART.sub_plot([], Grid, [1, MeasureIdx], [], true, '', PlotProps);
             plot_scattercloud(OvernightMetadata, 'Age', 'FrontBackRatio', ...

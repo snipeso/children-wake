@@ -18,7 +18,7 @@ TopoPlotProps.Text.AxisSize = 10;
 TopoPlotProps.Axes.xPadding = 8;
 TopoPlotProps.Axes.yPadding = 5;
 TopoPlotProps.Figure.Padding = 20;
-TopoPlotProps.Stats.PlotN= true;
+TopoPlotProps.Stats.PlotN = true;
 TopoFigureSizes = [.4, .11];
 
 % Ages = [2 8; % too few little kids
@@ -521,4 +521,8 @@ chART.save_figure('ADHDvsControls', ResultsFolder, PlotProps)
 
 % TODO
 %% front to back overnight change index
-% TODO
+
+Ages = [7, 12;
+    17 22];
+
+% Male vs female 
