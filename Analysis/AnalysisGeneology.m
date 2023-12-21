@@ -25,6 +25,10 @@ DataOut = load_datafile(fullfile(Paths.AnalyzedData, 'EEG', 'Bursts', Dataset, T
 Bursts = DataOut{1};
 Bursts = burst_bands(Bursts, Bands);
 
+DataOut = load_datafile(fullfile(Paths.AnalyzedData, 'EEG', 'Power', 'window4s_allt', Dataset, Task), Participant, Session, Hour, {'Power', 'Freqs'}, '.mat');
+Power = DataOut{1};
+Freqs = DataOut{2};
+
 cycy.plot.plot_all_bursts(EEG, 15, Bursts, 'NewBand');
 
 %%
@@ -75,9 +79,42 @@ axis off
 ylim([-40 40])
 xlim([2.5 11.5])
 
+%%
 
+PlotSize = [0 0 5.5 5.5];
+LW_Plot = 1.5;
+PowerAverage = mean(Power(labels2indexes([11, 60, 51, 129], EEG.chanlocs), :), 1);
+PowerAverage = smooth_frequencies(PowerAverage, Freqs, 2);
+
+close all
+
+figure('Units','centimeters', 'Position', PlotSize)
+plot(Freqs, PowerAverage, 'Color', 'k', 'LineWidth',LW_Plot)
+chART.set_axis_properties(PlotProps)
+xlabel('Frequency (Hz)')
+ylabel('Power (\muV^2/Hz)')
+xlim([1 20])
+ylim([0 15])
+axis square
+box off
+
+close all
+
+Bands = struct();
+Bands.Theta = [4 7];
+Bands.LowAlpha = [8 11];
+Bands.HighAlpha = [12 16];
 
 % log power
+figure('Units','centimeters', 'Position', PlotSize)
+plot_highlighted_spectrum(log(PowerAverage), Freqs, Bands, PlotProps)
+xlabel('Frequency (Hz)')
+ylabel('Log power')
+xlim([4 16])
+
+ylim([-1, 2.5])
+axis square
+box off
 
 
 % FOOOF
