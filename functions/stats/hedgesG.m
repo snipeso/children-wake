@@ -72,9 +72,15 @@ elseif nargin == 3 % if two matrices are provided
         for Indx1 = 1:Dims1(2)
             D1 = squeeze(Data1(:, Indx1));
             D2 = squeeze(Data2(:, Indx1));
-            stats = mes(D2, D1, StatsP.Paired.ES, 'isDep', 1, 'nBoot', StatsP.ANOVA.nBoot);
-            gValues(Indx1) = stats.hedgesg;
-            CI(Indx1, :) = stats.hedgesgCi;
+            if nnz(~isnan(D1)) <2 || nnz(~isnan(D2)) <2
+                gValues(Indx1) = nan;
+                CI(Indx1, :) = nan;
+            else
+                stats = mes(D2, D1, StatsP.Paired.ES, 'isDep', 1, 'nBoot', StatsP.ANOVA.nBoot);
+                gValues(Indx1) = stats.hedgesg;
+                CI(Indx1, :) = stats.hedgesgCi;
+            end
+
         end
     end
 else

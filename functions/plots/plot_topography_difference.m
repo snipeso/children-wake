@@ -10,11 +10,19 @@ function plot_topography_difference(Data1, Data2, Chanlocs, CLims, StatParameter
 % in 2process_Bursts.
 
 %%% Statistics
+MinNaNChannels = 25; % BAD SOPHIA!
+TooFewChannels = sum(isnan(Data2-Data1), 2) > MinNaNChannels;
+nParticipants = nnz(~TooFewChannels);
+if nParticipants <2
+    return
+end
+Data1(TooFewChannels, :) = nan; % make nan all channels, too sparse data % TODO, move to assemble data?
+Data2(TooFewChannels, :) = nan;
 
 if isfield(StatParameters, 'Unpaired') && StatParameters.Unpaired
     Stats = unpaired_ttest(Data1, Data2, StatParameters);
 else
-Stats = paired_ttest(Data1, Data2, StatParameters);
+    Stats = paired_ttest(Data1, Data2, StatParameters);
 end
 
 Stats.sig(isnan(Stats.sig)) = 0;

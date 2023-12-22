@@ -10,6 +10,7 @@ Hours = Parameters.Hours;
 Bands = Parameters.Bands;
 BandLabels = {'Theta', 'Low Alpha', 'High Alpha'};
 
+MinNaNChannels = 25; % for amplitudes
 
 % Topography plotprops
 TopoPlotProps = Parameters.PlotProps.Manuscript;
@@ -192,8 +193,6 @@ CLims.PeriodicPower = [0.04 .44];
 CLims.Slope = [1.3 2.1];
 CLims.Intercept = [.8 2.3];
 
-
-Measures = fieldnames(BurstInformationTopography);
 Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 nMeasures = numel(Measures);
 
@@ -204,7 +203,10 @@ for MeasureIdx = 1:nMeasures
     for AgeIdx = 1:nAges
         Indexes = ismember(Metadata.AgeGroups, string(AgeIdx));
         AverageSessions = average_by_column(Metadata, Topographies, 'Participant', Indexes);
-        nParticipants = nnz(~isnan(mean(AverageSessions, 2)));
+        TooFewChannels = sum(isnan(AverageSessions), 2) > MinNaNChannels;
+        AverageSessions(TooFewChannels, :) = nan; % make nan all channels, too sparse data % TODO, move to assemble data?
+
+        nParticipants = nnz(~TooFewChannels);
         AverageData = mean(AverageSessions, 1, 'omitnan'); % average across participants since its not a stat.
 
         chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, AgeIdx], [], false, '', TopoPlotProps);
@@ -253,10 +255,29 @@ for MeasureIdx = 1:nMeasures
     % figure('Units','normalized','Position', [0 0 TopoFigureSizes(1) TopoFigureSizes(2)*nMeasures])
     for BandIdx = 1:nBands
         for AgeIdx = 1:nAges
+
             Indexes = ismember(Metadata.AgeGroups, string(AgeIdx));
             AverageSessions = average_by_column(Metadata, ...
                 Topographies(:, :, BandIdx), 'Participant', Indexes);
-            nParticipants = nnz(~isnan(mean(AverageSessions, 2)));
+
+            TooFewChannels = sum(isnan(AverageSessions), 2) > MinNaNChannels;
+            nParticipants = nnz(~TooFewChannels);
+            if nParticipants<2
+                if BandIdx == 1
+                    chART.sub_plot([], [nBands, nAges+1], [BandIdx, AgeIdx], [], false, '', TopoPlotProps);
+                    title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))], 'FontSize', TopoPlotProps.Text.TitleSize)
+                    axis off
+                end
+                            if AgeIdx ==1
+                X = get(gca, 'XLim');
+                Y = get(gca, 'YLim');
+                text(X(1)-diff(X)*.1, Y(1)+diff(Y)*.5, BandLabels{BandIdx}, ...
+                    'FontSize', TopoPlotProps.Text.TitleSize, 'FontName', TopoPlotProps.Text.FontName, ...
+                    'FontWeight', 'Bold', 'HorizontalAlignment', 'Center', 'Rotation', 90);
+            end
+                continue
+            end
+            AverageSessions(TooFewChannels, :) = nan; % make nan all channels, too sparse data % TODO, move to assemble data?
 
             AverageData = mean(AverageSessions, 1, 'omitnan'); % average across participants since its not a stat.
 
@@ -296,12 +317,12 @@ MorningMetadata.Index = EveningMetadata.MorningIndexes;
 Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 nMeasures = numel(Measures);
 
-figure('Units','normalized','Position', [0 0 TopoFigureSizes(1) TopoFigureSizes(2)*nMeasures])
+% figure('Units','normalized','Position', [0 0 TopoFigureSizes(1) TopoFigureSizes(2)*nMeasures])
 figure('Units','centimeters','OuterPosition',[0 0 25 30])
 
 for MeasureIdx = 1:nMeasures
     Topographies = BurstInformationTopography.(Measures{MeasureIdx});
-    for AgeIdx = 1:nAges
+    for AgeIdx = 2:nAges
         Indexes = ismember(EveningMetadata.AgeGroups, string(AgeIdx));
 
         Evening = average_by_column(EveningMetadata, Topographies, 'Participant', Indexes);
@@ -315,7 +336,7 @@ for MeasureIdx = 1:nMeasures
             title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
         end
 
-        if AgeIdx ==1
+        if AgeIdx ==2
             X = get(gca, 'XLim');
             Y = get(gca, 'YLim');
             text(X(1)-diff(X)*.15, Y(1)+diff(Y)*.5, Measures{MeasureIdx}, ...
@@ -352,7 +373,7 @@ for MeasureIdx = 1:nMeasures
     figure('Units','centimeters','OuterPosition',[0 0 25 16])
 
     for BandIdx = 1:nBands
-        for AgeIdx = 1:nAges
+        for AgeIdx = 2:nAges
             Indexes = ismember(EveningMetadata.AgeGroups, string(AgeIdx));
 
             Evening = average_by_column(EveningMetadata, Topographies(:, :, BandIdx), 'Participant', Indexes);
@@ -366,7 +387,7 @@ for MeasureIdx = 1:nMeasures
                 title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
             end
 
-            if AgeIdx ==1
+            if AgeIdx ==2
                 X = get(gca, 'XLim');
                 Y = get(gca, 'YLim');
                 text(X(1)-diff(X)*.1, Y(1)+diff(Y)*.5, BandLabels{BandIdx}, ...
@@ -400,7 +421,7 @@ Metadata.EquispacedAges = discretize(Metadata.Age, EquidistantAges);
 OvernightMetadata = overnight_changes(Metadata);
 
 % figure('Units','normalized','OuterPosition',[0 0 .18 1])
-    figure('Units','centimeters','OuterPosition',[0 0 10 22])
+figure('Units','centimeters','OuterPosition',[0 0 10 22])
 
 for MeasureIdx = 1:nMeasures
     Spectrogram = BurstInformationClusters.(Measures{MeasureIdx});
@@ -424,7 +445,7 @@ chART.save_figure('FrequencyByAge', ResultsFolder, PlotProps)
 
 
 % figure('Units','normalized','OuterPosition',[0 0 .18 1])
-    figure('Units','centimeters','OuterPosition',[0 0 10 22])
+figure('Units','centimeters','OuterPosition',[0 0 10 22])
 
 for MeasureIdx = 1:nMeasures
 
