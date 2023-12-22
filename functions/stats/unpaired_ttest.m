@@ -17,7 +17,7 @@ Stats.mean1 = mean(Data1, 1, 'omitnan')';
 Stats.std1 = std(Data1, 0, 1, 'omitnan')';
 Stats.mean2 = mean(Data2, 1, 'omitnan')';
 Stats.std2 = std(Data2, 0, 1, 'omitnan')';
-
+Stats.cohenD = cohen_d(Data1, Data2);
 
 
 

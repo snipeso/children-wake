@@ -85,6 +85,7 @@ elseif numel(Dims1) == 2 && numel(Dims2) == 2 % C
     Diff = Data2-Data1;
     Stats.mean_diff = mean(Diff, 1, 'omitnan')';
     Stats.std_diff = std(Diff, 0, 1, 'omitnan')';
+    Stats.cohenD = cohen_d(Diff);
 
     Stats.mean1 = mean(Data1, 1, 'omitnan')';
     Stats.std1 = std(Data1, 0, 1, 'omitnan')';

@@ -282,7 +282,7 @@ end
 
 %% topography differences
 
-CLims = [-1 1];
+CLims = [-2 2];
 
 EveningMetadata = overnight_changes(Metadata);
 MorningMetadata = EveningMetadata;
@@ -321,7 +321,7 @@ for MeasureIdx = 1:nMeasures
 end
 
 chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, AgeIdx+1], [nMeasures, 1], false, '', TopoPlotProps);
-chART.plot.pretty_colorbar('Divergent', CLims, 'g-values', TopoPlotProps)
+chART.plot.pretty_colorbar('Divergent', CLims, "Cohen's d", TopoPlotProps)
 
 chART.save_figure('TopographyChange', ResultsFolder, TopoPlotProps)
 
@@ -334,7 +334,7 @@ MorningMetadata = EveningMetadata;
 MorningMetadata.Index = EveningMetadata.MorningIndexes;
 
 
-CLims = [-1.2 1];
+CLims = [-1.5 1.5];
 
 Measures = fieldnames(BurstInformationTopographyBands);
 nMeasures = numel(Measures);
@@ -372,7 +372,7 @@ for MeasureIdx = 1:nMeasures
     end
 
     chART.sub_plot([], [nBands, nAges+1], [BandIdx, AgeIdx+1], [nBands, 1], false, '', TopoPlotProps);
-    chART.plot.pretty_colorbar('Divergent', CLims, [Measures{MeasureIdx}, ' g-values'], TopoPlotProps)
+    chART.plot.pretty_colorbar('Divergent', CLims, strjoin([Measures{MeasureIdx}, "Cohen's d"], ' '), TopoPlotProps)
 
     chART.save_figure(['TopographyBandChange_', Measures{MeasureIdx}], ResultsFolder, TopoPlotProps)
 end
@@ -464,12 +464,14 @@ OvernightMetadata = overnight_changes(TempMetadata);
 
 
 HourLabels = {'Evening', 'Morning'};
-CLims = [-1 1];
+CLims = [-1.5 1.5];
 PlotProps.Stats.PlotN = true;
 StatsParameters = Parameters.Stats;
 StatsParameters.Unpaired = true;
 
-figure('Units','normalized','Position', [0 0 .21 .12*nMeasures])
+% figure('Units','normalized','Position', [0 0 .21 .12*nMeasures])
+         figure('Units','centimeters','OuterPosition',[0 0 13 30])
+
 for MeasuresIdx = 1:nMeasures
 
     Topographies = BurstInformationTopography.(Measures{MeasuresIdx});
@@ -489,7 +491,7 @@ for MeasuresIdx = 1:nMeasures
         Control = average_by_column(MetadataControls, Topographies, 'Participant',  [1:size(MetadataControls, 1)]');
 
         % plot
-        chART.sub_plot([], [nMeasures, 3], [MeasuresIdx, HourIdx], [], false, '', PlotProps);
+        chART.sub_plot([], [nMeasures+1, 3], [MeasuresIdx, HourIdx], [], false, '', PlotProps);
         plot_topography_difference(Control, ADHD, Chanlocs, CLims, StatsParameters, PlotProps)
         colorbar off
 
@@ -514,7 +516,7 @@ for MeasuresIdx = 1:nMeasures
     ADHD = average_by_column(OvernightMetadataPatients, ChangeADHD, 'Participant', []);
     Control = average_by_column(OvernightMetadataControls, ChangeControls, 'Participant', []);
 
-    chART.sub_plot([], [nMeasures, 3], [MeasuresIdx, 3], [], false, '', PlotProps);
+    chART.sub_plot([], [nMeasures+1, 3], [MeasuresIdx, 3], [], false, '', PlotProps);
     plot_topography_difference(Control, ADHD, Chanlocs, CLims, StatsParameters, PlotProps)
     colorbar off
     % plot
@@ -522,6 +524,13 @@ for MeasuresIdx = 1:nMeasures
         title('ADHD vs Controls')
     end
 end
+
+
+ADHDTopoPlotProps = TopoPlotProps;
+ADHDTopoPlotProps.Colorbar.Location = 'north';
+    chART.sub_plot([], [nMeasures+1, 3], [MeasuresIdx+1, 1], [1, 3], false, '', PlotProps);
+        chART.plot.pretty_colorbar('Divergent', CLims, "Cohen's d", ADHDTopoPlotProps)
+
 chART.save_figure('ADHDvsControls', ResultsFolder, PlotProps)
 
 % TODO
