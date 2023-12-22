@@ -99,8 +99,8 @@ for RecordingIdx = 1:nRecordings
         NotEdgeChanIndex = labels2indexes(Parameters.Channels.NotEdge, Chanlocs);
 
         % remove bursts outside of frequency range
-        Bursts([Bursts.BurstFrequency]<Frequencies(1) | [Bursts.BurstFrequency]<Frequencies(end)) = [];
-        BurstClusters([BurstClusters.BurstFrequency]<Frequencies(1) | [BurstClusters.BurstFrequency]<Frequencies(end)) = [];
+        Bursts([Bursts.BurstFrequency]<Frequencies(1) | [Bursts.BurstFrequency]>Frequencies(end)) = [];
+        BurstClusters([BurstClusters.BurstFrequency]<Frequencies(1) | [BurstClusters.BurstFrequency]>Frequencies(end)) = [];
 
         SampleRate = EEGMetadata.srate;
         RecordingDuration = EEGMetadata.times(end)/60; % in minutes
@@ -112,6 +112,7 @@ for RecordingIdx = 1:nRecordings
         TaskMetadata.Globality(NewIdx) = mean([BurstClusters.ClusterGlobality]);
         TaskMetadata.Amplitude(NewIdx) = mean([BurstClusters.ClusterAmplitude]);
         TaskMetadata.Duration(NewIdx) = mean([BurstClusters.ClusterEnd]-[BurstClusters.ClusterStart])/SampleRate; % burst durations
+        
         TaskMetadata.Quantity(NewIdx) = 100*sum([BurstClusters.ClusterEnd]-[BurstClusters.ClusterStart])/EEGMetadata.pnts; % number of bursts
 
         % load in power spectra
@@ -148,14 +149,14 @@ for RecordingIdx = 1:nRecordings
                 BurstsTemp = Bursts(BurstChannels==ChannelIdx & ...
                     [Bursts.BurstFrequency]>=Band(1) & [Bursts.BurstFrequency]<=Band(2));
 
-                BurstInformationTopographyBands.Quantity(NewIdx, ChannelIdx, BandIdx) = ...
+               BurstInformationTopographyBands.Quantity(NewIdx, ChannelIdx, BandIdx) = ...
                     100*sum([BurstsTemp.DurationPoints])/EEGMetadata.pnts; % NOT CYCLES PER MINUTE!!
 
                 if numel(BurstsTemp)<MinBursts
-                    BurstInformationTopographyBands.Amplitude(NewIdx, ChannelIdx, BandIdx) = nan;
+                   BurstInformationTopographyBands.Amplitude(NewIdx, ChannelIdx, BandIdx) = nan;
                 else
                     % average amplitude in that channel
-                    BurstInformationTopographyBands.Amplitude(NewIdx, ChannelIdx, BandIdx) = ...
+                  BurstInformationTopographyBands.Amplitude(NewIdx, ChannelIdx, BandIdx) = ...
                         mean([BurstsTemp.Amplitude]);
                 end
 
