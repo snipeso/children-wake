@@ -240,7 +240,9 @@ CLims.Amplitude = [-1, 18; 10, 30; 1, 16];
 CLims.Power = [-.5 2.5; -.25 2.25; -1.5 .5];
 CLims.PeriodicPower = [0.05 .3; .2 .8; -.05 .4];
 
-Measures = fieldnames(BurstInformationTopographyBands);
+% Measures = fieldnames(BurstInformationTopographyBands);
+Measures = {'Amplitude', 'Quantity', 'Power', 'PeriodicPower'};
+MeasureLabels = {'\muV', '% recording', 'Log power', 'Log power'};
 nMeasures = numel(Measures);
 
 for MeasureIdx = 1:nMeasures
@@ -277,7 +279,7 @@ for MeasureIdx = 1:nMeasures
 
         % plot colorbar
         chART.sub_plot([], [nBands, nAges+1], [BandIdx, nAges+1], [], false, '', TopoPlotProps);
-        chART.plot.pretty_colorbar('Linear', CLims.(Measures{MeasureIdx})(BandIdx, :), Measures{MeasureIdx}, TopoPlotProps)
+        chART.plot.pretty_colorbar('Linear', CLims.(Measures{MeasureIdx})(BandIdx, :), MeasureLabels{MeasureIdx}, TopoPlotProps)
     end
     chART.save_figure(['TopographyBandAverage_', Measures{MeasureIdx}], ResultsFolder, TopoPlotProps)
 end
@@ -452,8 +454,6 @@ chART.save_figure('FrequencyByAgeChange', ResultsFolder, PlotProps)
 
 
 %% ADHD vs HC
-
-
 
 % paired t-tests across channels for ADHD and controls
 Ages = [8 14];
