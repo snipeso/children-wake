@@ -73,7 +73,7 @@ chART.save_figure('EEG', ResultsFolder, PlotProps)
 
 % plot single channel snippet (composite?)
 LW_Bursts = 2;
-figure('Units','centimeters', 'Position', [0 0 25 3])
+figure('Units','centimeters', 'Position', [0 0 25 5.5])
 chART.sub_plot([], [1 1], [1 1], [], '', '', PlotProps)
 plot(t, Aperiodic, 'LineWidth', 1.5, 'Color', AperiodicGray)
 hold on
@@ -84,13 +84,14 @@ plot(t(StartLowAlpha:StartLowAlpha+DurationLowAlpha-1), Aperiodic(StartLowAlpha:
 plot(t(StartHighAlpha:StartHighAlpha+DurationHighAlpha-1), Aperiodic(StartHighAlpha:StartHighAlpha+DurationHighAlpha-1), ...
     'Color',chART.color_picker(1, '', 'red'), 'LineWidth', LW_Bursts)
 axis off
-ylim([-40 40])
+ylim([-50 50])
 xlim([2.5 11.5])
 chART.save_figure('Bursts', ResultsFolder, PlotProps)
 
 
 %%
 
+PlotProps.Text.AxisSize = 10;
 PlotSize = [0 0 5.5 5.5];
 LW_Plot = 1.5;
 PowerAverage = mean(Power(labels2indexes([11, 60, 51, 129], EEG.chanlocs), :), 1);
@@ -131,7 +132,6 @@ axis square
 box off
 chART.save_figure('LogPower', ResultsFolder, PlotProps)
 
-%%
 % log log power
 figure('Units','centimeters', 'Position', PlotSize)
 chART.sub_plot([], [1 1], [1 1], [], true, '', PlotProps);

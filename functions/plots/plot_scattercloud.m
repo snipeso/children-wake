@@ -59,7 +59,8 @@ else
     Start = XLim(2);
     HA = 'right';
 end
-text(Start, YLim(end), ['r=', num2str(R, '%.2f')], 'FontName', PlotProps.Text.FontName, 'FontSize', PlotProps.Text.LegendSize, 'HorizontalAlignment', HA)
+text(Start, YLim(end), ['r=', num2str(R, '%.2f')], ...
+    'FontName', PlotProps.Text.FontName, 'FontSize', PlotProps.Text.AxisSize, 'HorizontalAlignment', HA)
 chART.utils.pad_axis('y', .05)
 chART.utils.pad_axis('x', .05)
 end

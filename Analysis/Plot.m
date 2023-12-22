@@ -55,7 +55,7 @@ Metadata.AgeGroups = string(discretize(Metadata.Age, [Ages(:, 1); Ages(end, 2)])
 Metadata.Task(contains(Metadata.Task, 'Alertness')) = {'Alertness'}; % Fix because different order in task
 
 MetadataComplete = Metadata;
-Metadata(contains(Metadata.Group, 'ADHD'), :) 
+Metadata(contains(Metadata.Group, 'ADHD'), :) = [];
 nAges = size(Ages, 1);
 
 
@@ -84,11 +84,13 @@ XLim = [3 25];
 HourLabels = {'Evening', 'Morning'};
 OvernightMetadata = overnight_changes(Metadata);
 
-GroupColumns = {'', 'Sex', 'Dataset'};
+% GroupColumns = {'', 'Sex', 'Dataset'};
+GroupColumns = {''};
 
 for GC = GroupColumns
     GroupColumn = GC{1};
-    figure('Units','normalized','OuterPosition',[0 0 .4 .5])
+    % figure('Units','normalized','OuterPosition',[0 0 .4 .5])
+     figure('Units','centimeters','OuterPosition',[0 0 25 18])
     for VariableIdx = 1:numel(YVariables)
 
         %%% plot age x v split by evening and morning, averaged across sessions
