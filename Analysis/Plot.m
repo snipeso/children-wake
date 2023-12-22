@@ -229,13 +229,13 @@ for MeasureIdx = 1:nMeasures
     chART.plot.pretty_colorbar('Linear', CLims.(Measures{MeasureIdx}), Measures{MeasureIdx}, TopoPlotProps)
 
 end
-chART.save_figure(['TopographyAverage_', Measures{MeasureIdx}], ResultsFolder, TopoPlotProps)
+chART.save_figure('TopographyAverage', ResultsFolder, TopoPlotProps)
 
 
 %% Average topographies, split by band
 
 CLims = struct();
-CLims.Quantity = [0 5; 3 30; 0 7];
+CLims.Quantity = [0 5; 3 30; 0 6.5];
 CLims.Amplitude = [-1, 18; 10, 30; 1, 16];
 CLims.Power = [-.5 2.5; -.25 2.25; -1.5 .5];
 CLims.PeriodicPower = [0.05 .3; .2 .8; -.05 .4];
@@ -388,8 +388,8 @@ PlotProps = Parameters.PlotProps.Manuscript;
 PlotProps.Figure.Padding = 25;
 PlotProps.Axes.yPadding = 20;
 
-Measures = fieldnames(BurstInformationClusters);
 Measures = {'Amplitude', 'Quantity', 'Power', 'PeriodicPower'};
+Labels = {'\muV', '%', 'log power', 'log power'};
 nMeasures = numel(Measures);
 
 EquidistantAges = 4:4:25;
@@ -397,7 +397,9 @@ EquidistantAges = 4:4:25;
 Metadata.EquispacedAges = discretize(Metadata.Age, EquidistantAges);
 OvernightMetadata = overnight_changes(Metadata);
 
-figure('Units','normalized','OuterPosition',[0 0 .18 1])
+% figure('Units','normalized','OuterPosition',[0 0 .18 1])
+    figure('Units','centimeters','OuterPosition',[0 0 10 22])
+
 for MeasureIdx = 1:nMeasures
     Spectrogram = BurstInformationClusters.(Measures{MeasureIdx});
     Evening = average_by_column(OvernightMetadata, Spectrogram, 'Participant', [1:size(OvernightMetadata, 1)]');
@@ -406,7 +408,7 @@ for MeasureIdx = 1:nMeasures
 
     %%% plot average evening values
     chART.sub_plot([], [nMeasures, 1], [MeasureIdx, 1], [], true, '', PlotProps);
-    plot_age_by_frequency(EveningAverage, EquidistantAges(1:end-1), Frequencies, 'Linear', '', PlotProps)
+    plot_age_by_frequency(EveningAverage, EquidistantAges(1:end-1), Frequencies, 'Linear', Labels{MeasureIdx}, PlotProps)
 
     title(Measures{MeasureIdx})
     ylabel('Frequency (Hz)')
@@ -416,9 +418,12 @@ for MeasureIdx = 1:nMeasures
 end
 chART.save_figure('FrequencyByAge', ResultsFolder, PlotProps)
 
-%% spectrum difference
+% spectrum difference
 
-figure('Units','normalized','OuterPosition',[0 0 .18 1])
+
+% figure('Units','normalized','OuterPosition',[0 0 .18 1])
+    figure('Units','centimeters','OuterPosition',[0 0 10 22])
+
 for MeasureIdx = 1:nMeasures
 
     Spectrogram = BurstInformationClusters.(Measures{MeasureIdx});

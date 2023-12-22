@@ -126,6 +126,7 @@ ylabel('Log power')
 % xlim([2 18])
 xlim([1 20])
 legend(flip({'Theta_{ }', 'Alpha_{low}','Alpha_{high}'}), 'position', [ 0.5887    0.6237    0.3450    0.3125])
+legend boxoff  
 
 ylim([-1.7, 3])
 axis square
