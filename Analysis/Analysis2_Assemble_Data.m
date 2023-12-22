@@ -16,6 +16,7 @@ VariablesCluster = {};
 Frequencies = 4:16;
 nFrequencies = numel(Frequencies)-1;
 nChans = 123;
+MinBursts = 10;
 
 Source = fullfile(Paths.AnalyzedData, 'EEG', 'Bursts');
 SourcePower =  fullfile(Paths.AnalyzedData, 'EEG', 'Power');
@@ -150,7 +151,7 @@ for RecordingIdx = 1:nRecordings
                 BurstInformationTopographyBands.Quantity(NewIdx, ChannelIdx, BandIdx) = ...
                     100*sum([BurstsTemp.DurationPoints])/EEGMetadata.pnts; % NOT CYCLES PER MINUTE!!
 
-                if numel(BurstsTemp)<10
+                if numel(BurstsTemp)<MinBursts
                     BurstInformationTopographyBands.Amplitude(NewIdx, ChannelIdx, BandIdx) = nan;
                 else
                     % average amplitude in that channel
@@ -170,7 +171,9 @@ for RecordingIdx = 1:nRecordings
                 100*sum([BurstsTemp.DurationPoints])/EEGMetadata.pnts; % NOT CYCLES PER MINUTE!!
 
             % average amplitude in that channel
-            if numel(BurstsTemp)>=10
+            if numel(BurstsTemp)< MinBursts
+                BurstInformationTopography.Amplitude(NewIdx, ChannelIdx) = nan;
+            else
                 BurstInformationTopography.Amplitude(NewIdx, ChannelIdx) = ...
                     mean([BurstsTemp.Amplitude]);
             end
@@ -206,19 +209,20 @@ for RecordingIdx = 1:nRecordings
             BurstInformationClusters.Quantity(NewIdx, FrequencyIdx) = ...
                 100*sum([BurstsTemp.ClusterEnd]-[BurstsTemp.ClusterStart])/EEGMetadata.pnts;
 
-            if numel(BurstsTemp)<10
-                continue
+            if numel(BurstsTemp)<MinBursts
+                BurstInformationClusters.Amplitude(NewIdx, FrequencyIdx) = nan;
+                BurstInformationClusters.Globality(NewIdx, FrequencyIdx) = nan;
+                BurstInformationClusters.Duration(NewIdx, FrequencyIdx) = nan;
+            else
+                BurstInformationClusters.Amplitude(NewIdx, FrequencyIdx) = ...
+                    mean([BurstsTemp.Amplitude]);
+
+                BurstInformationClusters.Globality(NewIdx, FrequencyIdx) = ...
+                    mean([BurstsTemp.ClusterGlobality]);
+
+                BurstInformationClusters.Duration(NewIdx, FrequencyIdx) = ...
+                    mean([BurstsTemp.ClusterEnd]-[BurstsTemp.ClusterStart])/SampleRate;
             end
-
-            BurstInformationClusters.Amplitude(NewIdx, FrequencyIdx) = ...
-                mean([BurstsTemp.Amplitude]);
-
-            BurstInformationClusters.Globality(NewIdx, FrequencyIdx) = ...
-                mean([BurstsTemp.ClusterGlobality]);
-
-
-            BurstInformationClusters.Duration(NewIdx, FrequencyIdx) = ...
-                mean([BurstsTemp.ClusterEnd]-[BurstsTemp.ClusterStart])/SampleRate;
 
             % power for that frequency
             BurstInformationClusters.PeriodicPower(NewIdx, FrequencyIdx) = ...
@@ -226,6 +230,8 @@ for RecordingIdx = 1:nRecordings
 
             BurstInformationClusters.Power(NewIdx, FrequencyIdx) = ...
                 mean(mean(log(Power(NotEdgeChanIndex, PowerFrequencies==FrequencyIdx))));
+
+
         end
     end
     disp(num2str(RecordingIdx))
