@@ -151,11 +151,13 @@ for RecordingIdx = 1:nRecordings
                     100*sum([BurstsTemp.DurationPoints])/EEGMetadata.pnts; % NOT CYCLES PER MINUTE!!
 
                 if numel(BurstsTemp)<10
-                    continue
+                    BurstInformationTopographyBands.Amplitude(NewIdx, ChannelIdx, BandIdx) = nan;
+                else
+                    % average amplitude in that channel
+                    BurstInformationTopographyBands.Amplitude(NewIdx, ChannelIdx, BandIdx) = ...
+                        mean([BurstsTemp.Amplitude]);
                 end
-                % average amplitude in that channel
-                BurstInformationTopographyBands.Amplitude(NewIdx, ChannelIdx, BandIdx) = ...
-                    mean([BurstsTemp.Amplitude]);
+
             end
 
             %%% all frequencies amplitude and quantity
