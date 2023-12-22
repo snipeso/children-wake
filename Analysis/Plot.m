@@ -78,7 +78,7 @@ YLimits = [5, 42; % amplitudes
     .3, 2.5; % intercept
     -1.6, 2; % power
     -.05, .705; % periodic power
-  ];
+    ];
 XLim = [3 25];
 
 HourLabels = {'Evening', 'Morning'};
@@ -90,7 +90,7 @@ GroupColumns = {''};
 for GC = GroupColumns
     GroupColumn = GC{1};
     % figure('Units','normalized','OuterPosition',[0 0 .4 .5])
-     figure('Units','centimeters','OuterPosition',[0 0 25 18])
+    figure('Units','centimeters','OuterPosition',[0 0 25 18])
     for VariableIdx = 1:numel(YVariables)
 
         %%% plot age x v split by evening and morning, averaged across sessions
@@ -144,7 +144,7 @@ PlotProps.Scatter.Alpha = .4;
 YVariables = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 Grid = [numel(YVariables) numel(YVariables)];
 % figure('Units','centimeters','InnerPosition',[0 0 18 18])
-  figure('Units','centimeters','OuterPosition',[0 0 18 18])
+figure('Units','centimeters','OuterPosition',[0 0 18 18])
 for Idx1 = 1:numel(YVariables)
     for Idx2 = 1:numel(YVariables)
         chART.sub_plot([], Grid, [Idx2, Idx1], [], false, '', PlotProps);
@@ -198,12 +198,13 @@ Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPow
 nMeasures = numel(Measures);
 
 % figure('Units','normalized','Position', [0 0 TopoFigureSizes(1) TopoFigureSizes(2)*nMeasures])
-     figure('Units','centimeters','OuterPosition',[0 0 25 30])
+figure('Units','centimeters','OuterPosition',[0 0 25 30])
 for MeasureIdx = 1:nMeasures
     Topographies = BurstInformationTopography.(Measures{MeasureIdx});
     for AgeIdx = 1:nAges
         Indexes = ismember(Metadata.AgeGroups, string(AgeIdx));
         AverageSessions = average_by_column(Metadata, Topographies, 'Participant', Indexes);
+        nParticipants = nnz(~isnan(mean(AverageSessions, 2)));
         AverageData = mean(AverageSessions, 1, 'omitnan'); % average across participants since its not a stat.
 
         chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, AgeIdx], [], false, '', TopoPlotProps);
@@ -212,15 +213,15 @@ for MeasureIdx = 1:nMeasures
             title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
         end
 
-                if AgeIdx ==1
+        if AgeIdx ==1
             X = get(gca, 'XLim');
             Y = get(gca, 'YLim');
             text(X(1)-diff(X)*.15, Y(1)+diff(Y)*.5, Measures{MeasureIdx}, ...
                 'FontSize', TopoPlotProps.Text.TitleSize, 'FontName', TopoPlotProps.Text.FontName, ...
                 'FontWeight', 'Bold', 'HorizontalAlignment', 'Center', 'Rotation', 90);
-                end
+        end
 
-        text(.4, .5, ['N=', num2str(size(AverageSessions, 1))], 'FontName', TopoPlotProps.Text.FontName, 'FontSize', TopoPlotProps.Text.LegendSize)
+        text(.4, .5, ['N=', num2str(nParticipants)], 'FontName', TopoPlotProps.Text.FontName, 'FontSize', TopoPlotProps.Text.LegendSize)
     end
 
     % plot colorbar
@@ -245,14 +246,16 @@ nMeasures = numel(Measures);
 for MeasureIdx = 1:nMeasures
     Topographies = BurstInformationTopographyBands.(Measures{MeasureIdx});
     nBands = size(Topographies, 3);
-     figure('Units','centimeters','OuterPosition',[0 0 25 16])
+    figure('Units','centimeters','OuterPosition',[0 0 25 16])
 
-% figure('Units','normalized','Position', [0 0 TopoFigureSizes(1) TopoFigureSizes(2)*nMeasures])
+    % figure('Units','normalized','Position', [0 0 TopoFigureSizes(1) TopoFigureSizes(2)*nMeasures])
     for BandIdx = 1:nBands
         for AgeIdx = 1:nAges
             Indexes = ismember(Metadata.AgeGroups, string(AgeIdx));
             AverageSessions = average_by_column(Metadata, ...
                 Topographies(:, :, BandIdx), 'Participant', Indexes);
+            nParticipants = nnz(~isnan(mean(AverageSessions, 2)));
+
             AverageData = mean(AverageSessions, 1, 'omitnan'); % average across participants since its not a stat.
 
             chART.sub_plot([], [nBands, nAges+1], [BandIdx, AgeIdx], [], false, '', TopoPlotProps);
@@ -261,15 +264,15 @@ for MeasureIdx = 1:nMeasures
                 title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
             end
 
-              if AgeIdx ==1
-            X = get(gca, 'XLim');
-            Y = get(gca, 'YLim');
-            text(X(1)-diff(X)*.1, Y(1)+diff(Y)*.5, BandLabels{BandIdx}, ...
-                'FontSize', TopoPlotProps.Text.TitleSize, 'FontName', TopoPlotProps.Text.FontName, ...
-                'FontWeight', 'Bold', 'HorizontalAlignment', 'Center', 'Rotation', 90);
-                end
-            
-            text(.4, .5, ['N=', num2str(size(AverageSessions, 1))], 'FontName', TopoPlotProps.Text.FontName, 'FontSize', TopoPlotProps.Text.LegendSize)
+            if AgeIdx ==1
+                X = get(gca, 'XLim');
+                Y = get(gca, 'YLim');
+                text(X(1)-diff(X)*.1, Y(1)+diff(Y)*.5, BandLabels{BandIdx}, ...
+                    'FontSize', TopoPlotProps.Text.TitleSize, 'FontName', TopoPlotProps.Text.FontName, ...
+                    'FontWeight', 'Bold', 'HorizontalAlignment', 'Center', 'Rotation', 90);
+            end
+
+            text(.4, .5, ['N=', num2str(nParticipants)], 'FontName', TopoPlotProps.Text.FontName, 'FontSize', TopoPlotProps.Text.LegendSize)
         end
 
         % plot colorbar
@@ -292,7 +295,7 @@ Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPow
 nMeasures = numel(Measures);
 
 figure('Units','normalized','Position', [0 0 TopoFigureSizes(1) TopoFigureSizes(2)*nMeasures])
-     figure('Units','centimeters','OuterPosition',[0 0 25 30])
+figure('Units','centimeters','OuterPosition',[0 0 25 30])
 
 for MeasureIdx = 1:nMeasures
     Topographies = BurstInformationTopography.(Measures{MeasureIdx});
@@ -344,7 +347,7 @@ for MeasureIdx = 1:nMeasures
     nBands = size(Topographies, 3);
 
     % figure('Units','normalized','Position', [0 0 TopoFigureSizes(1) TopoFigureSizes(2)*nMeasures])
-         figure('Units','centimeters','OuterPosition',[0 0 25 16])
+    figure('Units','centimeters','OuterPosition',[0 0 25 16])
 
     for BandIdx = 1:nBands
         for AgeIdx = 1:nAges
@@ -470,7 +473,7 @@ StatsParameters = Parameters.Stats;
 StatsParameters.Unpaired = true;
 
 % figure('Units','normalized','Position', [0 0 .21 .12*nMeasures])
-         figure('Units','centimeters','OuterPosition',[0 0 13 30])
+figure('Units','centimeters','OuterPosition',[0 0 13 30])
 
 for MeasuresIdx = 1:nMeasures
 
@@ -528,8 +531,8 @@ end
 
 ADHDTopoPlotProps = TopoPlotProps;
 ADHDTopoPlotProps.Colorbar.Location = 'north';
-    chART.sub_plot([], [nMeasures+1, 3], [MeasuresIdx+1, 1], [1, 3], false, '', PlotProps);
-        chART.plot.pretty_colorbar('Divergent', CLims, "Cohen's d", ADHDTopoPlotProps)
+chART.sub_plot([], [nMeasures+1, 3], [MeasuresIdx+1, 1], [1, 3], false, '', PlotProps);
+chART.plot.pretty_colorbar('Divergent', CLims, "Cohen's d", ADHDTopoPlotProps)
 
 chART.save_figure('ADHDvsControls', ResultsFolder, PlotProps)
 
@@ -539,4 +542,4 @@ chART.save_figure('ADHDvsControls', ResultsFolder, PlotProps)
 Ages = [7, 12;
     17 22];
 
-% Male vs female 
+% Male vs female
