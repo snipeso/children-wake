@@ -143,7 +143,8 @@ PlotProps.Scatter.Alpha = .4;
 
 YVariables = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 Grid = [numel(YVariables) numel(YVariables)];
-figure('Units','centimeters','InnerPosition',[0 0 18 18])
+% figure('Units','centimeters','InnerPosition',[0 0 18 18])
+  figure('Units','centimeters','OuterPosition',[0 0 18 18])
 for Idx1 = 1:numel(YVariables)
     for Idx2 = 1:numel(YVariables)
         chART.sub_plot([], Grid, [Idx2, Idx1], [], false, '', PlotProps);
@@ -196,7 +197,8 @@ Measures = fieldnames(BurstInformationTopography);
 Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 nMeasures = numel(Measures);
 
-figure('Units','normalized','Position', [0 0 TopoFigureSizes(1) TopoFigureSizes(2)*nMeasures])
+% figure('Units','normalized','Position', [0 0 TopoFigureSizes(1) TopoFigureSizes(2)*nMeasures])
+     figure('Units','centimeters','OuterPosition',[0 0 25 30])
 for MeasureIdx = 1:nMeasures
     Topographies = BurstInformationTopography.(Measures{MeasureIdx});
     for AgeIdx = 1:nAges
@@ -243,8 +245,9 @@ nMeasures = numel(Measures);
 for MeasureIdx = 1:nMeasures
     Topographies = BurstInformationTopographyBands.(Measures{MeasureIdx});
     nBands = size(Topographies, 3);
+     figure('Units','centimeters','OuterPosition',[0 0 25 16])
 
-figure('Units','normalized','Position', [0 0 TopoFigureSizes(1) TopoFigureSizes(2)*nMeasures])
+% figure('Units','normalized','Position', [0 0 TopoFigureSizes(1) TopoFigureSizes(2)*nMeasures])
     for BandIdx = 1:nBands
         for AgeIdx = 1:nAges
             Indexes = ismember(Metadata.AgeGroups, string(AgeIdx));
@@ -289,6 +292,8 @@ Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPow
 nMeasures = numel(Measures);
 
 figure('Units','normalized','Position', [0 0 TopoFigureSizes(1) TopoFigureSizes(2)*nMeasures])
+     figure('Units','centimeters','OuterPosition',[0 0 25 30])
+
 for MeasureIdx = 1:nMeasures
     Topographies = BurstInformationTopography.(Measures{MeasureIdx});
     for AgeIdx = 1:nAges
@@ -338,7 +343,9 @@ for MeasureIdx = 1:nMeasures
     Topographies = BurstInformationTopographyBands.(Measures{MeasureIdx});
     nBands = size(Topographies, 3);
 
-    figure('Units','normalized','Position', [0 0 TopoFigureSizes(1) TopoFigureSizes(2)*nMeasures])
+    % figure('Units','normalized','Position', [0 0 TopoFigureSizes(1) TopoFigureSizes(2)*nMeasures])
+         figure('Units','centimeters','OuterPosition',[0 0 25 16])
+
     for BandIdx = 1:nBands
         for AgeIdx = 1:nAges
             Indexes = ismember(EveningMetadata.AgeGroups, string(AgeIdx));

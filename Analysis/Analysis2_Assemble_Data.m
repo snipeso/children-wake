@@ -97,6 +97,10 @@ for RecordingIdx = 1:nRecordings
         Chanlocs = EEGMetadata.chanlocs;
         NotEdgeChanIndex = labels2indexes(Parameters.Channels.NotEdge, Chanlocs);
 
+        % remove bursts outside of frequency range
+        Bursts([Bursts.BurstFrequency]<Frequencies(1) | [Bursts.BurstFrequency]<Frequencies(end)) = [];
+        BurstClusters([BurstClusters.BurstFrequency]<Frequencies(1) | [BurstClusters.BurstFrequency]<Frequencies(end)) = [];
+
         SampleRate = EEGMetadata.srate;
         RecordingDuration = EEGMetadata.times(end)/60; % in minutes
 
@@ -139,7 +143,7 @@ for RecordingIdx = 1:nRecordings
                 BurstInformationTopographyBands.PeriodicPower(NewIdx, ChannelIdx, BandIdx) = ...
                     mean(WhitenedPower(FreqRangeFooof(1):FreqRangeFooof(2)), 2);
 
-                                % average quantity of bursts in that channel (as % duration recording)
+                % average quantity of bursts in that channel (as % duration recording)
                 BurstsTemp = Bursts(BurstChannels==ChannelIdx & ...
                     [Bursts.BurstFrequency]>=Band(1) & [Bursts.BurstFrequency]<=Band(2));
 
