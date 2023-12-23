@@ -21,13 +21,18 @@ end
 function TableRow = new_row(Metadata, Label)
 TableRow = table();
 TableRow.Label = {Label};
-TableRow.N = numel(Metadata.Participant);
-TableRow.nFemale = nnz(strcmp(Metadata.Sex, 'f'));
-TableRow.nLefties = nnz(strcmp(Metadata.Handedness, 'l'));
-TableRow.nADHD = nnz(strcmp(Metadata.Group, 'ADHD'));
+N =  numel(Metadata.Participant);
+TableRow.N = N;
+TableRow.nFemale = round(100*nnz(strcmp(Metadata.Sex, 'f'))/N);
+TableRow.nLefties = round(100*nnz(strcmp(Metadata.Handedness, 'l'))/N);
+TableRow.nADHD = round(100*nnz(strcmp(Metadata.Group, 'ADHD'))/N);
 TableRow.AgeRange = {[num2str(min(Metadata.Age), '%.1f'),'-', num2str(max(Metadata.Age), '%.1f')]};
 TableRow.MeanAge = {[num2str(mean(Metadata.Age), '%.1f'), ' (', num2str(std(Metadata.Age), '%.1f'), ')']};
-TableRow.nOddball = nnz(contains(Metadata.Task, 'Oddball'));
+try
+TableRow.nOddball = round(100*nnz(contains(Metadata.Task, 'Oddball'))/N);
+catch
+TableRow.nOddball = round(100*nnz(contains(cellfun(@strjoin, Metadata.Task, 'UniformOutput', false), 'Oddball'))/N);
+end
 
 OutcomeVariables = {'Amplitude', 'Quantity', 'Globality', 'Duration', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 for Variable = OutcomeVariables

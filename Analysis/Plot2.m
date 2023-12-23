@@ -34,13 +34,13 @@ Ages = [3 7;
     14 18;
     18 25];
 
-ResultsFolder = fullfile(Paths.Results, 'Main');
+ResultsFolder = fullfile(Paths.Results, 'Main2');
 if ~exist(ResultsFolder,'dir')
     mkdir(ResultsFolder)
 end
 
 CacheDir = Paths.Cache;
-CacheName = 'AllBursts.mat';
+CacheName = 'MergedBursts.mat';
 
 load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopographyBands', ...
     'BurstInformationTopography', "BurstInformationClusters", 'Frequencies', 'Chanlocs')
@@ -49,12 +49,9 @@ load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopographyBands
 Metadata.Index = [1:size(Metadata, 1)]'; %#ok<NBRAK1> % add index so can chop up table as needed
 Metadata(strcmp(Metadata.Dataset, 'SleepLearning') & ...
     contains(Metadata.Session, {'Session_2', 'Session_3'}), :) = []; % remove repeated measures 1 year later (will average recordings a couple weeks apart)
-Metadata(contains(Metadata.Task, {'3Oddball', '1GoNoGo', '2Learning', '3Fixation', '4Fixation'}), :) = []; % only look at first oddball and alertness task
 Metadata.Subgroup(strcmp(Metadata.Group, 'HC')) = 5;
 Metadata.Globality = Metadata.Globality*100; % make it percentage instead of proportion
 Metadata.AgeGroups = string(discretize(Metadata.Age, [Ages(:, 1); Ages(end, 2)]));
-Metadata.Task(contains(Metadata.Task, 'Alertness')) = {'Alertness'}; % Fix because different order in task
-Metadata.Task(contains(Metadata.Task, 'Oddball')) = {'Oddball'};
 MetadataComplete = Metadata;
 Metadata(contains(Metadata.Group, 'ADHD'), :) = []; % RODO figure out why theres too few ADHD kids!!
 nAges = size(Ages, 1);
@@ -237,7 +234,7 @@ chART.save_figure('TopographyAverage', ResultsFolder, TopoPlotProps)
 %% Average topographies, split by band
 
 CLims = struct();
-CLims.Quantity = [0 5; 3 30; 0 6.5];
+CLims.Quantity = [0 7; 3 40; 0 9];
 CLims.Amplitude = [-1, 18; 10, 30; 1, 16];
 CLims.Power = [-.5 2.5; -.25 2.25; -1.5 .5];
 CLims.PeriodicPower = [0.05 .3; .2 .8; -.05 .4];
@@ -656,7 +653,7 @@ chART.save_figure('KidsvsAdults', ResultsFolder, PlotProps)
 Group = 1; % 0 oddball, 1 attention
 GroupingColumn = 'TaskType';
 
-Metadata.TaskType = ~contains(Metadata.Task, 'Oddball');
+Metadata.TaskType = ~contains(cellfun(@strjoin, Metadata.Task, 'UniformOutput', false), 'Oddball');
 % TempMetadata = MetadataComplete(MetadataComplete.Age >=Ages(1) & MetadataComplete.Age<=Ages(2), :);
 TempMetadata = Metadata;
 
@@ -712,3 +709,6 @@ chART.sub_plot([], [nMeasures+1, 2], [MeasuresIdx+1, 1], [1, 2], false, '', Plot
 chART.plot.pretty_colorbar('Divergent', CLims, "Cohen's d", ADHDTopoPlotProps)
 
 chART.save_figure('OddballVsAttention', ResultsFolder, PlotProps)
+
+
+

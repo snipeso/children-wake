@@ -25,7 +25,7 @@ Colors = flip(chART.color_picker(nGroups), 1);
 
 hold on
 if PlotZeroLine
-    plot(XLim, [0 0], ':', 'Color', [.5 .5 .5], 'HandleVisibility','off')
+    plot(XLim, [0 0], ':', 'Color', 'k', 'HandleVisibility','off')
 end
 
 for GroupIdx = 1:nGroups
