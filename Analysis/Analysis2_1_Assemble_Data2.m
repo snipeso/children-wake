@@ -129,6 +129,10 @@ for RecordingIdx = 1:nRecordings
         Freqs = DataOut{2};
     end
 
+    if ~isfield(AllBursts, 'BurstFrequency')
+        continue
+    end
+
     % remove bursts outside of frequency range
     AllBursts([AllBursts.BurstFrequency]<Frequencies(1) | [AllBursts.BurstFrequency]>Frequencies(end)) = [];
     AllBurstClusters([AllBurstClusters.BurstFrequency]<Frequencies(1) | [AllBurstClusters.BurstFrequency]>Frequencies(end)) = [];
@@ -146,7 +150,6 @@ for RecordingIdx = 1:nRecordings
     FreqRange = dsearchn(Freqs', [Frequencies(1); Frequencies(end)]);
     TaskMetadata.Power(NewIdx) = mean(mean(log(Power(NotEdgeChanIndex, FreqRange(1):FreqRange(2))), 2), 1);
 
-
     %%% load in data for topographies
     BurstChannels = [AllBursts.ChannelIndex];
     for ChannelIdx = 1:nChans
@@ -161,7 +164,7 @@ for RecordingIdx = 1:nRecordings
 
             % whitened power
             [~, ~, WhitenedPower, FooofFrequencies] = fooof_spectrum(Power(ChannelIdx, :), Freqs);
-            FreqRangeFooof = dsearchn(FooofFrequencies', [Band(1); Band(2)]);
+             FreqRangeFooof = dsearchn(FooofFrequencies', [Band(1); Band(2)]);
             BurstInformationTopographyBands.PeriodicPower(NewIdx, ChannelIdx, BandIdx) = ...
                 mean(WhitenedPower(FreqRangeFooof(1):FreqRangeFooof(2)), 2);
 
@@ -212,6 +215,7 @@ for RecordingIdx = 1:nRecordings
         BurstInformationTopography.PeriodicPower(NewIdx, ChannelIdx) = mean(WhitenedPower(FreqRangeFooof(1):FreqRangeFooof(2)), 2);
     end
 
+    
     % run fooof
     [Slope, Intercept, WhitenedPower, FooofFrequencies] = fooof_spectrum(mean(Power(NotEdgeChanIndex, :), 1), Freqs);
     TaskMetadata.Slope(NewIdx) = Slope;
