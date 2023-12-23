@@ -15,8 +15,8 @@ Parameters.Hours = {'eve', 'mor'};
 
 Parameters.Tasks.ADHD = {'1Oddball', '2Learning', '3Oddball'};
 Parameters.Tasks.BMS = {'1GoNoGo', '2Alertness', '3Fixation', '4Fixation'};
-% Parameters.Tasks.BMSSL = {'1GoNoGoGopher', '3Alertness', '2Fixation'};
-Parameters.Tasks.BMSSL = {'3Alertness'};
+Parameters.Tasks.BMSSL = {'1GoNoGoGopher', '3Alertness', '2Fixation'};
+% Parameters.Tasks.BMSSL = {'3Alertness'};
 Parameters.Tasks.SleepLearning = {'1Oddball', '2Learning','3Oddball'};
 Parameters.Tasks.Providence = {'Oddball'};
 Parameters.Tasks.BMSAdults = {'Oddball'};

@@ -56,7 +56,7 @@ Metadata.AgeGroups = string(discretize(Metadata.Age, [Ages(:, 1); Ages(end, 2)])
 Metadata.Task(contains(Metadata.Task, 'Alertness')) = {'Alertness'}; % Fix because different order in task
 
 MetadataComplete = Metadata;
-Metadata(contains(Metadata.Group, 'ADHD'), :) = [];
+Metadata(contains(Metadata.Group, 'ADHD'), :) = []; % RODO figure out why theres too few ADHD kids!!
 nAges = size(Ages, 1);
 
 
