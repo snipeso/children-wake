@@ -100,7 +100,7 @@ end
 
 close all
 
-plotGamma = true;
+plotGamma = false;
 FigureDimentions = [5 8];
 SessionIdx = 1;
 Colors = chART.color_picker([4, 2]);
@@ -129,7 +129,7 @@ for ParticipantIdx = Indexes'
             xlabel('Frequency (Hz)')
             ylabel('Power')
             set(gca, 'XScale', 'log', 'YScale', 'log', 'xlim', Range)
-            title([UniqueMetadata.Participant{ParticipantIdx}, ' ', num2str(UniqueMetadata.Age(ParticipantIdx)) ' yo'])
+            title([UniqueMetadata.Participant{ParticipantIdx}, ' ', num2str(UniqueMetadata.Age(ParticipantIdx), '%.1f') ' yo'])
         end
     end
 % 
