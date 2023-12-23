@@ -1,13 +1,14 @@
-function Stats = hedgesG(Data1, Data2, StatsP)
+function Stats = paired_hedges_g(Data1, Data2, StatsP)
 % Data1 and Data2 are P x m x n matrices resulting in m x n stats matrices
 % with Hedge's g m x n matrix and confidence intervals m x n x 2. If only
 % Data1 is provided, then it should be a P x m matrix, and g values will be
 % calculated for every pairwise comparison
+% isDep 1 if dependent, 0 if independent
 
 Dims1 = size(Data1);
 Dims2 = size(Data2);
 
-if nargin == 2 % if only one data matrix is provided
+if nargin == 2  % if only one data matrix is provided
     gValues = nan(Dims1(2));
     CI = nan(Dims1(2), Dims1(2), 2);
     for Indx1 = 1:Dims1(2)-1
@@ -39,7 +40,7 @@ elseif nargin == 3 % if two matrices are provided
             for Indx2 = 1:Dims1(3)
                 D1 = squeeze(Data1(:, Indx1, Indx2));
                 D2 = squeeze(Data2(:, Indx1, Indx2));
-                stats = mes(D2, D1, StatsP.Paired.ES, 'isDep', 1, 'nBoot', StatsP.ANOVA.nBoot);
+                stats = mes(D2, D1, StatsP.Paired.ES, 'isDep', isDep, 'nBoot', StatsP.ANOVA.nBoot);
                 gValues(Indx1, Indx2) = stats.hedgesg;
                 CI(Indx1, Indx2, :) = stats.hedgesgCi;
             end
