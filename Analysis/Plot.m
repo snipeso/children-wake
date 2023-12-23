@@ -54,7 +54,7 @@ Metadata.Subgroup(strcmp(Metadata.Group, 'HC')) = 5;
 Metadata.Globality = Metadata.Globality*100; % make it percentage instead of proportion
 Metadata.AgeGroups = string(discretize(Metadata.Age, [Ages(:, 1); Ages(end, 2)]));
 Metadata.Task(contains(Metadata.Task, 'Alertness')) = {'Alertness'}; % Fix because different order in task
-
+Metadata.Task(contains(Metadata.Task, 'Oddball')) = {'Oddball'};
 MetadataComplete = Metadata;
 Metadata(contains(Metadata.Group, 'ADHD'), :) = []; % RODO figure out why theres too few ADHD kids!!
 nAges = size(Ages, 1);
@@ -477,10 +477,11 @@ chART.save_figure('FrequencyByAgeChange', ResultsFolder, PlotProps)
 %% ADHD vs HC
 
 % paired t-tests across channels for ADHD and controls
-Ages = [8 14];
+% Ages = [8 14];
 Group = 'ADHD';
 GroupingColumn = 'Group';
-TempMetadata = MetadataComplete(MetadataComplete.Age >=Ages(1) & MetadataComplete.Age<=Ages(2), :);
+% TempMetadata = MetadataComplete(MetadataComplete.Age >=Ages(1) & MetadataComplete.Age<=Ages(2), :);
+TempMetadata = MetadataComplete;
 
 Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 nMeasures = numel(Measures);
@@ -498,7 +499,6 @@ PlotProps.Stats.PlotN = true;
 StatsParameters = Parameters.Stats;
 StatsParameters.Unpaired = true;
 
-% figure('Units','normalized','Position', [0 0 .21 .12*nMeasures])
 figure('Units','centimeters','OuterPosition',[0 0 13 30])
 
 for MeasuresIdx = 1:nMeasures
@@ -513,7 +513,6 @@ for MeasuresIdx = 1:nMeasures
         [MetadataPatients, MetadataControls] = match_participants(...
             HourMetadata, strcmp(HourMetadata.(GroupingColumn), Group));
 
-        Control = Topographies(MetadataControls.Index, :);
 
         % average multiple sessions together
         ADHD = average_by_column(MetadataPatients, Topographies, 'Participant', [1:size(MetadataPatients, 1)]');
@@ -561,6 +560,93 @@ chART.sub_plot([], [nMeasures+1, 3], [MeasuresIdx+1, 1], [1, 3], false, '', Plot
 chART.plot.pretty_colorbar('Divergent', CLims, "Cohen's d", ADHDTopoPlotProps)
 
 chART.save_figure('ADHDvsControls', ResultsFolder, PlotProps)
+
+
+
+
+%% kids vs adults
+
+% paired t-tests across channels for ADHD and controls
+% Ages = [8 14];
+
+GroupingColumn = 'AgeGroup2';
+Items = [ 1 3];
+Metadata.AgeGroup2 = discretize(Metadata.Age, [7, 13, 18, 25]);
+
+Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
+nMeasures = numel(Measures);
+
+% match recordings and participants
+OvernightMetadata = overnight_changes(Metadata);
+
+[OvernightMetadataKids, OvernightMetadataAdults] = split_groups(OvernightMetadata, GroupingColumn, Items);
+
+
+HourLabels = {'Evening', 'Morning'};
+CLims = [-3 3];
+PlotProps.Stats.PlotN = true;
+StatsParameters = Parameters.Stats;
+StatsParameters.Unpaired = true;
+
+figure('Units','centimeters','OuterPosition',[0 0 13 30])
+
+for MeasuresIdx = 1:nMeasures
+
+    Topographies = BurstInformationTopography.(Measures{MeasuresIdx});
+
+    %%% group differences at each hour
+    for HourIdx = 1:numel(Hours)
+
+        HourMetadata = Metadata(strcmp(Metadata.Hour, Hours{HourIdx}), :);
+        [MetadataKids, MetadataAdults] = split_groups(HourMetadata, GroupingColumn, Items);
+
+        % average multiple sessions together
+        Kids = average_by_column(MetadataKids, Topographies, 'Participant', [1:size(MetadataKids, 1)]');
+        Adults = average_by_column(MetadataAdults, Topographies, 'Participant',  [1:size(MetadataAdults, 1)]');
+
+        % plot
+        chART.sub_plot([], [nMeasures+1, 3], [MeasuresIdx, HourIdx], [], false, '', PlotProps);
+        plot_topography_difference(Adults, Kids, Chanlocs, CLims, StatsParameters, PlotProps)
+        colorbar off
+
+        if HourIdx ==1
+            X = get(gca, 'XLim');
+            Y = get(gca, 'YLim');
+            text(X(1)-diff(X)*.15, Y(1)+diff(Y)*.5, Measures{MeasuresIdx}, ...
+                'FontSize', PlotProps.Text.TitleSize, 'FontName', PlotProps.Text.FontName, ...
+                'FontWeight', 'Bold', 'HorizontalAlignment', 'Center', 'Rotation', 90);
+        end
+        if MeasuresIdx ==1
+            title(HourLabels{HourIdx})
+        end
+    end
+
+    %%% overnight differences patients and controls
+    ChangeKids = Topographies(OvernightMetadataKids.MorningIndexes, :)- ...
+        Topographies(OvernightMetadataKids.EveningIndexes, :);
+    ChangeAdults = Topographies(OvernightMetadataAdults.MorningIndexes, :)-...
+        Topographies(OvernightMetadataAdults.EveningIndexes, :);
+
+    Kids = average_by_column(OvernightMetadataKids, ChangeKids, 'Participant', []);
+    Adults = average_by_column(OvernightMetadataAdults, ChangeAdults, 'Participant', []);
+
+    chART.sub_plot([], [nMeasures+1, 3], [MeasuresIdx, 3], [], false, '', PlotProps);
+    plot_topography_difference(Adults, Kids, Chanlocs, CLims, StatsParameters, PlotProps)
+    colorbar off
+    % plot
+    if MeasuresIdx ==1
+        title('Kids vs Adults')
+    end
+end
+
+
+ADHDTopoPlotProps = TopoPlotProps;
+ADHDTopoPlotProps.Colorbar.Location = 'north';
+chART.sub_plot([], [nMeasures+1, 3], [MeasuresIdx+1, 1], [1, 3], false, '', PlotProps);
+chART.plot.pretty_colorbar('Divergent', CLims, "Cohen's d", ADHDTopoPlotProps)
+
+chART.save_figure('KidsvsAdults', ResultsFolder, PlotProps)
+
 
 % TODO
 %% front to back overnight change index
