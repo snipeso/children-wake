@@ -21,5 +21,6 @@ for ChannelIdx = Order
             Data(ParticipantIdx, :) = nan;
             continue
         end
+        Data(ParticipantIdx, ChannelIdx) = NeighborData;
     end
 end
