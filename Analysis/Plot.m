@@ -83,7 +83,7 @@ YLimits = [5, 42; % amplitudes
 XLim = [3 25];
 
 HourLabels = {'Evening', 'Morning'};
-OvernightMetadata = overnight_changes(Metadata);
+OvernightMetadata = pair_recordings(Metadata, 'Hour', {'eve', 'mor'});
 
 % GroupColumns = {'', 'Sex', 'Dataset'};
 GroupColumns = {''};
@@ -310,9 +310,9 @@ end
 
 CLims = [-2 2];
 
-EveningMetadata = overnight_changes(Metadata);
+EveningMetadata = pair_recordings(Metadata, 'Hour', {'eve', 'mor'});
 MorningMetadata = EveningMetadata;
-MorningMetadata.Index = EveningMetadata.MorningIndexes;
+MorningMetadata.Index = EveningMetadata.IndexesCategory2;
 
 Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 nMeasures = numel(Measures);
@@ -355,9 +355,9 @@ chART.save_figure('TopographyChange', ResultsFolder, TopoPlotProps)
 %% Overnight topographies split by band
 
 
-EveningMetadata = overnight_changes(Metadata);
+EveningMetadata = pair_recordings(Metadata, 'Hour', {'eve', 'mor'});
 MorningMetadata = EveningMetadata;
-MorningMetadata.Index = EveningMetadata.MorningIndexes;
+MorningMetadata.Index = EveningMetadata.IndexesCategory2;
 
 
 CLims = [-1.5 1.5];
@@ -418,7 +418,7 @@ nMeasures = numel(Measures);
 EquidistantAges = 4:4:25;
 
 Metadata.EquispacedAges = discretize(Metadata.Age, EquidistantAges);
-OvernightMetadata = overnight_changes(Metadata);
+OvernightMetadata = pair_recordings(Metadata, 'Hour', {'eve', 'mor'});
 
 % figure('Units','normalized','OuterPosition',[0 0 .18 1])
 figure('Units','centimeters','OuterPosition',[0 0 10 22])
@@ -453,7 +453,7 @@ for MeasureIdx = 1:nMeasures
     Evening = average_by_column(OvernightMetadata, Spectrogram, 'Participant', [1:size(OvernightMetadata, 1)]');
 
     OvernightTemp = OvernightMetadata;
-    OvernightTemp.Index = OvernightMetadata.MorningIndexes;
+    OvernightTemp.Index = OvernightMetadata.IndexesCategory2;
     Morning = average_by_column(OvernightTemp, Spectrogram, 'Participant', [1:size(OvernightMetadata, 1)]');
 
     Change = Morning-Evening;
@@ -487,7 +487,7 @@ Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPow
 nMeasures = numel(Measures);
 
 % match recordings and participants
-OvernightMetadata = overnight_changes(TempMetadata);
+OvernightMetadata = pair_recordings(TempMetadata, 'Hour', {'eve', 'mor'});
 
 [OvernightMetadataPatients, OvernightMetadataControls] = match_participants(...
     OvernightMetadata, strcmp(OvernightMetadata.(GroupingColumn), Group));
@@ -536,10 +536,10 @@ for MeasuresIdx = 1:nMeasures
     end
 
     %%% overnight differences patients and controls
-    ChangeADHD = Topographies(OvernightMetadataPatients.MorningIndexes, :)- ...
-        Topographies(OvernightMetadataPatients.EveningIndexes, :);
-    ChangeControls = Topographies(OvernightMetadataControls.MorningIndexes, :)-...
-        Topographies(OvernightMetadataControls.EveningIndexes, :);
+    ChangeADHD = Topographies(OvernightMetadataPatients.IndexesCategory2, :)- ...
+        Topographies(OvernightMetadataPatients.IndexesCategory1, :);
+    ChangeControls = Topographies(OvernightMetadataControls.IndexesCategory2, :)-...
+        Topographies(OvernightMetadataControls.IndexesCategory1, :);
 
     ADHD = average_by_column(OvernightMetadataPatients, ChangeADHD, 'Participant', []);
     Control = average_by_column(OvernightMetadataControls, ChangeControls, 'Participant', []);
@@ -577,7 +577,7 @@ Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPow
 nMeasures = numel(Measures);
 
 % match recordings and participants
-OvernightMetadata = overnight_changes(Metadata);
+OvernightMetadata = pair_recordings(Metadata, 'Hour', {'eve', 'mor'});
 
 [OvernightMetadataKids, OvernightMetadataAdults] = split_groups(OvernightMetadata, GroupingColumn, Items);
 
@@ -622,10 +622,10 @@ for MeasuresIdx = 1:nMeasures
     end
 
     %%% overnight differences patients and controls
-    ChangeKids = Topographies(OvernightMetadataKids.MorningIndexes, :)- ...
-        Topographies(OvernightMetadataKids.EveningIndexes, :);
-    ChangeAdults = Topographies(OvernightMetadataAdults.MorningIndexes, :)-...
-        Topographies(OvernightMetadataAdults.EveningIndexes, :);
+    ChangeKids = Topographies(OvernightMetadataKids.IndexesCategory2, :)- ...
+        Topographies(OvernightMetadataKids.IndexesCategory1, :);
+    ChangeAdults = Topographies(OvernightMetadataAdults.IndexesCategory2, :)-...
+        Topographies(OvernightMetadataAdults.IndexesCategory1, :);
 
     Kids = average_by_column(OvernightMetadataKids, ChangeKids, 'Participant', []);
     Adults = average_by_column(OvernightMetadataAdults, ChangeAdults, 'Participant', []);
