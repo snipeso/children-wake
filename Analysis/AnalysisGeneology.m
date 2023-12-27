@@ -15,24 +15,9 @@ end
 
 % Filename_Core = 'P137_SleepLearning_Session11_eve_1Oddball_n_1.mat';
 Filename_Core = 'P139_SleepLearning_Session11_eve_1Oddball_n_1.mat';
-Levels = split(Filename_Core, '_');
-Participant = Levels{1};
-Dataset = Levels{2};
-Session = Levels{3};
-Hour = Levels{4};
-Task = Levels{5};
+[EEG, Bursts, ~, Power, Freqs] = load_single_participant(Filename_Core, Paths);
 
-% load data (EEG, power, and bursts)
-DataOut = load_datafile(fullfile(Paths.CleanEEG, Dataset, Task), Participant, Session, Hour, {'EEG'}, '.mat');
-EEG = DataOut{1};
-
-DataOut = load_datafile(fullfile(Paths.AnalyzedData, 'EEG', 'Bursts', Dataset, Task), Participant, Session, Hour, {'Bursts'}, '.mat');
-Bursts = DataOut{1};
 Bursts = burst_bands(Bursts, Bands);
-
-DataOut = load_datafile(fullfile(Paths.AnalyzedData, 'EEG', 'Power', 'window4s_allt', Dataset, Task), Participant, Session, Hour, {'Power', 'Freqs'}, '.mat');
-Power = DataOut{1};
-Freqs = DataOut{2};
 
 % cycy.plot.plot_all_bursts(EEG, 15, Bursts, 'NewBand');
 
