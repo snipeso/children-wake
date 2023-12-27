@@ -9,11 +9,19 @@ function plot_topography_difference(Data1, Data2, Chanlocs, CLims, StatParameter
 % PlotProps is a structure with plotting info (see chART).
 % in 2process_Bursts.
 
+MinNan = 25;
+TooFewChannels = sum(isnan((Data2-Data1)), 2)>MinNan;
+Data1(TooFewChannels, :) = nan;
+Data2(TooFewChannels, :) = nan;
+
 % %%% Statistics
 Data1 = interpolate_point_channels(Data1, Chanlocs);
 Data2 = interpolate_point_channels(Data2, Chanlocs);
 
 nParticipants = nnz(~all(isnan((Data2-Data1)), 2));
+if nParticipants < 2
+    return
+end
 
 if isfield(StatParameters, 'Unpaired') && StatParameters.Unpaired
     Stats = unpaired_ttest(Data1, Data2, StatParameters);
