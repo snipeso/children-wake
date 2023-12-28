@@ -58,8 +58,8 @@ Metadata.Globality = Metadata.Globality*100; % make it percentage instead of pro
 Metadata.AgeGroups = string(discretize(Metadata.Age, [Ages(:, 1); Ages(end, 2)]));
 Metadata.Task(contains(Metadata.Task, 'Alertness')) = {'Alertness'}; % Fix because different order in task
 Metadata.Task(contains(Metadata.Task, 'GoNoGo')) = {'GoNoGo'}; % Fix because different order in task
-Metadata(contains(Metadata.Task, '4Fixation'), :) = [];
-Metadata.Task(contains(Metadata.Task, 'Fixation')) = {'Fixation'}; % Fix because different order in task
+% Metadata(contains(Metadata.Task, '4Fixation'), :) = [];
+% Metadata.Task(contains(Metadata.Task, 'Fixation')) = {'Fixation'}; % Fix because different order in task
 
 
 % Metadata.Task(contains(Metadata.Task, 'Oddball')) = {'Oddball'};
@@ -72,7 +72,7 @@ nAges = size(Ages, 1);
 
 %% plot oddball1 vs oddball3 and learning
 
-CLims = [-2 2];
+CLims = [-1.5 1.5];
 
 PlotProps = Parameters.PlotProps.Manuscript;
 PlotProps.Figure.Padding = 20;
@@ -84,8 +84,7 @@ Conditions = {'base', 'rotation'};
 for ConditionIdx = 1:numel(Conditions)
 
     % MetadataTemp = Metadata(strcmp(Metadata.Hour, 'mor') & strcmp(Metadata.Condition, Conditions{ConditionIdx}), :);
-
-        MetadataTemp = Metadata(strcmp(Metadata.Condition, Conditions{ConditionIdx}), :);
+    MetadataTemp = Metadata(strcmp(Metadata.Condition, Conditions{ConditionIdx}), :);
 
     Metadata1 = pair_recordings(MetadataTemp, 'Task', {'1Oddball', '3Oddball'});
     Metadata2 = Metadata1;
@@ -129,16 +128,14 @@ end
 
 %% fixation vs gonogo task
 
-CLims = [-2 2];
-
-
+CLims = [-1.5 1.5];
 
 Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 nMeasures = numel(Measures);
 
 MetadataTemp = Metadata(strcmp(Metadata.Hour, 'eve'), :);
-
-Metadata1 = pair_recordings(MetadataTemp, 'Task', {'Fixation', 'GoNoGo'});
+MetadataTemp = Metadata;
+Metadata1 = pair_recordings(MetadataTemp, 'Task', {'3Fixation', '4Fixation'});
 Metadata2 = Metadata1;
 Metadata2.Index = Metadata1.IndexesCategory2;
 
