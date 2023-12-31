@@ -62,7 +62,7 @@ end
 chART.plot.eeglab_topoplot(Stats.cohenD, Chanlocs, Stats, CLims, "Cohen's d", 'Divergent', PlotProps)
 
 if PlotProps.Stats.PlotN
-    text(.4, .5, ['N=', num2str(nParticipants)], 'FontName', PlotProps.Text.FontName, 'FontSize', PlotProps.Text.LegendSize)
+    topo_corner_text(['N=', num2str(nParticipants)], PlotProps)
 end
 
 
