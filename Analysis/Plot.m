@@ -11,26 +11,8 @@ BandLabels = {'Theta', 'Low Alpha', 'High Alpha'};
 MinNaNChannels = 25; % for amplitudes
 
 % Topography plotprops
-TopoPlotProps = Parameters.PlotProps.Manuscript;
-TopoPlotProps.Text.LegendSize = 10;
-TopoPlotProps.Text.AxisSize = 10;
-TopoPlotProps.Axes.xPadding = 8;
-TopoPlotProps.Axes.yPadding = 5;
-TopoPlotProps.Figure.Padding = 20;
-TopoPlotProps.Stats.PlotN = true;
-TopoFigureSizes = [.4, .11];
-
-% Ages = [2 8; % too few little kids
-%     8, 11;% 3 year age jumps, like Kurth et al. 2010
-%     11 14;
-%     14 17;
-%     17, 20;
-%     20 25];
-Ages = [3 7;
-    7 10;
-    10 14;
-    14 18;
-    18 25];
+TopoPlotProps = Parameters.PlotProps.TopoPlots;
+Ages = Parameters.Ages;
 
 ResultsFolder = fullfile(Paths.Results, 'Main');
 if ~exist(ResultsFolder,'dir')
