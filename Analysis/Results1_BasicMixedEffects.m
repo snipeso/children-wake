@@ -18,15 +18,12 @@ end
 
 
 load(fullfile(CacheDir, CacheName), 'Metadata')
-% Metadata(contains(Metadata.Group, 'ADHD'), :) = []; % RODO figure out why theres too few ADHD kids!!
-
 Metadata.Index = [1:size(Metadata, 1)]'; %#ok<NBRAK1> % add index so can chop up table as needed
 Metadata(strcmp(Metadata.Dataset, 'SleepLearning') & ...
     contains(Metadata.Session, {'Session_2', 'Session_3'}), :) = []; % remove repeated measures 1 year later (will average recordings a couple weeks apart)
 Metadata.Globality = Metadata.Globality*100; % make it percentage instead of proportion
 
 table_demographics(unique_metadata(Metadata), 'Dataset', ResultsFolder, 'DemographicsDatasets')
-
 
 
 
@@ -110,12 +107,12 @@ for MeasureIdx = 1:numel(OutcomeMeasures)
     formula = [OutcomeMeasures{MeasureIdx}, ' ~ Age*Hour + Group + Task + (1|Participant)'];
 
     % mdl = fitlme(MetadataStat, formula,  'DummyVarCoding', 'effects');
-    mdl = fitlme(MetadataStat, formula);
+    Model = fitlme(MetadataStat, formula);
 
     % Display the model summary
     disp(['____________________ ', OutcomeMeasures{MeasureIdx}, ' ____________________'])
-    disp(mdl);
-    % writetable
+    disp(Model);
+    save_model(Model, fullfile(ResultsFolder, ['BasicModel_', OutcomeMeasures{MeasureIdx}, '.txt']))
 end
 
 
