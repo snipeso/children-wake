@@ -5,7 +5,7 @@ Metadata(~contains(Metadata.(ColumnName), VariableOrder), :) = [];
 NewColumn = zeros(size(Metadata, 1), 1);
 
 for VariableIdx = 1:numel(VariableOrder)
-    NewColumn(strcmp(Metadata.(ColumnName), VariableOrder{VariableIdx})) = VariableIdx;
+    NewColumn(contains(Metadata.(ColumnName), VariableOrder{VariableIdx})) = VariableIdx;
 end
 
 NewColumn = categorical(NewColumn);

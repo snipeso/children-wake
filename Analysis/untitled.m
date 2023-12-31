@@ -19,14 +19,20 @@ MetadataStat = make_categorical(MetadataStat, 'Task', {'1Oddball', '3Oddball'});
 MetadataStat = make_categorical(MetadataStat, 'Hour', {'eve', 'mor'});
 MetadataStat.Participant = categorical(MetadataStat.Participant);
 MetadataStat = make_categorical(MetadataStat, 'Group', {'HC', 'ADHD'});
+MetadataStat = make_categorical(MetadataStat, 'Session', {'Session_1', 'Session_2'});
 
 
 %%
 
-clc
+% clc
 % Create a linear mixed-effects model with 'Age' as a fixed effect
 OutcomeMeasure = 'Amplitude';
-formula = [OutcomeMeasure, ' ~ Condition*Task + Hour*Age + Group + (1|Participant)'];
+% OutcomeMeasure = 'Quantity';
+% formula = [OutcomeMeasure, ' ~ Condition*Task + Hour*Age + Group + (1|Participant)'];
+formula = [OutcomeMeasure, ' ~ Condition*Task + Hour*Age + Group + (1|Group:Participant)'];
+% formula = [OutcomeMeasure, ' ~ Condition*Task + Hour*Age + Group + (1|Participant)'];
+
+
 % mdl = fitlme(MetadataStat, formula,  'DummyVarCoding', 'effects');
 mdl = fitlme(MetadataStat, formula);
 
