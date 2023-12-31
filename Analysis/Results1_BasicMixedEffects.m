@@ -54,7 +54,7 @@ for GC = GroupColumns
         for HourIdx = 1:numel(Hours)
             Hour = Hours(HourIdx);
 
-            Indexes = strcmp(Metadata.Hour, Hour);
+            Indexes = strcmp(Metadata.Hour, Hour) & contains(Metadata.Task, {'Oddball', 'GoNoGo'});
             TempMetadata = Metadata(Indexes, :);
             AverageMetadata = unique_metadata(TempMetadata, 'Participant'); % average all tasks and sessions
 
@@ -103,7 +103,9 @@ for MeasureIdx = 1:numel(OutcomeMeasures)
     formula = [OutcomeMeasures{MeasureIdx}, ' ~ Age*Hour + Group + Task + (1|Participant)'];
 
     % mdl = fitlme(MetadataStat, formula,  'DummyVarCoding', 'effects');
+    A = tic;
     Model = fitlme(MetadataStat, formula);
+    disp(toc(A))
 
     % Display the model summary
     disp(['____________________ ', OutcomeMeasures{MeasureIdx}, ' ____________________'])
