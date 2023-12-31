@@ -8,20 +8,16 @@ Paths = Parameters.Paths;
 Hours = Parameters.Hours;
 
 
-CacheDir = Paths.Cache;
-CacheName = 'AllBursts.mat';
-
 ResultsFolder = fullfile(Paths.Results, 'MainStats');
 if ~exist(ResultsFolder,'dir')
     mkdir(ResultsFolder)
 end
 
-
+CacheDir = Paths.Cache;
+CacheName = 'AllBursts.mat';
 load(fullfile(CacheDir, CacheName), 'Metadata')
+
 Metadata.Index = [1:size(Metadata, 1)]'; %#ok<NBRAK1> % add index so can chop up table as needed
-Metadata(strcmp(Metadata.Dataset, 'SleepLearning') & ...
-    contains(Metadata.Session, {'Session_2', 'Session_3'}), :) = []; % remove repeated measures 1 year later (will average recordings a couple weeks apart)
-Metadata.Globality = Metadata.Globality*100; % make it percentage instead of proportion
 
 table_demographics(unique_metadata(Metadata), 'Dataset', ResultsFolder, 'DemographicsDatasets')
 
