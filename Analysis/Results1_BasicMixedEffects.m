@@ -23,6 +23,37 @@ table_demographics(unique_metadata(Metadata), 'Dataset', ResultsFolder, 'Demogra
 
 
 
+%% run mixed modesl
+
+% FormulaString = ' ~ Age*Hour + Group + Task + (1|Participant)';
+ FormulaString = ' ~ Age*Hour + Group + Task + Sex + (1|Participant)';
+MetadataStat = Metadata;
+MetadataStat = make_categorical(MetadataStat, 'Task', {'Oddball', 'Learning', 'GoNoGo', 'Alertness', 'Fixation'});
+MetadataStat = make_categorical(MetadataStat, 'Hour', {'eve', 'mor'});
+MetadataStat.Participant = categorical(MetadataStat.Participant);
+MetadataStat = make_categorical(MetadataStat, 'Group', {'HC', 'ADHD'});
+MetadataStat = make_categorical(MetadataStat, 'Sex', {'f', 'm'});
+
+clc
+
+OutcomeMeasures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
+for MeasureIdx = 1:numel(OutcomeMeasures)
+    formula = [OutcomeMeasures{MeasureIdx}, FormulaString];
+
+    % mdl = fitlme(MetadataStat, formula,  'DummyVarCoding', 'effects');
+    A = tic;
+    Model = fitlme(MetadataStat, formula);
+    disp(toc(A))
+
+    % Display the model summary
+    disp(['____________________ ', OutcomeMeasures{MeasureIdx}, ' ____________________'])
+    disp(Model);
+    save_model(Model, fullfile(ResultsFolder, ['BasicModel_', OutcomeMeasures{MeasureIdx}, '.txt']))
+end
+
+
+
+
 %% scatterplot of basic information
 close all
 PlotProps = Parameters.PlotProps.Manuscript;
@@ -88,30 +119,6 @@ for GC = GroupColumns
     chART.save_figure(['BasicScatterAge', GroupColumn], ResultsFolder, PlotProps)
 end
 
-
-%% run mixed modesl
-MetadataStat = Metadata;
-MetadataStat = make_categorical(MetadataStat, 'Task', {'Oddball', 'Learning', 'GoNoGo', 'Alertness', 'Fixation'});
-
-MetadataStat = make_categorical(MetadataStat, 'Hour', {'eve', 'mor'});
-MetadataStat.Participant = categorical(MetadataStat.Participant);
-MetadataStat = make_categorical(MetadataStat, 'Group', {'HC', 'ADHD'});
-clc
-
-OutcomeMeasures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
-for MeasureIdx = 1:numel(OutcomeMeasures)
-    formula = [OutcomeMeasures{MeasureIdx}, ' ~ Age*Hour + Group + Task + (1|Participant)'];
-
-    % mdl = fitlme(MetadataStat, formula,  'DummyVarCoding', 'effects');
-    A = tic;
-    Model = fitlme(MetadataStat, formula);
-    disp(toc(A))
-
-    % Display the model summary
-    disp(['____________________ ', OutcomeMeasures{MeasureIdx}, ' ____________________'])
-    disp(Model);
-    save_model(Model, fullfile(ResultsFolder, ['BasicModel_', OutcomeMeasures{MeasureIdx}, '.txt']))
-end
 
 
 
