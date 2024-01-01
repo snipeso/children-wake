@@ -14,8 +14,9 @@ for ChIdx = 1:nChannels
 end
 
 
-  [Sig, crit_p, ~, adj_P] = fdr_bh(PValue, Alpha, 'dep');
-Stats.sig = Sig;
+% Stats.sig = PValue < Alpha;
+[~, p_masked] = fdr(PValue, Alpha);
+Stats.sig = p_masked;
 
 if isempty(CLims)
     Max = max(abs([quantile(Effect, .01), quantile(Effect, .99)]));
