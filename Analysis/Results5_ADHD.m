@@ -32,7 +32,6 @@ MetadataStat = make_categorical(MetadataStat, 'Group', {'HC', 'ADHD'});
 MetadataStat = make_categorical(MetadataStat, 'Sex', {'f', 'm'});
 MetadataStat.Data = nan(size(MetadataStat, 1), 1);
 
-% ModelFormula = ' ~ Age*Hour + Task*Condition + (1|Participant)';
 ModelFormula = ' ~ Hour*Age + Task + Group + Sex + (1|Participant)';
 
 Models = cell([nMeasures, nChannels]);
@@ -53,8 +52,6 @@ end
 close all
 CLims = [-3 3];
 Coefficient = 'Group_2';
-% CLims = [-5 5];
-% Coefficient = 'Sex_2';
 
 Grid = [1, nMeasures+1];
 
@@ -72,4 +69,4 @@ Axes = chART.sub_plot([], Grid, [1, MeasureIdx+1], [1, 1], false, '', PlotProps)
 Axes.Position(1) = Axes.Position(1)+.02;
 chART.plot.pretty_colorbar('Divergent', CLims, "t values", PlotProps)
 
-chART.save_figure('TopographyChange', ResultsFolder, PlotProps)
+chART.save_figure('ADHDTopographyChange', ResultsFolder, PlotProps)
