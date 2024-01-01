@@ -7,12 +7,17 @@ PlotProps = Parameters.PlotProps.Manuscript;
 Paths = Parameters.Paths;
 Hours = Parameters.Hours;
 BandLabels = {'Theta', 'Low Alpha', 'High Alpha'};
-TopoPlotProps = Parameters.PlotProps.TopoPlots;
-Ages = Parameters.Ages;
-nAges = size(Ages, 1);
+
+PlotProps = Parameters.PlotProps.TopoPlots;
+% PlotProps = Parameters.PlotProps.Manuscript;
 nChannels = 123;
 
-ResultsFolder = fullfile(Paths.Results, 'AverageTopographies');
+Ages = [ 7 14;
+    14 25];
+nAges = size(Ages, 1);
+
+
+ResultsFolder = fullfile(Paths.Results, 'MixedModelLearningTopography');
 if ~exist(ResultsFolder,'dir')
     mkdir(ResultsFolder)
 end
@@ -25,8 +30,10 @@ CacheName = 'AllBursts.mat';
 load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopographyBands', ...
     'BurstInformationTopography', 'Chanlocs')
 Metadata.Index = [1:size(Metadata, 1)]'; %#ok<NBRAK1> % add index so can chop up table as needed
+Metadata.AgeGroups = discretize(Metadata.Age, [Ages(:, 1); Ages(end, 2)]);
 
-Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
+% Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
+Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept'};
 nMeasures = numel(Measures);
 
 
@@ -34,6 +41,8 @@ nMeasures = numel(Measures);
 
 MetadataStat = Metadata;
 MetadataStat = make_categorical(MetadataStat, 'Task', {'1Oddball', '3Oddball'});
+% MetadataStat = make_categorical(MetadataStat, 'Task', {'Oddball', 'Learning', 'GoNoGo', 'Alertness', 'Fixation'});
+% MetadataStat(~contains(MetadataStat.Task, {'Oddball', 'Alertness'}), :) = [];
 MetadataStat = make_categorical(MetadataStat, 'Hour', {'eve', 'mor'});
 MetadataStat.Participant = categorical(MetadataStat.Participant);
 MetadataStat = make_categorical(MetadataStat, 'Group', {'HC', 'ADHD'});
@@ -41,16 +50,18 @@ MetadataStat = make_categorical(MetadataStat, 'Condition', {'base', 'rotation'})
 
 MetadataStat.Data = nan(size(MetadataStat, 1), 1);
 
-ModelFormula = ' ~ Age*Hour + Task*Condition + (1|Participant)';
+% ModelFormula = ' ~ Age*Hour + Task*Condition + (1|Participant)';
+ModelFormula = ' ~ Hour + Task*Condition + (1|Participant)';
 
-Models = cell([nMeasures, nChannels]);
+Models = cell([nAges, nMeasures, nChannels]);
 for MeasureIdx = 1:nMeasures
-    for ChannelIdx = 1:nChannels
-
-        MetadataStat.Data = BurstInformationTopography.(Measures{MeasureIdx})(MetadataStat.Index, ChannelIdx);
-        formula = ['Data', ModelFormula];
-        Models{MeasureIdx, ChannelIdx} = fitlme(MetadataStat, formula);
-
+    for AgeIdx = 1:nAges
+        for ChannelIdx = 1:nChannels
+            MetadataTemp = MetadataStat(MetadataStat.AgeGroups==AgeIdx, :);
+            MetadataTemp.Data = BurstInformationTopography.(Measures{MeasureIdx})(MetadataTemp.Index, ChannelIdx);
+            formula = ['Data', ModelFormula];
+            Models{AgeIdx, MeasureIdx, ChannelIdx} = fitlme(MetadataTemp, formula);
+        end
     end
     disp(['Finished ', Measures{MeasureIdx}])
 end
@@ -59,44 +70,31 @@ end
 
 %% Overnight changes
 
-CLims = [-2 2];
+close all
+CLims = [-5 5];
+Coefficient = 'Condition_2:Task_2';
+% Coefficient = 'Task_2';
 
-EveningMetadata = pair_recordings(Metadata, 'Hour', {'eve', 'mor'});
-MorningMetadata = EveningMetadata;
-MorningMetadata.Index = EveningMetadata.IndexesCategory2;
+figure('Units','centimeters','OuterPosition',[0 0 10 30])
 
+for AgeIdx = 1:nAges
+    for MeasureIdx = 1:nMeasures
 
-
-% figure('Units','normalized','Position', [0 0 TopoFigureSizes(1) TopoFigureSizes(2)*nMeasures])
-figure('Units','centimeters','OuterPosition',[0 0 25 30])
-
-for MeasureIdx = 1:nMeasures
-    Topographies = BurstInformationTopography.(Measures{MeasureIdx});
-    for AgeIdx = 2:nAges
-        Indexes = ismember(EveningMetadata.AgeGroups, string(AgeIdx));
-
-        Evening = average_by_column(EveningMetadata, Topographies, 'Participant', Indexes);
-        Morning = average_by_column(MorningMetadata, Topographies, 'Participant', Indexes);
-
-        chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, AgeIdx], [], false, '', TopoPlotProps);
-        plot_topography_difference(Evening, Morning, Chanlocs, CLims, Parameters.Stats, TopoPlotProps) %
+        chART.sub_plot([], [nMeasures+1, nAges], [MeasureIdx, AgeIdx], [], false, '', PlotProps);
+        mixed_model_topography(squeeze(Models(AgeIdx, MeasureIdx, :)), Chanlocs, CLims, Coefficient, PlotProps)
         colorbar off
-
         if MeasureIdx == 1
             title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
         end
 
-        if AgeIdx ==2
-            X = get(gca, 'XLim');
-            Y = get(gca, 'YLim');
-            text(X(1)-diff(X)*.15, Y(1)+diff(Y)*.5, Measures{MeasureIdx}, ...
-                'FontSize', TopoPlotProps.Text.TitleSize, 'FontName', TopoPlotProps.Text.FontName, ...
-                'FontWeight', 'Bold', 'HorizontalAlignment', 'Center', 'Rotation', 90);
+        if AgeIdx ==1
+            chART.plot.vertical_text(Measures{MeasureIdx}, .15, .5, PlotProps)
         end
+
     end
 end
+chART.sub_plot([], [nMeasures+1, nAges], [MeasureIdx+1, 1], [1, nAges], false, '', PlotProps);
+PlotProps.Colorbar.Location = 'north';
+chART.plot.pretty_colorbar('Divergent', CLims, "t values", PlotProps)
 
-chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, AgeIdx+1], [nMeasures, 1], false, '', TopoPlotProps);
-chART.plot.pretty_colorbar('Divergent', CLims, "Cohen's d", TopoPlotProps)
-
-chART.save_figure('TopographyChange', ResultsFolder, TopoPlotProps)
+% chART.save_figure('TopographyChange', ResultsFolder, TopoPlotProps)
