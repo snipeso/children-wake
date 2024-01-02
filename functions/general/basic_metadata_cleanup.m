@@ -32,7 +32,12 @@ end
 if any(strcmp(Extras, 'Ages'))
     Idx = find(strcmp(Extras, 'Ages'))+1;
     Ages = Extras{Idx};
-    Metadata.AgeGroups = string(discretize(Metadata.Age, [Ages(:, 1); Ages(end, 2)]));
+
+    AgeGroups = discretize(Metadata.Age, [Ages(:, 1); Ages(end, 2)]);
+    Nans = isnan(AgeGroups);
+    AgeGroups = string(AgeGroups);
+    AgeGroups(Nans) = "";
+    Metadata.AgeGroups = string(AgeGroups);
 end
 
 
