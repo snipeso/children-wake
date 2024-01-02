@@ -42,16 +42,16 @@ nMeasures = numel(Measures);
 MetadataStat = Metadata;
 MetadataStat = make_categorical(MetadataStat, 'Task', {'1Oddball', '3Oddball'});
 % MetadataStat = make_categorical(MetadataStat, 'Task', {'Oddball', 'Learning', 'GoNoGo', 'Alertness', 'Fixation'});
-% MetadataStat(~contains(MetadataStat.Task, {'Oddball', 'Alertness'}), :) = [];
+MetadataStat(~contains(MetadataStat.Condition, {'base'}), :) = [];
 MetadataStat = make_categorical(MetadataStat, 'Hour', {'eve', 'mor'});
 MetadataStat.Participant = categorical(MetadataStat.Participant);
-MetadataStat = make_categorical(MetadataStat, 'Group', {'HC', 'ADHD'});
-MetadataStat = make_categorical(MetadataStat, 'Condition', {'base', 'rotation'});
+% MetadataStat = make_categorical(MetadataStat, 'Group', {'HC', 'ADHD'});
+% MetadataStat = make_categorical(MetadataStat, 'Condition', {'base', 'rotation'});
 
 MetadataStat.Data = nan(size(MetadataStat, 1), 1);
 
 % ModelFormula = ' ~ Age*Hour + Task*Condition + (1|Participant)';
-ModelFormula = ' ~ Hour + Task*Condition + (1|Participant)';
+ModelFormula = ' ~ Age*Hour + Task + (1|Participant)';
 
 Models = cell([nAges, nMeasures, nChannels]);
 for MeasureIdx = 1:nMeasures
@@ -72,8 +72,8 @@ end
 
 close all
 CLims = [-5 5];
-Coefficient = 'Condition_2:Task_2';
-% Coefficient = 'Task_2';
+% Coefficient = 'Condition_2:Task_2';
+Coefficient = 'Age:Hour_2';
 
 figure('Units','centimeters','OuterPosition',[0 0 10 30])
 

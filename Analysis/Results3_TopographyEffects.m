@@ -26,6 +26,9 @@ load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopographyBands
     'BurstInformationTopography', 'Chanlocs')
 Metadata.Index = [1:size(Metadata, 1)]'; %#ok<NBRAK1> % add index so can chop up table as needed
 Metadata.AgeGroups = discretize(Metadata.Age, [Ages(:, 1); Ages(end, 2)]);
+Metadata.Session(strcmp(Metadata.Session, 'Session_1_1')) = {'Session_1'};
+Metadata.Session(strcmp(Metadata.Session, 'Session_1_2')) = {'Session_2'};
+
 
 Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 nMeasures = numel(Measures);
@@ -39,13 +42,15 @@ MetadataStat = Metadata;
 MetadataStat = make_categorical(MetadataStat, 'Task', {'Oddball', 'Learning', 'GoNoGo', 'Alertness', 'Fixation'});
 MetadataStat = make_categorical(MetadataStat, 'Hour', {'eve', 'mor'});
 MetadataStat.Participant = categorical(MetadataStat.Participant);
-MetadataStat = make_categorical(MetadataStat, 'Group', {'HC', 'ADHD'});
-% MetadataStat = make_categorical(MetadataStat, 'Sex', {'f', 'm'});
+% MetadataStat = make_categorical(MetadataStat, 'Group', {'HC', 'ADHD'});
+MetadataStat = make_categorical(MetadataStat, 'Sex', {'f', 'm'});
+MetadataStat = make_categorical(MetadataStat, 'Session', {'Session_1', 'Session_2'});
+
 
 MetadataStat.Data = nan(size(MetadataStat, 1), 1);
 
-ModelFormula = ' ~ Hour + Task + Group + (1|Participant)';
-ModelFormula = ' ~ Hour + (1|Participant)';
+ModelFormula = ' ~ Hour + Task + Session + Sex + (1|Participant)';
+% ModelFormula = ' ~ Hour + (1|Participant)';
 % ModelFormula = ' ~ Age*Hour + Task*Condition + (1|Participant)';
 % ModelFormula = ' ~ Hour + Task + Group + Sex + (1|Participant)';
 
@@ -67,8 +72,8 @@ end
 %% Overnight changes
 
 close all
-CLims = [-5 5];
-% Coefficient = 'Condition_2:Task_2';
+% CLims = [-15 15];
+CLims = [];
 Coefficient = 'Hour_2';
 
 figure('Units','centimeters','OuterPosition',[0 0 25 30])

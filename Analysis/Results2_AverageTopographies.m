@@ -1,6 +1,6 @@
 clear
 clc
-close all
+% close all
 
 Parameters = analysisParameters();
 PlotProps = Parameters.PlotProps.Manuscript;

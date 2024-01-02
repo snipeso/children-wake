@@ -3,7 +3,6 @@ clc
 close all
 
 Parameters = analysisParameters();
-PlotProps = Parameters.PlotProps.Manuscript;
 Paths = Parameters.Paths;
 Hours = Parameters.Hours;
 
@@ -18,6 +17,8 @@ CacheName = 'AllBursts.mat';
 load(fullfile(CacheDir, CacheName), 'Metadata')
 
 Metadata.Index = [1:size(Metadata, 1)]'; %#ok<NBRAK1> % add index so can chop up table as needed
+Metadata.Session(strcmp(Metadata.Session, 'Session_1_1')) = {'Session_1'};
+Metadata.Session(strcmp(Metadata.Session, 'Session_1_2')) = {'Session_2'};
 
 table_demographics(unique_metadata(Metadata), 'Dataset', ResultsFolder, 'DemographicsDatasets')
 
@@ -26,13 +27,14 @@ table_demographics(unique_metadata(Metadata), 'Dataset', ResultsFolder, 'Demogra
 %% run mixed modesl
 
 % FormulaString = ' ~ Age*Hour + Group + Task + (1|Participant)';
- FormulaString = ' ~ Age*Hour + Group + Task + Sex + (1|Participant)';
+ FormulaString = ' ~ Age*Hour + Group + Task + Sex + Session + (1|Participant)';
 MetadataStat = Metadata;
 MetadataStat = make_categorical(MetadataStat, 'Task', {'Oddball', 'Learning', 'GoNoGo', 'Alertness', 'Fixation'});
 MetadataStat = make_categorical(MetadataStat, 'Hour', {'eve', 'mor'});
 MetadataStat.Participant = categorical(MetadataStat.Participant);
 MetadataStat = make_categorical(MetadataStat, 'Group', {'HC', 'ADHD'});
 MetadataStat = make_categorical(MetadataStat, 'Sex', {'f', 'm'});
+MetadataStat = make_categorical(MetadataStat, 'Session', {'Session_1', 'Session_2'});
 
 clc
 
