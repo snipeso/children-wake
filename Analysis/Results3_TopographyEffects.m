@@ -9,7 +9,7 @@ close all
 %%% parameters
 
 Parameters = analysisParameters();
-PlotProps = Parameters.PlotProps.Manuscript;
+PlotProps = Parameters.PlotProps.TopoPlots;
 Paths = Parameters.Paths;
 BandLabels = {'Theta', 'Low Alpha', 'High Alpha'};
 Ages = Parameters.Ages;
@@ -18,9 +18,8 @@ nAges = size(Ages, 1);
 nChannels = 123;
 Tasks = {'Oddball', 'GoNoGo', 'Alertness', 'Fixation'}; % oddball first is important; its the reference
 Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
-MeaureLabels = append('\Delta ',{'\muV', '%', '', 'log power', 'log power', 'log power'});
+MeaureLabels = append('\beta ',{'\muV', '%', '', 'log power', 'log power', 'log power'});
 ColorParameter = 'Estimate';
-ColorParameterLabel = '\beta';
 nMeasures = numel(Measures);
 
 %%% paths
@@ -96,7 +95,7 @@ CLims.PeriodicPower = [-.08 .08];
 Coefficient = 'Hour_2';
 Grid = [nMeasures, nAges+1];
 
-figure('Units','centimeters','OuterPosition',[0 0 25 30])
+figure('Units','centimeters','OuterPosition',[0 0 22 30])
 
 for MeasureIdx = 1:nMeasures
     for AgeIdx = 1:nAges
