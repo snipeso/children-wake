@@ -1,51 +1,71 @@
+% script to run main mixed effects models to determine the significance of
+% the most important factors for the paper's analysis.
+
 clear
 clc
 close all
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% setup variables and parameters
+
 Parameters = analysisParameters();
-Paths = Parameters.Paths;
 Hours = Parameters.Hours;
 
+OutcomeMeasures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 
+%%% set paths
+Paths = Parameters.Paths;
+
+% where data can be found
+CacheDir = Paths.Cache;
+CacheName = 'AllBursts.mat';
+
+% where to save figures
 ResultsFolder = fullfile(Paths.Results, 'MainStats');
 if ~exist(ResultsFolder,'dir')
     mkdir(ResultsFolder)
 end
 
-CacheDir = Paths.Cache;
-CacheName = 'AllBursts.mat';
+
+%%% load data
 load(fullfile(CacheDir, CacheName), 'Metadata')
 
-Metadata.Index = [1:size(Metadata, 1)]'; %#ok<NBRAK1> % add index so can chop up table as needed
-Metadata.Session(strcmp(Metadata.Session, 'Session_1_1')) = {'Session_1'};
-Metadata.Session(strcmp(Metadata.Session, 'Session_1_2')) = {'Session_2'};
+% fixes to metadata
+Metadata = basic_metadata_cleanup(Metadata);
 
+% overview of final dataset
 table_demographics(unique_metadata(Metadata), 'Dataset', ResultsFolder, 'DemographicsDatasets')
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Analyses
 
-%% run mixed modesl
+%% run mixed models
 
-% FormulaString = ' ~ Age*Hour + Group + Task + (1|Participant)';
- FormulaString = ' ~ Age*Hour + Group + Task + Sex + Session + (1|Participant)';
+FormulaString = ' ~ Task + Hour*Age + Group + Sex + (1|Participant) + (1|Participant:SessionUnique)';
+% FormulaString = ' ~ Task + Hour*Age + (1|Participant) + (1|Participant:SessionUnique)'; % this model provides the better BIC
+
+
+%%% setup metadata for statistics
 MetadataStat = Metadata;
-MetadataStat = make_categorical(MetadataStat, 'Task', {'Oddball', 'Learning', 'GoNoGo', 'Alertness', 'Fixation'});
-MetadataStat = make_categorical(MetadataStat, 'Hour', {'eve', 'mor'});
-MetadataStat.Participant = categorical(MetadataStat.Participant);
-MetadataStat = make_categorical(MetadataStat, 'Group', {'HC', 'ADHD'});
-MetadataStat = make_categorical(MetadataStat, 'Sex', {'f', 'm'});
-MetadataStat = make_categorical(MetadataStat, 'Session', {'Session_1', 'Session_2'});
 
+% make categorical (removes the interpetable names, but makes sure the
+% order is correct, so that the first category is the "baseline" kind).
+% Also selects the categories to be considered.
+MetadataStat.Participant = categorical(MetadataStat.Participant);
+
+MetadataStat = make_categorical(MetadataStat, 'Task', {'Oddball', 'Learning', 'GoNoGo', 'Alertness', 'Fixation'}); % compare all tasks to the oddball
+MetadataStat = make_categorical(MetadataStat, 'Hour', {'eve', 'mor'}); % compare morning to evening
+MetadataStat = make_categorical(MetadataStat, 'Group', {'HC', 'ADHD'}); % compare patietns to controls
+MetadataStat = make_categorical(MetadataStat, 'Sex', {'f', 'm'}); % compare males to females
+
+
+%%% run models
 clc
 
-OutcomeMeasures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 for MeasureIdx = 1:numel(OutcomeMeasures)
     formula = [OutcomeMeasures{MeasureIdx}, FormulaString];
-
-    % mdl = fitlme(MetadataStat, formula,  'DummyVarCoding', 'effects');
-    A = tic;
     Model = fitlme(MetadataStat, formula);
-    disp(toc(A))
 
     % Display the model summary
     disp(['____________________ ', OutcomeMeasures{MeasureIdx}, ' ____________________'])
@@ -54,15 +74,13 @@ for MeasureIdx = 1:numel(OutcomeMeasures)
 end
 
 
-
-
 %% scatterplot of basic information
 close all
 PlotProps = Parameters.PlotProps.Manuscript;
 PlotProps.Figure.Padding = 20;
-YVariables = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
-Grid = [3 numel(YVariables)];
+Grid = [3 numel(OutcomeMeasures)];
 
+% fix y lims, so same for mor and eve
 YLimits = [5, 42; % amplitudes
     70, 550; % quantities
     .7 2.25; % slope
@@ -73,53 +91,57 @@ YLimits = [5, 42; % amplitudes
 XLim = [3 25];
 
 HourLabels = {'Evening', 'Morning'};
-OvernightMetadata = pair_recordings(Metadata, 'Hour', {'eve', 'mor'});
 
-% GroupColumns = {'', 'Sex', 'Dataset'};
-GroupColumns = {''};
+% select only some of the data
+MetadataScatter = Metadata;
+MetadataScatter = MetadataScatter(contains(MetadataScatter.Task, {'Oddball'}), :);
 
-for GC = GroupColumns
-    GroupColumn = GC{1};
-    figure('Units','centimeters','OuterPosition',[0 0 25 18])
-    for VariableIdx = 1:numel(YVariables)
+OvernightMetadata = pair_recordings(MetadataScatter, 'Hour', {'eve', 'mor'});
 
-        %%% plot age x v split by evening and morning, averaged across sessions
-        for HourIdx = 1:numel(Hours)
-            Hour = Hours(HourIdx);
 
-            Indexes = strcmp(Metadata.Hour, Hour) & contains(Metadata.Task, {'Oddball', 'GoNoGo'});
-            TempMetadata = Metadata(Indexes, :);
-            AverageMetadata = unique_metadata(TempMetadata, 'Participant'); % average all tasks and sessions
+figure('Units','centimeters','OuterPosition',[0 0 25 18])
 
-            chART.sub_plot([], Grid, [HourIdx, VariableIdx], [], true, '', PlotProps);
-            plot_scattercloud(AverageMetadata, 'Age', YVariables{VariableIdx}, ...
-                PlotProps, GroupColumn, false, XLim, YLimits(VariableIdx, :))
-            legend off
+for VariableIdx = 1:numel(OutcomeMeasures)
 
-            if HourIdx==1
-                title(YVariables{VariableIdx})
-            end
-            if VariableIdx==1
-                ylabel(HourLabels{HourIdx}, 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
-            end
-        end
+    %%% plot age x v split by evening and morning, averaged across sessions
+    for HourIdx = 1:numel(Hours)
 
-        %%% plot overnight change
-        chART.sub_plot([], Grid, [3, VariableIdx], [], true, '', PlotProps);
-        AverageMetadata = unique_metadata(OvernightMetadata, 'Participant');
+        % select data of either evening or morning
+        MetadataHour = MetadataScatter(strcmp(MetadataScatter.Hour, Hours(HourIdx)), :);
 
-        plot_scattercloud(AverageMetadata, 'Age', YVariables{VariableIdx}, ...
-            PlotProps, GroupColumn, true, XLim)
-        if VariableIdx ~=numel(YVariables)
-            legend off
+        % average sessions and multiple tasks (1oddball and 3 oddball)
+        MetadataAverage = unique_metadata(MetadataHour, 'Participant');
+
+        % plot
+        chART.sub_plot([], Grid, [HourIdx, VariableIdx], [], true, '', PlotProps);
+        plot_scattercloud(MetadataAverage, 'Age', OutcomeMeasures{VariableIdx}, ...
+            PlotProps, '', false, XLim, YLimits(VariableIdx, :))
+        legend off
+
+        if HourIdx==1
+            title(OutcomeMeasures{VariableIdx})
         end
         if VariableIdx==1
-            ylabel('Overnight change', 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
+            ylabel(HourLabels{HourIdx}, 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
         end
-        xlabel('Age')
     end
-    chART.save_figure(['BasicScatterAge', GroupColumn], ResultsFolder, PlotProps)
+
+    %%% plot overnight change
+    chART.sub_plot([], Grid, [3, VariableIdx], [], true, '', PlotProps);
+    MetadataAverage = unique_metadata(OvernightMetadata, 'Participant');
+
+    plot_scattercloud(MetadataAverage, 'Age', OutcomeMeasures{VariableIdx}, ...
+        PlotProps, '', true, XLim)
+    if VariableIdx ~=numel(OutcomeMeasures)
+        legend off
+    end
+    if VariableIdx==1
+        ylabel('Overnight change', 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
+    end
+    xlabel('Age')
 end
+chART.save_figure('BasicScatterAge', ResultsFolder, PlotProps)
+
 
 
 
@@ -134,34 +156,32 @@ PlotProps.Axes.xPadding = 5;
 PlotProps.Scatter.Size = 5;
 PlotProps.Scatter.Alpha = .4;
 
-YVariables = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
-Grid = [numel(YVariables) numel(YVariables)];
-% figure('Units','centimeters','InnerPosition',[0 0 18 18])
+Grid = [numel(OutcomeMeasures) numel(OutcomeMeasures)];
 figure('Units','centimeters','OuterPosition',[0 0 18 18])
-for Idx1 = 1:numel(YVariables)
-    for Idx2 = 1:numel(YVariables)
+for Idx1 = 1:numel(OutcomeMeasures)
+    for Idx2 = 1:numel(OutcomeMeasures)
         chART.sub_plot([], Grid, [Idx2, Idx1], [], false, '', PlotProps);
 
         if Idx1==Idx2
             if Idx1==1
                 chART.set_axis_properties(PlotProps)
-                title(YVariables{Idx1})
-                ylabel(YVariables{Idx2})
+                title(OutcomeMeasures{Idx1})
+                ylabel(OutcomeMeasures{Idx2})
             end
             axis off
             continue
         end
 
-        plot_scattercloud(correct_for_age(Metadata), YVariables{Idx1}, YVariables{Idx2}, PlotProps, '', false)
+        plot_scattercloud(Metadata, OutcomeMeasures{Idx1}, OutcomeMeasures{Idx2}, PlotProps, '', false)
         set(gca, 'XTick' ,[], 'YTick', [])
         axis square
-        if Idx2 == numel(YVariables)
-            xlabel(YVariables{Idx1})
+        if Idx2 == numel(OutcomeMeasures)
+            xlabel(OutcomeMeasures{Idx1})
         elseif Idx2==1
-            title(YVariables{Idx1})
+            title(OutcomeMeasures{Idx1})
         end
         if Idx1==1
-            ylabel(YVariables{Idx2})
+            ylabel(OutcomeMeasures{Idx2})
         end
     end
 end
@@ -169,3 +189,42 @@ chART.save_figure('CorrelateVariables', ResultsFolder, PlotProps)
 
 
 
+%% mixed model to correct for multiple recordings etc.
+
+FormulaFixed = '~ Task + Hour + Age +';
+FormulaRandom = '+ (1|Participant) + (1|Participant:SessionUnique)';
+
+
+Stats = nan(numel(OutcomeMeasures), numel(OutcomeMeasures), 4); % estimates, tStats, DF, pValues
+Stats = table();
+Stats.OutcomeMeasures = OutcomeMeasures';
+
+for Idx1 = 1:numel(OutcomeMeasures)
+    for Idx2 = 1:numel(OutcomeMeasures)
+
+        if Idx1==Idx2
+            continue
+        end
+
+        formula = [OutcomeMeasures{Idx1}, FormulaFixed, OutcomeMeasures{Idx2}, FormulaRandom];
+        Model = fitlme(MetadataStat, formula);
+
+        RowIdx = strcmp(Model.Coefficients.Name, OutcomeMeasures{Idx2});
+
+
+        beta = Model.Coefficients.Estimate(RowIdx);
+        t = Model.Coefficients.tStat(RowIdx);
+        df = Model.Coefficients.DF(RowIdx);
+        p = Model.Coefficients.pValue(RowIdx);
+        pString = extractAfter(num2str(p, '%.3f'), '.');
+        if p < .001
+            pString = '<.001';
+            else
+               pString = ['=.',pString];
+        end
+
+        StatString = ['b=', num2str(beta, '%.2f'), '; t=', num2str(t, '%.1f'), '; p', pString, '; df=', num2str(df)];
+        Stats.(OutcomeMeasures{Idx1})(Idx2) = {StatString};
+    end
+end
+writetable(Stats, fullfile(ResultsFolder, 'CorrelationsOutcomeVariables.xlsx'))

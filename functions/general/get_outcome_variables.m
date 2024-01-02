@@ -1,6 +1,6 @@
 function OutcomeVariables = get_outcome_variables(Metadata)
 
-NotOutcomeVariables = {'Dataset', 'Participant', 'Session', 'Sex', 'Handedness', ...
+NotOutcomeVariables = {'Dataset', 'Participant', 'Session', 'SessionUnique', 'Sex', 'Handedness', ...
     'Age', 'Group', 'Subgroup', 'Condition', 'Hour', 'Task', 'Index', 'AgeGroups', 'EquispacedAges'};
 
 AllVariables = Metadata.Properties.VariableNames;
