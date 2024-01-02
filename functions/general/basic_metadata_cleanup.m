@@ -45,6 +45,7 @@ end
 if any(strcmp(Extras, 'Tasks'))
     Idx = find(strcmp(Extras, 'Tasks'))+1;
     Tasks = Extras{Idx};
+    Metadata(~contains(Metadata.Task, Tasks), :) = [];
 
     for Task = Tasks
         Metadata.Task(contains(Metadata.Task, Task{1})) = Task;

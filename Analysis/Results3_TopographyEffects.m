@@ -178,7 +178,7 @@ end
 
 CLims = [-1 1;
     -12 12;
-    -3 3];
+    -2.5 2.5];
 
 Coefficient = 'Hour_2';
 Grid = [nBands, nAges+1];
@@ -205,7 +205,7 @@ for BandIdx = 1:nBands
     % plot colorbar
     Axes= chART.sub_plot([], Grid, [BandIdx, nAges+1], [], false, '', PlotProps);
     Axes.Position(1) = Axes.Position(1)+.02;
-    chART.plot.pretty_colorbar('Divergent', CLims(BandIdx, :), MeaureLabels{BandIdx}, PlotProps)
+    chART.plot.pretty_colorbar('Divergent', CLims(BandIdx, :), MeaureLabels{strcmp(Measures, Measure)}, PlotProps)
 end
 
 
