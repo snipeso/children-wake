@@ -1,15 +1,17 @@
 function Metadata = basic_metadata_cleanup(Metadata, Extras)
 arguments
     Metadata
-    Extras = [];
+    Extras = {};
 end
 % applies standard fixes to the metadata so that all scripts update it in
-% the same way.
+% the same way. Write Extras as {'Ages', Ages, 'Tasks', Tasks}, in pairs.
 
 % assign unique index to each entry, so you can find the correct row in the
 % matrices of data even if later the metadata strcture gets reduced as data
 % is removed.
 Metadata.Index = [1:size(Metadata, 1)]'; %#ok<NBRAK1> % add index so can chop up table as needed
+
+Metadata.Subgroup(strcmp(Metadata.Group, 'HC')) = 5;
 
 % remove 1 year later follow-up sessions
 Metadata(contains(Metadata.Dataset, 'SleepLearning') & ...
@@ -27,4 +29,19 @@ if isempty(Extras)
     return
 end
 
-% TODO: all the special ones
+if any(strcmp(Extras, 'Ages'))
+    Idx = find(strcmp(Extras, 'Ages'))+1;
+    Ages = Extras{Idx};
+    Metadata.AgeGroups = string(discretize(Metadata.Age, [Ages(:, 1); Ages(end, 2)]));
+end
+
+
+
+if any(strcmp(Extras, 'Tasks'))
+    Idx = find(strcmp(Extras, 'Tasks'))+1;
+    Tasks = Extras{Idx};
+
+    for Task = Tasks
+        Metadata.Task(contains(Metadata.Task, Task{1})) = Task;
+    end
+end

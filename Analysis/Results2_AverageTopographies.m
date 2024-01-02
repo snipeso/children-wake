@@ -1,38 +1,43 @@
+% plots just the average topographies for different ages
+
 clear
 clc
-% close all
+close all
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Parameters
 
 Parameters = analysisParameters();
-PlotProps = Parameters.PlotProps.Manuscript;
 Paths = Parameters.Paths;
-Hours = Parameters.Hours;
 BandLabels = {'Theta', 'Low Alpha', 'High Alpha'};
-TopoPlotProps = Parameters.PlotProps.TopoPlots;
+PlotProps = Parameters.PlotProps.TopoPlots;
 Ages = Parameters.Ages;
+nAges = size(Ages, 1);
 
+MinNaNChannels = 25; % exclude participants from average if missing too many channels
+Tasks = {'Oddball'};
+
+
+%%% paths
 ResultsFolder = fullfile(Paths.Results, 'AverageTopographies');
 if ~exist(ResultsFolder,'dir')
     mkdir(ResultsFolder)
 end
 
-MinNaNChannels = 25; % for amplitudes
-
 CacheDir = Paths.Cache;
 CacheName = 'AllBursts.mat';
 
+
+%%% load data
 load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopographyBands', ...
     'BurstInformationTopography', 'Chanlocs')
 
+% fixes to metadata
+Metadata = basic_metadata_cleanup(Metadata, {'Ages', Ages, 'Tasks', Tasks});
+Metadata(~contains(Metadata.Task, Tasks), :) = []; % only look at first oddball and GoNoGo, since they are most similar
+Metadata(~contains(Metadata.Group, 'HC'), :) = [];
 
-Metadata.Index = [1:size(Metadata, 1)]'; %#ok<NBRAK1> % add index so can chop up table as needed
-Metadata(~contains(Metadata.Task, {'Oddball', 'GoNoGo'}), :) = []; % only look at first oddball and GoNoGo, since they are most similar
-Metadata.Subgroup(strcmp(Metadata.Group, 'HC')) = 5;
-Metadata.AgeGroups = string(discretize(Metadata.Age, [Ages(:, 1); Ages(end, 2)]));
-Metadata.Task(contains(Metadata.Task, 'GoNoGo')) = {'GoNoGo'}; % pool datasets to same task
-Metadata.Task(contains(Metadata.Task, 'Oddball')) = {'Oddball'};
-MetadataComplete = Metadata;
-nAges = size(Ages, 1);
-
+% tabulate the age groups
 table_demographics(unique_metadata(Metadata), 'AgeGroups', ResultsFolder, 'DemographicsAgeGroups')
 
 
@@ -54,6 +59,8 @@ figure('Units','centimeters','OuterPosition',[0 0 25 30])
 for MeasureIdx = 1:nMeasures
     Topographies = BurstInformationTopography.(Measures{MeasureIdx});
     for AgeIdx = 1:nAges
+
+        % assemble and average data
         Indexes = ismember(Metadata.AgeGroups, string(AgeIdx));
         AverageSessions = average_by_column(Metadata, Topographies, 'Participant', Indexes);
         TooFewChannels = sum(isnan(AverageSessions), 2) > MinNaNChannels;
@@ -62,8 +69,10 @@ for MeasureIdx = 1:nMeasures
         nParticipants = nnz(~TooFewChannels);
         AverageData = mean(AverageSessions, 1, 'omitnan'); % average across participants since its not a stat.
 
-        chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, AgeIdx], [], false, '', TopoPlotProps);
-        chART.plot.eeglab_topoplot(AverageData, Chanlocs, [], CLims.(Measures{MeasureIdx}), '', 'Linear', TopoPlotProps);
+        %%% plot
+        chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, AgeIdx], [], false, '', PlotProps);
+        chART.plot.eeglab_topoplot(AverageData, Chanlocs, [], CLims.(Measures{MeasureIdx}), '', 'Linear', PlotProps);
+
         if MeasureIdx == 1
             title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
         end
@@ -71,15 +80,16 @@ for MeasureIdx = 1:nMeasures
         if AgeIdx ==1
             chART.plot.vertical_text(Measures{MeasureIdx})
         end
-        topo_corner_text(['N=', num2str(nParticipants)],TopoPlotProps)
+
+        topo_corner_text(['N=', num2str(nParticipants)],PlotProps)
     end
 
     % plot colorbar
-    chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, nAges+1], [], false, '', TopoPlotProps);
-    chART.plot.pretty_colorbar('Linear', CLims.(Measures{MeasureIdx}), MeasureUnits{MeasureIdx}, TopoPlotProps)
+    chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, nAges+1], [], false, '', PlotProps);
+    chART.plot.pretty_colorbar('Linear', CLims.(Measures{MeasureIdx}), MeasureUnits{MeasureIdx}, PlotProps)
 
 end
-chART.save_figure('TopographyAverage', ResultsFolder, TopoPlotProps)
+chART.save_figure('TopographyAverage', ResultsFolder, PlotProps)
 
 
 
@@ -93,7 +103,6 @@ CLims.Amplitude = [-1, 18; 10, 30; 1, 16];
 CLims.Power = [-.5 2.5; -.25 2.25; -1.5 .5];
 CLims.PeriodicPower = [0.05 .3; .2 .8; -.05 .4];
 
-% Measures = fieldnames(BurstInformationTopographyBands);
 Measures = {'Amplitude', 'Quantity', 'Power', 'PeriodicPower'};
 MeasureUnits = {'\muV', '% recording', 'log power', 'log power'};
 nMeasures = numel(Measures);
@@ -101,58 +110,53 @@ nMeasures = numel(Measures);
 for MeasureIdx = 1:nMeasures
     Topographies = BurstInformationTopographyBands.(Measures{MeasureIdx});
     nBands = size(Topographies, 3);
-    figure('Units','centimeters','OuterPosition',[0 0 25 16])
 
-    % figure('Units','normalized','Position', [0 0 TopoFigureSizes(1) TopoFigureSizes(2)*nMeasures])
+    figure('Units','centimeters','OuterPosition',[0 0 25 16])
     for BandIdx = 1:nBands
         for AgeIdx = 1:nAges
 
+            % gather data
             Indexes = ismember(Metadata.AgeGroups, string(AgeIdx));
             AverageSessions = average_by_column(Metadata, ...
                 Topographies(:, :, BandIdx), 'Participant', Indexes);
 
             TooFewChannels = sum(isnan(AverageSessions), 2) > MinNaNChannels;
             nParticipants = nnz(~TooFewChannels);
-            if nParticipants<2
+            if nParticipants<2 % handle too little data and titles
                 if BandIdx == 1
-                    chART.sub_plot([], [nBands, nAges+1], [BandIdx, AgeIdx], [], false, '', TopoPlotProps);
-                    title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))], 'FontSize', TopoPlotProps.Text.TitleSize)
+                    chART.sub_plot([], [nBands, nAges+1], [BandIdx, AgeIdx], [], false, '', PlotProps);
+                    title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))], 'FontSize', PlotProps.Text.TitleSize)
                     axis off
                 end
-                if AgeIdx ==1
-                    X = get(gca, 'XLim');
-                    Y = get(gca, 'YLim');
-                    text(X(1)-diff(X)*.1, Y(1)+diff(Y)*.5, BandLabels{BandIdx}, ...
-                        'FontSize', TopoPlotProps.Text.TitleSize, 'FontName', TopoPlotProps.Text.FontName, ...
-                        'FontWeight', 'Bold', 'HorizontalAlignment', 'Center', 'Rotation', 90);
+
+                if AgeIdx == 1
+                    chART.sub_plot([], [nBands, nAges+1], [BandIdx, AgeIdx], [], false, '', PlotProps);
+                    axis off
+                    chART.plot.vertical_text(BandLabels{BandIdx}, .1, .5, PlotProps)
                 end
                 continue
             end
             AverageSessions(TooFewChannels, :) = nan; % make nan all channels, too sparse data % TODO, move to assemble data?
-
             AverageData = mean(AverageSessions, 1, 'omitnan'); % average across participants since its not a stat.
 
-            chART.sub_plot([], [nBands, nAges+1], [BandIdx, AgeIdx], [], false, '', TopoPlotProps);
-            chART.plot.eeglab_topoplot(AverageData, Chanlocs, [], CLims.(Measures{MeasureIdx})(BandIdx, :), '', 'Linear', TopoPlotProps);
+            %%% plot
+            chART.sub_plot([], [nBands, nAges+1], [BandIdx, AgeIdx], [], false, '', PlotProps);
+            chART.plot.eeglab_topoplot(AverageData, Chanlocs, [], CLims.(Measures{MeasureIdx})(BandIdx, :), '', 'Linear', PlotProps);
             if BandIdx == 1
                 title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
             end
 
-            if AgeIdx ==1
-                X = get(gca, 'XLim');
-                Y = get(gca, 'YLim');
-                text(X(1)-diff(X)*.1, Y(1)+diff(Y)*.5, BandLabels{BandIdx}, ...
-                    'FontSize', TopoPlotProps.Text.TitleSize, 'FontName', TopoPlotProps.Text.FontName, ...
-                    'FontWeight', 'Bold', 'HorizontalAlignment', 'Center', 'Rotation', 90);
+            if AgeIdx == 1
+                chART.plot.vertical_text(BandLabels{BandIdx}, .1, .5, PlotProps)
             end
 
-            topo_corner_text(['N=', num2str(nParticipants)],TopoPlotProps)
+            topo_corner_text(['N=', num2str(nParticipants)],PlotProps)
         end
 
         % plot colorbar
-        chART.sub_plot([], [nBands, nAges+1], [BandIdx, nAges+1], [], false, '', TopoPlotProps);
-        chART.plot.pretty_colorbar('Linear', CLims.(Measures{MeasureIdx})(BandIdx, :), MeasureUnits{MeasureIdx}, TopoPlotProps)
+        chART.sub_plot([], [nBands, nAges+1], [BandIdx, nAges+1], [], false, '', PlotProps);
+        chART.plot.pretty_colorbar('Linear', CLims.(Measures{MeasureIdx})(BandIdx, :), MeasureUnits{MeasureIdx}, PlotProps)
     end
-    chART.save_figure(['TopographyBandAverage_', Measures{MeasureIdx}], ResultsFolder, TopoPlotProps)
+    chART.save_figure(['TopographyBandAverage_', Measures{MeasureIdx}], ResultsFolder, PlotProps)
 end
 
