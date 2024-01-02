@@ -1,23 +1,30 @@
-function mixed_model_topography(Models, Chanlocs, CLims, ComparisonString, PlotProps)
+function mixed_model_topography(Models, ColorParameter, Coefficient, Chanlocs, CLims, PlotProps)
+% plots topographies from mixed effects models, whichever statistic is
+% specified in ColorParameters, and whichever estimate is specified by the
+% coefficient (e.g. 'Age', or 'Age:Hour_2').
 
 Alpha = .05;
 
 nChannels = numel(Chanlocs);
-% ColorLabel = "t values";
-ColorLabel = "\beta";
+
+switch ColorParameter
+    case 'tStat'
+        ColorLabel = 't-values';
+    case 'Estimate'
+        ColorLabel = '\beta';
+end
 
 PValue = nan(1, nChannels);
 Effect = PValue;
 for ChIdx = 1:nChannels
     Model = Models{ChIdx};
-    RowIdx = strcmp(Model.Coefficients.Name, ComparisonString);
+    RowIdx = strcmp(Model.Coefficients.Name, Coefficient);
     PValue(ChIdx) = Model.Coefficients.pValue(RowIdx);
-    % Effect(ChIdx) = Model.Coefficients.tStat(RowIdx);
-Effect(ChIdx) = Model.Coefficients.Estimate(RowIdx);
+    Effect(ChIdx) = Model.Coefficients.(ColorParameter)(RowIdx);
 end
 
 
-% Stats.sig = PValue < Alpha;
+% Stats.sig = PValue < Alpha; % debug without fdr correction
 [~, p_masked] = fdr(PValue, Alpha);
 Stats.sig = p_masked;
 
@@ -30,8 +37,3 @@ chART.plot.eeglab_topoplot(Effect, Chanlocs, Stats, CLims, ColorLabel, 'Divergen
 
 DF = Model.Coefficients.DF(1);
 topo_corner_text(['df=', num2str(DF)], PlotProps)
-
-
-% if PlotProps.Stats.PlotN
-%     topo_corner_text(['N=', num2str(nParticipants)], PlotProps)
-% end
