@@ -32,14 +32,8 @@ end
 if any(strcmp(Extras, 'Ages'))
     Idx = find(strcmp(Extras, 'Ages'))+1;
     Ages = Extras{Idx};
-
-    AgeGroups = discretize(Metadata.Age, [Ages(:, 1); Ages(end, 2)]);
-    Nans = isnan(AgeGroups);
-    AgeGroups = string(AgeGroups);
-    AgeGroups(Nans) = "";
-    Metadata.AgeGroups = string(AgeGroups);
+    Metadata.AgeGroups = discretize(Metadata.Age, [Ages(:, 1); Ages(end, 2)]);
 end
-
 
 
 if any(strcmp(Extras, 'Tasks'))
@@ -51,3 +45,14 @@ if any(strcmp(Extras, 'Tasks'))
         Metadata.Task(contains(Metadata.Task, Task{1})) = Task;
     end
 end
+
+if any(strcmp(Extras, 'Datasets'))
+    Idx = find(strcmp(Extras, 'Datasets'))+1;
+    Datasets = Extras{Idx};
+    Metadata(~contains(Metadata.Dataset, Datasets), :) = [];
+
+    for Dataset = Datasets
+        Metadata.Dataset(contains(Metadata.Dataset, Dataset{1})) = Dataset;
+    end
+end
+
