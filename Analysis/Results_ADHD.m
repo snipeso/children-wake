@@ -13,6 +13,8 @@ nChannels = 123;
 Tasks = {'Oddball', 'Learning', 'GoNoGo', 'Alertness', 'Fixation'}; % oddball first is important; its the reference
 
 Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
+MeasureLabels = append('\beta ',{'\muV', '%', '', 'log power', 'log power', 'log power'});
+
 nMeasures = numel(Measures);
 
 %%% paths
@@ -64,16 +66,22 @@ CLims = [-3 3];
 Coefficient = 'Group_2';
 ColorParameter = 'Estimate';
 
+
 Grid = [1, nMeasures];
 
 PlotProps = Parameters.PlotProps.Manuscript;
+PlotProps.Color.Steps.Divergent = 20;
 
-figure('Units','centimeters','OuterPosition',[0 0 30 8])
+figure('Units','centimeters','OuterPosition',[0 0 35 8])
 for MeasureIdx = 1:nMeasures
     chART.sub_plot([], Grid, [1, MeasureIdx], [], false, '', PlotProps);
 
     mixed_model_topography(squeeze(Models(MeasureIdx, :)), ...
         ColorParameter, Coefficient, Chanlocs, [], PlotProps)
+    h = colorbar;
+h.TickLength = 0;
+ylabel(h, MeasureLabels{MeasureIdx}) % text style needs to be specified for label, because its weird
+
     title(Measures{MeasureIdx})
 end
 

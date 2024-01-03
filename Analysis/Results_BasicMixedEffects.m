@@ -70,6 +70,7 @@ for MeasureIdx = 1:numel(OutcomeMeasures)
     % Display the model summary
     disp(['____________________ ', OutcomeMeasures{MeasureIdx}, ' ____________________'])
     disp(Model);
+    
     save_model(Model, fullfile(ResultsFolder, ['BasicModel_', OutcomeMeasures{MeasureIdx}, '.txt']))
 end
 
@@ -98,7 +99,7 @@ MetadataScatter = MetadataScatter(contains(MetadataScatter.Task, {'Oddball'}), :
 
 OvernightMetadata = pair_recordings(MetadataScatter, 'Hour', {'eve', 'mor'});
 
-
+clc
 figure('Units','centimeters','OuterPosition',[0 0 25 18])
 
 for VariableIdx = 1:numel(OutcomeMeasures)
@@ -124,6 +125,9 @@ for VariableIdx = 1:numel(OutcomeMeasures)
         if VariableIdx==1
             ylabel(HourLabels{HourIdx}, 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
         end
+        disp([ Hours{HourIdx}, OutcomeMeasures{VariableIdx}, ...
+            'N=', num2str(numel(unique(MetadataAverage.Participant)))])
+
     end
 
     %%% plot overnight change
@@ -139,8 +143,11 @@ for VariableIdx = 1:numel(OutcomeMeasures)
         ylabel('Overnight change', 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
     end
     xlabel('Age')
+    disp(['Overnight', OutcomeMeasures{VariableIdx}, ...
+        'N=', num2str(numel(unique(MetadataAverage.Participant)))])
 end
 chART.save_figure('BasicScatterAge', ResultsFolder, PlotProps)
+
 
 
 
