@@ -60,7 +60,7 @@ Models = cell([nAges, nMeasures, nChannels]);
 for MeasureIdx = 1:nMeasures
     for AgeIdx = 1:nAges
         for ChannelIdx = 1:nChannels
-            MetadataTemp = MetadataStat(strcmp(MetadataStat.AgeGroups, num2str(AgeIdx)), :);
+            MetadataTemp = MetadataStat(MetadataStat.AgeGroups==AgeIdx, :);
             MetadataTemp.Data = BurstInformationTopography.(Measures{MeasureIdx})(MetadataTemp.Index, ChannelIdx);
 
             if numel(unique(MetadataTemp.Task)) > 1
@@ -148,7 +148,7 @@ BandModels = cell([nAges, nBands, nChannels]);
 for BandIdx = 1:nBands
     for AgeIdx = 1:nAges
         for ChannelIdx = 1:nChannels
-            MetadataTemp = MetadataStat(strcmp(MetadataStat.AgeGroups, num2str(AgeIdx)), :);
+            MetadataTemp = MetadataStat(MetadataStat.AgeGroups==AgeIdx, :);
             MetadataTemp.Data = BurstInformationTopographyBands.(Measure)(MetadataTemp.Index, ChannelIdx, BandIdx);
 
             if numel(unique(MetadataTemp.Task)) > 1

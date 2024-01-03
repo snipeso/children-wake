@@ -2,14 +2,23 @@ function table_demographics(Metadata, CategoryColumn, Destination, Filename)
 % creates table of how many of each binary category there is, and average
 % of the main outcome variables
 
+try
+Metadata(isnan(Metadata.(CategoryColumn)), :) = [];
+end
 
 Categories = unique(Metadata.(CategoryColumn));
 Table = table();
 
 for Category = Categories'
-
+    try
     TempMetadata = Metadata(ismember(Metadata.(CategoryColumn), Category{1}), :);
-    Table = cat(1, Table, new_row(TempMetadata, Category{1}));
+        Table = cat(1, Table, new_row(TempMetadata, Category{1}));
+
+    catch
+   TempMetadata = Metadata(ismember(Metadata.(CategoryColumn), Category(1)), :);
+       Table = cat(1, Table, new_row(TempMetadata, Category(1)));
+
+    end
 end
 Table = cat(1, Table, new_row(Metadata, 'All'));
 disp(Table)

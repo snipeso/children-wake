@@ -191,14 +191,15 @@ chART.save_figure('CorrelateVariables', ResultsFolder, PlotProps)
 
 %% mixed model to correct for multiple recordings etc.
 
-FormulaFixed = '~ Task + Hour + Age +';
+FormulaFixed = '~ Task + Hour*Age +';
 FormulaRandom = '+ (1|Participant) + (1|Participant:SessionUnique)';
 
 
 Stats = nan(numel(OutcomeMeasures), numel(OutcomeMeasures), 4); % estimates, tStats, DF, pValues
 Stats = table();
 Stats.OutcomeMeasures = OutcomeMeasures';
-
+nMeasures = numel(OutcomeMeasures);
+AllT = nan(nMeasures, nMeasures);
 for Idx1 = 1:numel(OutcomeMeasures)
     for Idx2 = 1:numel(OutcomeMeasures)
 
@@ -214,13 +215,14 @@ for Idx1 = 1:numel(OutcomeMeasures)
 
         beta = Model.Coefficients.Estimate(RowIdx);
         t = Model.Coefficients.tStat(RowIdx);
+        AllT(Idx2, Idx1) = t;
         df = Model.Coefficients.DF(RowIdx);
         p = Model.Coefficients.pValue(RowIdx);
         pString = extractAfter(num2str(p, '%.3f'), '.');
         if p < .001
             pString = '<.001';
-            else
-               pString = ['=.',pString];
+        else
+            pString = ['=.',pString];
         end
 
         StatString = ['b=', num2str(beta, '%.2f'), '; t=', num2str(t, '%.1f'), '; p', pString, '; df=', num2str(df)];
@@ -228,3 +230,14 @@ for Idx1 = 1:numel(OutcomeMeasures)
     end
 end
 writetable(Stats, fullfile(ResultsFolder, 'CorrelationsOutcomeVariables.xlsx'))
+
+
+%%
+figure('Units','centimeters','InnerPosition',[0 0 12 8])
+imagesc(AllT)
+chART.plot.vertical_colorbar('t-values', PlotProps)
+chART.set_axis_properties(PlotProps)
+colormap(PlotProps.Color.Maps.Linear)
+set(gca, 'xtick', 1:nMeasures, 'xticklabels', OutcomeMeasures, 'XAxisLocation','top', ...
+    'ytick', 1:nMeasures, 'yticklabels', OutcomeMeasures, 'TickLength', [0 0])
+axis square

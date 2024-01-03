@@ -43,13 +43,22 @@ table_demographics(unique_metadata(Metadata), 'AgeGroups', ResultsFolder, 'Demog
 
 %% Average topographies
 
+% CLims = struct();
+% CLims.Quantity = [5 40];
+% CLims.Amplitude = [10, 35];
+% CLims.Power = [-1 1.7];
+% CLims.PeriodicPower = [0.04 .44];
+% CLims.Slope = [1.3 2.1];
+% CLims.Intercept = [.8 2.3];
+
 CLims = struct();
 CLims.Quantity = [5 40];
 CLims.Amplitude = [10, 35];
-CLims.Power = [-1 1.7];
-CLims.PeriodicPower = [0.04 .44];
 CLims.Slope = [1.3 2.1];
 CLims.Intercept = [.8 2.3];
+CLims.Power = [-.7  1.7];
+CLims.PeriodicPower = [0.1 .44];
+
 
 Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 MeasureUnits = {'\muV', '% recording', '', 'log power', 'log power', 'log power'};
@@ -61,7 +70,7 @@ for MeasureIdx = 1:nMeasures
     for AgeIdx = 1:nAges
 
         % assemble and average data
-        Indexes = ismember(Metadata.AgeGroups, string(AgeIdx));
+        Indexes = Metadata.AgeGroups==AgeIdx;
         AverageSessions = average_by_column(Metadata, Topographies, 'Participant', Indexes);
         TooFewChannels = sum(isnan(AverageSessions), 2) > MinNaNChannels;
         AverageSessions(TooFewChannels, :) = nan; % make nan all channels, too sparse data % TODO, move to assemble data?
@@ -78,7 +87,7 @@ for MeasureIdx = 1:nMeasures
         end
 
         if AgeIdx ==1
-            chART.plot.vertical_text(Measures{MeasureIdx})
+            chART.plot.vertical_text(Measures{MeasureIdx}, .15, .5, PlotProps)
         end
 
         topo_corner_text(['N=', num2str(nParticipants)],PlotProps)
@@ -116,7 +125,7 @@ for MeasureIdx = 1:nMeasures
         for AgeIdx = 1:nAges
 
             % gather data
-            Indexes = ismember(Metadata.AgeGroups, string(AgeIdx));
+            Indexes = Metadata.AgeGroups==AgeIdx;
             AverageSessions = average_by_column(Metadata, ...
                 Topographies(:, :, BandIdx), 'Participant', Indexes);
 
