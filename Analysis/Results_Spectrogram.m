@@ -52,7 +52,6 @@ EquidistantAges = 4:4:25;
 Metadata.EquispacedAges = discretize(Metadata.Age, EquidistantAges);
 OvernightMetadata = pair_recordings(Metadata, 'Hour', {'eve', 'mor'});
 
-% figure('Units','normalized','OuterPosition',[0 0 .18 1])
 figure('Units','centimeters','OuterPosition',[0 0 10 22])
 
 for MeasureIdx = 1:nMeasures
@@ -64,7 +63,7 @@ for MeasureIdx = 1:nMeasures
     %%% plot average evening values
     chART.sub_plot([], [nMeasures, 1], [MeasureIdx, 1], [], true, '', PlotProps);
     plot_age_by_frequency(EveningAverage, EquidistantAges(1:end-1), Frequencies, 'Linear', Labels{MeasureIdx}, PlotProps)
-
+    ylim([5 15])
     title(Measures{MeasureIdx})
     ylabel('Frequency (Hz)')
     if MeasureIdx == nMeasures
@@ -95,6 +94,7 @@ for MeasureIdx = 1:nMeasures
     %%% plot differences
     chART.sub_plot([], [nMeasures, 1], [MeasureIdx, 1], [], true, '', PlotProps);
     plot_age_by_frequency(ChangeAverage, EquidistantAges(1:end-1), Frequencies, 'Divergent', 'difference', PlotProps)
+    ylim([5 15])
 
     title([Measures{MeasureIdx}])
     ylabel('Frequency (Hz)')
