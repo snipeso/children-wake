@@ -1,11 +1,21 @@
+% plots topographies of ADHD vs HC
+
 clear
 clc
 close all
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% parameters
+
 Parameters = analysisParameters();
 Paths = Parameters.Paths;
 nChannels = 123;
+Tasks = {'Oddball', 'Learning', 'GoNoGo', 'Alertness', 'Fixation'}; % oddball first is important; its the reference
 
+Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
+nMeasures = numel(Measures);
+
+%%% paths
 ResultsFolder = fullfile(Paths.Results, 'MixedModelADHD');
 if ~exist(ResultsFolder,'dir')
     mkdir(ResultsFolder)
@@ -14,31 +24,24 @@ end
 CacheDir = Paths.Cache;
 CacheName = 'AllBursts.mat';
 
+
+%%% load data
 load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopographyBands', ...
     'BurstInformationTopography', 'Chanlocs')
-Metadata.Index = [1:size(Metadata, 1)]'; %#ok<NBRAK1> % add index so can chop up table as needed
+Metadata = basic_metadata_cleanup(Metadata, {'Tasks', Tasks});
 
-Metadata.Session(strcmp(Metadata.Session, 'Session_1_1')) = {'Session_1'};
-Metadata.Session(strcmp(Metadata.Session, 'Session_1_2')) = {'Session_2'};
-Metadata = Metadata(contains(Metadata.Session, 'Session_1'), :);
-
-Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
-nMeasures = numel(Measures);
 
 
 %% make model
 
 MetadataStat = Metadata;
-MetadataStat = make_categorical(MetadataStat, 'Task', {'Oddball', 'Learning', 'GoNoGo', 'Alertness', 'Fixation'});
+MetadataStat = make_categorical(MetadataStat, 'Task', Tasks);
 MetadataStat = make_categorical(MetadataStat, 'Hour', {'eve', 'mor'});
 MetadataStat.Participant = categorical(MetadataStat.Participant);
 MetadataStat = make_categorical(MetadataStat, 'Group', {'HC', 'ADHD'});
-MetadataStat = make_categorical(MetadataStat, 'Sex', {'f', 'm'});
-% MetadataStat = make_categorical(MetadataStat, 'Session', {'Session_1', 'Session_2'});
 MetadataStat.Data = nan(size(MetadataStat, 1), 1);
 
-ModelFormula = ' ~ Hour + Age + Task + Group + Sex + (1|Participant)';
-ModelFormula = ' ~ Hour*Age + Task + Group + (1|Participant)';
+ModelFormula = ' ~ Hour*Age + Task + Group + (1|Participant) + (1|Participant:SessionUnique)';
 
 Models = cell([nMeasures, nChannels]);
 for MeasureIdx = 1:nMeasures
@@ -58,21 +61,19 @@ end
 close all
 CLims = [-3 3];
 Coefficient = 'Group_2';
+ColorParameter = 'Estimate';
 
-Grid = [1, nMeasures+1];
+Grid = [1, nMeasures];
 
-PlotProps = Parameters.PlotProps.TopoPlots;
+PlotProps = Parameters.PlotProps.Manuscript;
 
 figure('Units','centimeters','OuterPosition',[0 0 30 8])
 for MeasureIdx = 1:nMeasures
     chART.sub_plot([], Grid, [1, MeasureIdx], [], false, '', PlotProps);
-    mixed_model_topography(Models(MeasureIdx, :), Chanlocs, CLims, Coefficient, PlotProps)
-    colorbar off
+
+    mixed_model_topography(squeeze(Models(MeasureIdx, :)), ...
+        ColorParameter, Coefficient, Chanlocs, [], PlotProps)
     title(Measures{MeasureIdx})
 end
-
-Axes = chART.sub_plot([], Grid, [1, MeasureIdx+1], [1, 1], false, '', PlotProps);
-Axes.Position(1) = Axes.Position(1)+.02;
-chART.plot.pretty_colorbar('Divergent', CLims, "t values", PlotProps)
 
 chART.save_figure('ADHDTopographyChange', ResultsFolder, PlotProps)

@@ -103,7 +103,8 @@ for MeasureIdx = 1:nMeasures
 
         %%% plot
         chART.sub_plot([], Grid, [MeasureIdx, AgeIdx], [], false, '', PlotProps);
-        mixed_model_topography(squeeze(Models(AgeIdx, MeasureIdx, :)), ColorParameter, Coefficient, Chanlocs, CLims.(Measures{MeasureIdx}), PlotProps)
+        mixed_model_topography(squeeze(Models(AgeIdx, MeasureIdx, :)), ...
+            ColorParameter, Coefficient, Chanlocs, CLims.(Measures{MeasureIdx}), PlotProps)
         colorbar off
 
         if MeasureIdx == 1
