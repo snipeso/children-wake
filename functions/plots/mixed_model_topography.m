@@ -1,4 +1,4 @@
-function mixed_model_topography(Models, ColorParameter, Coefficient, Chanlocs, CLims, PlotProps)
+function mixed_model_topography(Models, ColorParameter, Coefficient, Chanlocs, CLims, PlotProps, ColorLabel)
 % plots topographies from mixed effects models, whichever statistic is
 % specified in ColorParameters, and whichever estimate is specified by the
 % coefficient (e.g. 'Age', or 'Age:Hour_2').
@@ -7,11 +7,13 @@ Alpha = .05;
 
 nChannels = numel(Chanlocs);
 
+if ~exist("ColorLabel", 'var')
 switch ColorParameter
     case 'tStat'
         ColorLabel = 't-values';
     case 'Estimate'
         ColorLabel = '\beta';
+end
 end
 
 PValue = nan(1, nChannels);
@@ -35,5 +37,5 @@ end
 
 chART.plot.eeglab_topoplot(Effect, Chanlocs, Stats, CLims, ColorLabel, 'Divergent', PlotProps)
 
-% DF = Model.Coefficients.DF(1);
-% topo_corner_text(['df=', num2str(DF)], PlotProps)
+DF = Model.Coefficients.DF(1);
+topo_corner_text(['df=', num2str(DF)], PlotProps)

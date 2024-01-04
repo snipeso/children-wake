@@ -70,7 +70,13 @@ for MeasureIdx = 1:numel(OutcomeMeasures)
     % Display the model summary
     disp(['____________________ ', OutcomeMeasures{MeasureIdx}, ' ____________________'])
     disp(Model);
-    
+    disp_mixed_stat(Model, 'Age')
+    disp_mixed_stat(Model, 'Group_2')
+    disp_mixed_stat(Model, 'Hour_2')
+    disp_mixed_stat(Model, 'Sex_2')
+    disp_mixed_stat(Model, 'Age:Hour_2')
+
+
     save_model(Model, fullfile(ResultsFolder, ['BasicModel_', OutcomeMeasures{MeasureIdx}, '.txt']))
 end
 

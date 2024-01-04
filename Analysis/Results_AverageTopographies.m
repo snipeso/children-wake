@@ -35,7 +35,6 @@ load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopographyBands
 % fixes to metadata
 Metadata = basic_metadata_cleanup(Metadata, {'Ages', Ages, 'Tasks', Tasks});
 Metadata(~contains(Metadata.Task, Tasks), :) = []; % only look at first oddball and GoNoGo, since they are most similar
-Metadata(~contains(Metadata.Group, 'HC'), :) = [];
 
 % tabulate the age groups
 table_demographics(unique_metadata(Metadata), 'AgeGroups', ResultsFolder, 'DemographicsAgeGroups')

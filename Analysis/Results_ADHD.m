@@ -62,26 +62,31 @@ end
 %% Effect of ADHD on outcome measures
 
 close all
-CLims = [-3 3];
 Coefficient = 'Group_2';
 ColorParameter = 'Estimate';
 
+CLims = struct();
+CLims.Amplitude = [-4 4];
+CLims.Quantity = [-10 10];
+CLims.Slope = [-.15 .15];
+CLims.Intercept = [-.15 .15];
+CLims.Power = [-.4 .4];
+CLims.PeriodicPower = [-.08 .08];
 
 Grid = [1, nMeasures];
 
 PlotProps = Parameters.PlotProps.Manuscript;
 PlotProps.Color.Steps.Divergent = 20;
+    PlotProps.Colorbar.Location = 'southoutside';
 
-figure('Units','centimeters','OuterPosition',[0 0 35 8])
+
+figure('Units','centimeters','OuterPosition',[0 0 25 10])
 for MeasureIdx = 1:nMeasures
     chART.sub_plot([], Grid, [1, MeasureIdx], [], false, '', PlotProps);
 
+    
     mixed_model_topography(squeeze(Models(MeasureIdx, :)), ...
-        ColorParameter, Coefficient, Chanlocs, [], PlotProps)
-    h = colorbar;
-h.TickLength = 0;
-ylabel(h, MeasureLabels{MeasureIdx}) % text style needs to be specified for label, because its weird
-
+        ColorParameter, Coefficient, Chanlocs, CLims.(Measures{MeasureIdx}), PlotProps, MeasureLabels{MeasureIdx})
     title(Measures{MeasureIdx})
 end
 
