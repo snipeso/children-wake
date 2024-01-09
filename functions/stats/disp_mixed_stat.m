@@ -15,5 +15,5 @@ else
     pString = [', p = .',pString];
 end
 
-disp([Coefficient, ': beta = ' num2str(Estimate, '%.2f'), ...
+disp([Coefficient, ': beta = ' num2str(Estimate, '%.3f'), ...
     ', t = ', num2str(tStat, '%.2f'), pString, ', df = ', num2str(DF)])
