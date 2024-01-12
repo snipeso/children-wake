@@ -42,6 +42,7 @@ sccprj/
 
 # Matlab code generation folders
 codegen/
+.cycy_cache_dont_add_to_git
 
 # Simulink autosave extension
 *.autosave
@@ -56,6 +57,5 @@ generalFunctions/desktop.ini
 .Rproj.user
 Analysis/surfmesh.mat
 Analysis/surfmesh.mat
-*.mat
 
 .env

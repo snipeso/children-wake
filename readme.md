@@ -41,3 +41,12 @@ Orginal repo was AllWake
 - quality check: plot all participants and their sessions in one plot (see how differnt mor/eve can be), and use to exclude bad participants
 - handedness of BMSSL
 - finish loading in birthdates BMSSLL!!
+
+
+
+### random codes
+1 med in past
+2 unmed
+3 med day before
+4 med day of
+5 HC

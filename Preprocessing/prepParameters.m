@@ -2,7 +2,13 @@ function P = prepParameters()
 % Here is located all the common variables, paths, and parameters that get
 % repeatedly called by more than one preprocessing script.
 
-P.Datasets = {'ADHD', 'BMS', 'BMSSL', 'Koffein', 'SleepLearning'};
+P.Datasets = {'ADHD', 'BMS', 'BMSSL', 'SleepLearning', 'Providence', 'BMSAdults'};
+P.LineNoise.ADHD = 50;
+P.LineNoise.BMS = 50;
+P.LineNoise.BMSSL = 50;
+P.LineNoise.SleepLearning = 50;
+P.LineNoise.Providence = 60;
+P.LineNoise.BMSAdults = 50;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Locations
@@ -13,18 +19,21 @@ Paths = struct(); % I make structs of variables so they don't flood the workspac
 Paths.Analysis = mfilename('fullpath');
 Paths.Analysis = extractBefore(Paths.Analysis, 'Preprocessing');
 
-Core ='X:\Data\';
+Core ='D:\Data\AllWake';
+% Core ='E:\Data\';
 
 Paths.Datasets = fullfile(Core, 'Raw');
 Paths.Preprocessed = fullfile(Core, 'Preprocessed');
 Paths.Final = fullfile(Core, 'Final'); % where data gets saved once its been turned into something else
 Paths.Core = Core;
+Paths.Metadata = fullfile(Core, 'Metadata');
+Paths.Errors = fullfile(Core, 'Errors');
 
 P.Paths = Paths;
 
 % add location of subfunctions
 addpath(fullfile(Paths.Analysis, 'functions', 'general'))
-Subfunctions = getContent(fullfile(Paths.Analysis, 'functions'));
+Subfunctions = list_filenames(fullfile(Paths.Analysis, 'functions'));
 for Indx_F = 1:numel(Subfunctions)
     addpath(fullfile(Paths.Analysis, 'functions',Subfunctions{Indx_F}))
 end

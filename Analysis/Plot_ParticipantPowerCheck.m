@@ -10,10 +10,11 @@ Paths = Parameters.Paths;
 Datasets = Parameters.Datasets;
 Refresh = true;
 PlotProps = Parameters.PlotProps.Manuscript;
+Channels = Parameters.Channels;
 
-nFreqs = 1025;
-nChans = 109;
-Folder = 'window8s_allt/';
+nFreqs = 513;
+nChans = 123;
+Folder = 'window4s_allt/';
 
 CacheDir = Paths.Cache;
 CacheName = 'AllAveragePower.mat';
@@ -29,7 +30,7 @@ end
 
 GammaRange = [25, 35];
 
-Metadata = readtable(fullfile(Paths.Metadata, 'Metadata.csv'));
+Metadata = readtable(fullfile(Paths.Metadata, 'Metadata_Children_Wake.csv'));
 Metadata = Metadata(contains(Metadata.Dataset, Datasets), :);
 
 [Participants, UniqueIndx] = unique(Metadata.Participant);
@@ -66,18 +67,21 @@ if Refresh || ~exist(fullfile(CacheDir, CacheName), 'file')
                     end
 
                     % average across channels
-                    Spectrum = mean(Power, 1, 'omitnan');
+                    Spectrum = mean(Power(labels2indexes(Channels.NotEdge, Chanlocs), :), 1, 'omitnan');
                     SpectrumSmooth =  smooth_frequencies(Spectrum, Freqs, 2);
                     PowerSpectra(ParticipantIdx, SessionIdx, TaskIdx, HourIdx, :) = SpectrumSmooth;
 
 
                     % gather topography of peak frequency
-
+try
                     PeakFreq = find_periodic_peak(SpectrumSmooth, Freqs, GammaRange);
                     if ~isempty(PeakFreq)
                         BumpIndex = ismember(Freqs, PeakFreq);
                         GammaTopographies(ParticipantIdx, SessionIdx, TaskIdx, HourIdx, :) = Power(:, BumpIndex);
                     end
+catch
+    warning('topo didnt work')
+end
                 end
 
             end
@@ -96,7 +100,7 @@ end
 
 close all
 
-plotGamma = true;
+plotGamma = false;
 FigureDimentions = [5 8];
 SessionIdx = 1;
 Colors = chART.color_picker([4, 2]);
@@ -109,7 +113,7 @@ else
     FigLabel = 'AllPower_';
 end
 
-[~, Indexes] = sort(UniqueMetadata.Handedness);
+[~, Indexes] = sort(UniqueMetadata.Age);
 
 Idx = 1;
 figure('Units','normalized','OuterPosition',[0 0 1 1])
@@ -125,17 +129,17 @@ for ParticipantIdx = Indexes'
             xlabel('Frequency (Hz)')
             ylabel('Power')
             set(gca, 'XScale', 'log', 'YScale', 'log', 'xlim', Range)
-            title(UniqueMetadata.Participant(ParticipantIdx))
+            title([UniqueMetadata.Participant{ParticipantIdx}, ' ', num2str(UniqueMetadata.Age(ParticipantIdx), '%.1f') ' yo'])
         end
     end
-
+% 
 
     Idx = Idx+1;
     if Idx > FigureDimentions(1)*FigureDimentions(2)
         % chART.save_figure([FigLabel,num2str(ParticipantIdx)], ResultsFolder, PlotProps)
         Idx = 1;
         figure('Units','normalized','OuterPosition',[0 0 1 1])
-    elseif ParticipantIdx == Parameters.Participants
+    elseif ParticipantIdx == max(Indexes)
         % chART.save_figure([FigLabel, num2str(ParticipantIdx)], ResultsFolder, PlotProps)
     end
 end

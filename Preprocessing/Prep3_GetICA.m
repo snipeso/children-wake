@@ -1,6 +1,5 @@
 % script to calculate components used to clean data
 
-
 close all
 clc
 clear
@@ -11,17 +10,19 @@ clear
 P = prepParameters();
 Paths = P.Paths;
 Datasets = P.Datasets;
-Datasets = {'SleepLearning'};
+% Datasets = {'Providence', 'BMSAdults'};
 Parameters = P.Parameters;
 EEG_Channels = P.EEG_Channels;
 
-MinNeighborCorrelation = .5;
+MinNeighborCorrelation = .3;
+WindowLength = 3;
 MinDataKeep = .15; % proportion of noise in data as either channel or segment, above which the channel/segment is tossed
 MinChannels = 25; % maximum number of channels that can be removed
-MinTime = 60; % ninimum file durationin seconds
+MinTime = 60; % ninimum file duration in seconds
+CorrelationFrequencyRange = [4 40];
 
 Refresh = false;
- 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Source_All = fullfile(Paths.Preprocessed, 'ICA', 'MAT');
@@ -30,7 +31,7 @@ Destination_All = fullfile(Paths.Preprocessed, 'ICA', 'Components');
 
 for Indx_D = 1:numel(Datasets)
     Dataset = Datasets{Indx_D};
-    Tasks = getContent(fullfile(Source_All, Dataset));
+    Tasks = list_filenames(fullfile(Source_All, Dataset));
 
     for Indx_T = 1:numel(Tasks)
         Task = Tasks{Indx_T};
@@ -42,10 +43,11 @@ for Indx_D = 1:numel(Datasets)
             mkdir(Destination)
         end
 
-        Files = getContent(Source);
+        Files = list_filenames(Source);
         Files(~contains(Files, '.mat'))=  [];
 
-        for Indx_F = 1:numel(Files)
+        % for Indx_F = 1:numel(Files)
+        parfor Indx_F = 1:numel(Files)
             File = Files{Indx_F};
 
             % skip if file already exists
@@ -55,20 +57,25 @@ for Indx_D = 1:numel(Datasets)
             end
 
             % load data
-            load(fullfile(Source, File), 'EEG')
-            Chanlocs = EEG.chanlocs;
+            Data = load(fullfile(Source, File), 'EEG');
+            EEG = Data.EEG;
+            if ~isfield(EEG, 'data')
+                parsave(fullfile(Paths.Errors, File), 'EEG')
+                continue
+            end
+            Channels =  EEG_Channels;
 
             % convert to double
             EEG.data = double(EEG.data);
 
             % remove bad channels and really bad timepoints
-            [~, BadChannels, BadWindows] = findBadSegments(EEG, 5, MinNeighborCorrelation, ...
-                EEG_Channels.notEEG, true, MinDataKeep);
-            EEG.data(:, BadWindows) = [];
+            [~, BadChannels, BadWindows_t] = find_bad_segments(EEG, WindowLength, MinNeighborCorrelation, ...
+                Channels.notEEG, true, MinDataKeep, CorrelationFrequencyRange);
+            EEG.data(:, BadWindows_t) = [];
             EEG = eeg_checkset(EEG);
 
             if numel(BadChannels)> MinChannels
-                warning(['Removed too many channel in ', File])
+                warning(['Removed too many channels in ', File])
                 continue
             end
 
@@ -77,31 +84,23 @@ for Indx_D = 1:numel(Datasets)
                 continue
             end
 
-
             % remove maybe other noise (flatlines, and little bad windows)
-            EEGHyperclean = clean_artifacts(EEG, ...
-                'Highpass', 'off', ...
-                'ChannelCriterion', 'off', ...
-                'LineNoiseCriterion', 'off', ...
-                'BurstRejection', 'off',...
-                'BurstCriterion', 'off', ...
-                'BurstCriterionRefMaxBadChns', 'off', ...
-                'WindowCriterion', 'off'); % very agressively remove bad data
-
-            FlatChannels = str2double(setdiff({EEG.chanlocs.labels}, {EEGHyperclean.chanlocs.labels}));
-
+            FlatChannels = find_flat_channels(EEG);
 
             % save info of which are bad channels
-            EEG.badchans = [EEG_Channels.notEEG, BadChannels, FlatChannels];
+            EEG.badchans = unique([BadChannels, FlatChannels]);
             if numel([EEG.badchans])> MinChannels
-                warning(['Removed too many channel in ', File])
+                warning(['Removed too many channels in ', File])
                 continue
             end
+
+            % remove also external electrodes
+            EEG.badchans = unique([Channels.notEEG, EEG.badchans]);
 
             % remove really bad channels
             EEG = pop_select(EEG, 'nochannel', EEG.badchans);
 
-            % remove mildly bad timepoints
+            % remove bad timepoints
             EEG = clean_artifacts(EEG, ...
                 'FlatlineCriterion', 'off', ...
                 'Highpass', 'off', ...
@@ -110,7 +109,7 @@ for Indx_D = 1:numel(Datasets)
                 'BurstRejection', 'off',...
                 'BurstCriterion', 'off', ...
                 'BurstCriterionRefMaxBadChns', 'off', ...
-                'WindowCriterion', .1); % very agressively remove bad data
+                'WindowCriterion', .1); % quite strict
 
             if size(EEG.data, 2) < EEG.srate*MinTime
                 warning(['Removed too many timepoints removed in ', File])
@@ -118,7 +117,7 @@ for Indx_D = 1:numel(Datasets)
             end
 
             % add Cz
-            EEG = addCz(EEG);
+            EEG = add_cz(EEG);
 
             % rereference to average
             EEG = pop_reref(EEG, []);
@@ -135,14 +134,19 @@ for Indx_D = 1:numel(Datasets)
             % classify components
             EEG = iclabel(EEG);
 
-            save(fullfile(Destination, File), 'EEG')
+            parsave(fullfile(Destination, File), EEG)
             disp(['***********', 'Finished ', File, '***********'])
         end
     end
 end
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% functions
 
+function parsave(Path, EEG)
+save(Path, 'EEG')
+end
 
 
 
