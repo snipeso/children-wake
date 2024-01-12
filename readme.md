@@ -15,6 +15,11 @@ Research questions:
 
 ### Preprocessing
 
+Preprequisites:
+- fieldtrip (https://download.fieldtriptoolbox.org/) for extracting events in the EEG
+
+Steps:
+
 1. Prep1_Raw2MAT.m: extract data from EGI format into EEGLAB struct, saved to MAT files
 2. Prep2_Filter.m: filter, downsample data
 3. Prep3_GetICA.m: Remove bad channels and timepoints, run ICA. Removes slow! 
