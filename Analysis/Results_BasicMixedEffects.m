@@ -34,7 +34,8 @@ load(fullfile(CacheDir, CacheName), 'Metadata')
 Metadata = basic_metadata_cleanup(Metadata);
 
 % overview of final dataset
-table_demographics(unique_metadata(Metadata), 'Group', ResultsFolder, 'Group')
+table_demographics(unique_metadata(Metadata), 'Subgroup', ResultsFolder, 'Subgroup')
+table_demographics(unique_metadata(Metadata), 'Dataset', ResultsFolder, 'Dataset')
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -54,7 +55,7 @@ MetadataStat = Metadata;
 % Also selects the categories to be considered.
 MetadataStat.Participant = categorical(MetadataStat.Participant);
 
-MetadataStat = make_categorical(MetadataStat, 'Task', {'Oddball', 'Learning', 'GoNoGo', 'Alertness', 'Fixation'}); % compare all tasks to the oddball
+MetadataStat = make_categorical(MetadataStat, 'Task', {'Oddball', 'GoNoGo', 'Alertness', 'Fixation'}); % compare all tasks to the oddball
 MetadataStat = make_categorical(MetadataStat, 'Hour', {'eve', 'mor'}); % compare morning to evening
 MetadataStat = make_categorical(MetadataStat, 'Group', {'HC', 'ADHD'}); % compare patietns to controls
 MetadataStat = make_categorical(MetadataStat, 'Sex', {'f', 'm'}); % compare males to females

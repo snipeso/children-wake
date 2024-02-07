@@ -43,7 +43,7 @@ catch
     TableRow.Oddball = round(100*nnz(contains(cellfun(@strjoin, Metadata.Task, 'UniformOutput', false), 'Oddball'))/N);
 end
 
-OutcomeVariables = {'Amplitude', 'Quantity', 'Globality', 'Duration', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
+OutcomeVariables = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 for Variable = OutcomeVariables
     TableRow.(Variable{1}) =  {[num2str(mean(Metadata.(Variable{1})), '%.2f'), ' (', num2str(std(Metadata.(Variable{1})), '%.2f'), ')']};
 
