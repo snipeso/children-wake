@@ -21,7 +21,7 @@ else
 end
 
 Colors = flip(chART.color_picker(nGroups), 1);
-
+% Colors = chART.color_picker(1, '', 'yellow');
 
 hold on
 if PlotZeroLine

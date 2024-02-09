@@ -88,6 +88,8 @@ PlotProps = Parameters.PlotProps.Manuscript;
 PlotProps.Figure.Padding = 20;
 Grid = [3 numel(OutcomeMeasures)];
 
+% PlotProps.Text.FontName = 'Tw Cen MT';
+
 % fix y lims, so same for mor and eve
 YLimits = [5, 42; % amplitudes
     70, 550; % quantities
