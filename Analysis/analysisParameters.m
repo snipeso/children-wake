@@ -15,8 +15,8 @@ Parameters.Hours = {'eve', 'mor'};
 
 Parameters.Tasks.ADHD = {'1Oddball', '2Learning', '3Oddball'};
 Parameters.Tasks.BMS = {'1GoNoGo', '2Alertness', '3Fixation', '4Fixation'};
-% Parameters.Tasks.BMSSL = {'1GoNoGoGopher', '3Alertness', '2Fixation'};
-Parameters.Tasks.BMSSL = {'3Alertness'};
+Parameters.Tasks.BMSSL = {'1GoNoGoGopher', '3Alertness', '2Fixation'};
+% Parameters.Tasks.BMSSL = {'3Alertness'};
 Parameters.Tasks.SleepLearning = {'1Oddball', '2Learning','3Oddball'};
 Parameters.Tasks.Providence = {'Oddball'};
 Parameters.Tasks.BMSAdults = {'Oddball'};
@@ -24,9 +24,16 @@ Parameters.Tasks.BMSAdults = {'Oddball'};
 Parameters.Sessions.ADHD = {'Session1'};
 Parameters.Sessions.BMS = {'Session1', 'Session2'};
 Parameters.Sessions.BMSSL = {'Session1', 'Session2'};
-Parameters.Sessions.SleepLearning = {'Session11', 'Session12', 'Session2', 'Session3'};
+Parameters.Sessions.SleepLearning = {'Session11', 'Session12'};
 Parameters.Sessions.Providence = {'Session1'};
 Parameters.Sessions.BMSAdults = {'Session1'};
+
+
+Parameters.Ages = [3 7;
+    7 10;
+    10 14;
+    14 18;
+    18 25];
 
 
 %%% labels
@@ -111,7 +118,7 @@ Parameters.Narrowbands = Narrowbands;
 
 Bands.Theta = [4 7]; % add little gaps toavoid capturing edges
 Bands.Alpha = [8 11];
-Bands.Sigma = [12 16];
+Bands.Beta = [12 16];
 Parameters.Bands = Bands;
 
 
@@ -134,6 +141,17 @@ Parameters.PlotProps.Manuscript.Figure.Width = 22;
 
 Parameters.PlotProps.Powerpoint = chART.load_plot_properties({'Iota', 'Powerpoint'});
 Parameters.PlotProps.Poster = chART.load_plot_properties({'Iota', 'Poster'});
+
+TopoPlotProps = Parameters.PlotProps.Manuscript;
+TopoPlotProps.Text.LegendSize = 10;
+TopoPlotProps.Text.AxisSize = 10;
+TopoPlotProps.Axes.xPadding = 8;
+TopoPlotProps.Axes.yPadding = 5;
+TopoPlotProps.Figure.Padding = 20;
+TopoPlotProps.Stats.PlotN = true;
+
+Parameters.PlotProps.TopoPlots = TopoPlotProps;
+
 
 %%% channel clusters
 

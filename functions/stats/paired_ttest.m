@@ -61,7 +61,7 @@ if isempty(Data2) && numel(Dims1) == 2 % A
     Stats.p_fdr = FDR;
 
     % get effect sizes
-    G = hedgesG(Data1, StatsP);
+    G = paired_hedges_g(Data1, StatsP);
     Stats.hedgesg = G.hedgesg;
     Stats.hedgesgCI = G.hedgesgCI;
 
@@ -92,7 +92,7 @@ elseif numel(Dims1) == 2 && numel(Dims2) == 2 % C
     Stats.mean2 = mean(Data2, 1, 'omitnan')';
     Stats.std2 = std(Data2, 0, 1, 'omitnan')';
 
-    stats =  hedgesG(Data1, Data2, StatsP);
+    stats =  paired_hedges_g(Data1, Data2, StatsP);
     Stats.(StatsP.Paired.ES) = stats.(StatsP.Paired.ES);
     Stats.([StatsP.Paired.ES, 'CI']) = stats.([StatsP.Paired.ES, 'CI']);
 
@@ -129,7 +129,7 @@ elseif numel(Dims1) == 2 && numel(Dims2) == 3 % D
     Stats.df = df;
     Stats.N = N;
 
-    stats =  hedgesG(Data1, Data2, StatsP);
+    stats =  paired_hedges_g(Data1, Data2, StatsP);
     Stats.(StatsP.Paired.ES) = stats.(StatsP.Paired.ES);
     Stats.([StatsP.Paired.ES, 'CI']) = stats.([StatsP.Paired.ES, 'CI']);
 

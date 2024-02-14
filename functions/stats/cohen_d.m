@@ -10,8 +10,13 @@ for ChannelIdx = 1:nChannels
       Table = meanEffectSize(Data1(:, ChannelIdx), Data2(:, ChannelIdx), 'effect','cohen', 'ConfidenceIntervalType','none');
         CohenD(ChannelIdx) = Table.Effect(1);
     else % paired
+
+        if all(isnan(Data1(:, ChannelIdx)))
+            continue
+        end
       Table = meanEffectSize(Data1(:, ChannelIdx), 'effect','cohen', 'ConfidenceIntervalType','none');
-        CohenD(ChannelIdx) = Table.Effect(1);
+
+      CohenD(ChannelIdx) = Table.Effect(1);
     end
 end
 

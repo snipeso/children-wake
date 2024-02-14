@@ -109,7 +109,7 @@ for RecordingIdx = 1:nRecordings
         TaskMetadata = cat(1, TaskMetadata, Metadata(RecordingIdx, :));
         NewIdx = size(TaskMetadata, 1);
         TaskMetadata.Task{NewIdx} = Task;
-        TaskMetadata.Globality(NewIdx) = mean([BurstClusters.ClusterGlobality]);
+        TaskMetadata.Globality(NewIdx) = 100*mean([BurstClusters.ClusterGlobality]);
         TaskMetadata.Amplitude(NewIdx) = mean([BurstClusters.ClusterAmplitude]);
         TaskMetadata.Duration(NewIdx) = mean([BurstClusters.ClusterEnd]-[BurstClusters.ClusterStart])/SampleRate; % burst durations
         
@@ -219,7 +219,7 @@ for RecordingIdx = 1:nRecordings
                     mean([BurstsTemp.Amplitude]);
 
                 BurstInformationClusters.Globality(NewIdx, FrequencyIdx) = ...
-                    mean([BurstsTemp.ClusterGlobality]);
+                    100*mean([BurstsTemp.ClusterGlobality]);
 
                 BurstInformationClusters.Duration(NewIdx, FrequencyIdx) = ...
                     mean([BurstsTemp.ClusterEnd]-[BurstsTemp.ClusterStart])/SampleRate;

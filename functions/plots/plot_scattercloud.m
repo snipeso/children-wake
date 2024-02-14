@@ -21,11 +21,11 @@ else
 end
 
 Colors = flip(chART.color_picker(nGroups), 1);
-
+% Colors = chART.color_picker(1, '', 'yellow');
 
 hold on
 if PlotZeroLine
-    plot(XLim, [0 0], ':', 'Color', [.5 .5 .5], 'HandleVisibility','off')
+    plot(XLim, [0 0], ':', 'Color', 'k', 'HandleVisibility','off')
 end
 
 for GroupIdx = 1:nGroups
@@ -59,7 +59,9 @@ else
     Start = XLim(2);
     HA = 'right';
 end
-text(Start, YLim(end), ['r=', num2str(R, '%.2f')], ...
+
+RhoString = num2str(R, '%.2f');
+text(Start, YLim(end), ['\rho=', RhoString(2:end)], ...
     'FontName', PlotProps.Text.FontName, 'FontSize', PlotProps.Text.AxisSize, 'HorizontalAlignment', HA)
 chART.utils.pad_axis('y', .05)
 chART.utils.pad_axis('x', .05)
