@@ -12,6 +12,7 @@ Parameters = analysisParameters();
 Hours = Parameters.Hours;
 
 OutcomeMeasures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
+OutcomeMeasuresTitles = {'Amplitude', 'Density', 'Slope', 'Intercept', 'Power', 'Periodic power'};
 
 %%% set paths
 Paths = Parameters.Paths;
@@ -34,7 +35,10 @@ load(fullfile(CacheDir, CacheName), 'Metadata')
 Metadata = basic_metadata_cleanup(Metadata);
 
 % overview of final dataset
-table_demographics(unique_metadata(Metadata), 'Subgroup', ResultsFolder, 'Subgroup')
+Patients = Metadata(contains(Metadata.Group, 'ADHD'), :);
+table_demographics(unique_metadata(Patients), 'Subgroup', ResultsFolder, 'SubgroupPatients')
+Controls = Metadata(contains(Metadata.Group, 'HC'), :);
+table_demographics(unique_metadata(Controls), 'Subgroup', ResultsFolder, 'SubgroupControls')
 table_demographics(unique_metadata(Metadata), 'Dataset', ResultsFolder, 'Dataset')
 table_demographics(Metadata, 'Hour', ResultsFolder, 'Hour')
 
@@ -130,7 +134,7 @@ for VariableIdx = 1:numel(OutcomeMeasures)
         legend off
 
         if HourIdx==1
-            title(OutcomeMeasures{VariableIdx})
+            title(OutcomeMeasuresTitles{VariableIdx})
         end
         if VariableIdx==1
             ylabel(HourLabels{HourIdx}, 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
@@ -182,7 +186,7 @@ for Idx1 = 1:numel(OutcomeMeasures)
         if Idx1==Idx2
             if Idx1==1
                 chART.set_axis_properties(PlotProps)
-                title(OutcomeMeasures{Idx1})
+                title(OutcomeMeasuresTitles{Idx1})
                 ylabel(OutcomeMeasures{Idx2})
             end
             axis off
@@ -193,12 +197,12 @@ for Idx1 = 1:numel(OutcomeMeasures)
         set(gca, 'XTick' ,[], 'YTick', [])
         axis square
         if Idx2 == numel(OutcomeMeasures)
-            xlabel(OutcomeMeasures{Idx1})
+            xlabel(OutcomeMeasuresTitles{Idx1})
         elseif Idx2==1
-            title(OutcomeMeasures{Idx1})
+            title(OutcomeMeasuresTitles{Idx1})
         end
         if Idx1==1
-            ylabel(OutcomeMeasures{Idx2})
+            ylabel(OutcomeMeasuresTitles{Idx2})
         end
     end
 end
@@ -215,6 +219,7 @@ FormulaRandom = '+ (1|Participant) + (1|Participant:SessionUnique)';
 Stats = nan(numel(OutcomeMeasures), numel(OutcomeMeasures), 4); % estimates, tStats, DF, pValues
 Stats = table();
 Stats.OutcomeMeasures = OutcomeMeasures';
+TValues = Stats;
 nMeasures = numel(OutcomeMeasures);
 AllT = nan(nMeasures, nMeasures);
 for Idx1 = 1:numel(OutcomeMeasures)
@@ -244,10 +249,11 @@ for Idx1 = 1:numel(OutcomeMeasures)
 
         StatString = ['b=', num2str(beta, '%.2f'), '; t=', num2str(t, '%.1f'), '; p', pString, '; df=', num2str(df)];
         Stats.(OutcomeMeasures{Idx1})(Idx2) = {StatString};
+        TValues.(OutcomeMeasures{Idx1})(Idx2) = t;
     end
 end
 writetable(Stats, fullfile(ResultsFolder, 'CorrelationsOutcomeVariables.xlsx'))
-
+writetable(TValues, fullfile(ResultsFolder, 'CorrelationsOutcomeVariables_TValues.csv'))
 
 %%
 figure('Units','centimeters','InnerPosition',[0 0 12 8])
