@@ -7,10 +7,7 @@ close all
 %%% parameters
 
 Parameters = analysisParameters();
-PlotProps = Parameters.PlotProps.TopoPlots;
 Paths = Parameters.Paths;
-BandLabels = {'Theta', 'Low Alpha', 'High Alpha'};
-nBands = numel(BandLabels);
 Ages = Parameters.Ages;
 Ages = Ages(2:end, :); % exclude youngest group; too few
 nAges = size(Ages, 1);
@@ -44,6 +41,7 @@ PlotProps.Figure.Padding = 25;
 PlotProps.Axes.yPadding = 20;
 
 Measures = {'Amplitude', 'Quantity', 'Power', 'PeriodicPower'};
+MeasureTitles = {'Amplitude', 'Density', 'Power', 'Periodic power'};
 Labels = {'\muV', '%', 'log power', 'log power'};
 nMeasures = numel(Measures);
 
@@ -64,7 +62,8 @@ for MeasureIdx = 1:nMeasures
     chART.sub_plot([], [nMeasures, 1], [MeasureIdx, 1], [], true, '', PlotProps);
     plot_age_by_frequency(EveningAverage, EquidistantAges(1:end-1), Frequencies, 'Linear', Labels{MeasureIdx}, PlotProps)
     ylim([5 15])
-    title(Measures{MeasureIdx})
+    set(gca, 'TickDir', 'in')
+    title(MeasureTitles{MeasureIdx}, 'FontSize', PlotProps.Text.TitleSize)
     ylabel('Frequency (Hz)')
     if MeasureIdx == nMeasures
         xlabel('Age')
@@ -95,8 +94,8 @@ for MeasureIdx = 1:nMeasures
     chART.sub_plot([], [nMeasures, 1], [MeasureIdx, 1], [], true, '', PlotProps);
     plot_age_by_frequency(ChangeAverage, EquidistantAges(1:end-1), Frequencies, 'Divergent', 'difference', PlotProps)
     ylim([5 15])
-
-    title([Measures{MeasureIdx}])
+    set(gca, 'TickDir', 'in')
+    title(MeasureTitles{MeasureIdx}, 'FontSize', PlotProps.Text.TitleSize)
     ylabel('Frequency (Hz)')
     if MeasureIdx == nMeasures
         xlabel('Age')
