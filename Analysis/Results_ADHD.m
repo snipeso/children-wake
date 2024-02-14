@@ -13,6 +13,7 @@ nChannels = 123;
 Tasks = {'Oddball', 'Learning', 'GoNoGo', 'Alertness', 'Fixation'}; % oddball first is important; its the reference
 
 Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
+MeasureTitles = {'Amplitude', 'Density', 'Slope', 'Intercept', 'Power', 'Periodic power'};
 MeasureLabels = append('\beta ',{'\muV', '%', '', 'log power', 'log power', 'log power'});
 
 nMeasures = numel(Measures);
@@ -73,20 +74,19 @@ CLims.Intercept = [-.15 .15];
 CLims.Power = [-.4 .4];
 CLims.PeriodicPower = [-.08 .08];
 
-Grid = [1, nMeasures];
+Grid = [2, nMeasures];
 
 PlotProps = Parameters.PlotProps.Manuscript;
 PlotProps.Color.Steps.Divergent = 20;
     PlotProps.Colorbar.Location = 'southoutside';
 
-
 figure('Units','centimeters','OuterPosition',[0 0 25 10])
 for MeasureIdx = 1:nMeasures
     chART.sub_plot([], Grid, [1, MeasureIdx], [], false, '', PlotProps);
-
-    
     mixed_model_topography(squeeze(Models(MeasureIdx, :)), ...
-        ColorParameter, Coefficient, Chanlocs, CLims.(Measures{MeasureIdx}), PlotProps, MeasureLabels{MeasureIdx})
+        ColorParameter, Coefficient, Chanlocs, CLims.(Measures{MeasureIdx}), PlotProps, '')
+      chART.sub_plot([], Grid, [3, MeasureIdx], [], false, '', PlotProps);
+chART.plot.pretty_colorbar('Divergent', CLims.(Measures{MeasureIdx}), MeasureLabels{MeasureIdx}, PlotProps)
     title(Measures{MeasureIdx})
 end
 

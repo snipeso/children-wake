@@ -118,7 +118,7 @@ Parameters.Narrowbands = Narrowbands;
 
 Bands.Theta = [4 7]; % add little gaps toavoid capturing edges
 Bands.Alpha = [8 11];
-Bands.Sigma = [12 16];
+Bands.Beta = [12 16];
 Parameters.Bands = Bands;
 
 

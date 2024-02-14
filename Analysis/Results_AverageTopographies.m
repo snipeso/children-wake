@@ -9,7 +9,7 @@ close all
 
 Parameters = analysisParameters();
 Paths = Parameters.Paths;
-BandLabels = {'Theta', 'Low Alpha', 'High Alpha'};
+BandLabels = {'Theta', 'Alpha', 'Beta_{low}'};
 PlotProps = Parameters.PlotProps.TopoPlots;
 Ages = Parameters.Ages;
 nAges = size(Ages, 1);

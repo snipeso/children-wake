@@ -36,6 +36,7 @@ Metadata = basic_metadata_cleanup(Metadata);
 % overview of final dataset
 table_demographics(unique_metadata(Metadata), 'Subgroup', ResultsFolder, 'Subgroup')
 table_demographics(unique_metadata(Metadata), 'Dataset', ResultsFolder, 'Dataset')
+table_demographics(Metadata, 'Hour', ResultsFolder, 'Hour')
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -11,7 +11,7 @@ close all
 Parameters = analysisParameters();
 PlotProps = Parameters.PlotProps.TopoPlots;
 Paths = Parameters.Paths;
-BandLabels = {'Theta', 'Low Alpha', 'High Alpha'};
+BandLabels = {'Theta', 'Alpha', 'Beta_{low}'};
 nBands = numel(BandLabels);
 Ages = Parameters.Ages;
 Ages = Ages(2:end, :); % exclude youngest group; too few

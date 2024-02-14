@@ -9,6 +9,7 @@ end
 % assign unique index to each entry, so you can find the correct row in the
 % matrices of data even if later the metadata strcture gets reduced as data
 % is removed.
+
 Metadata.Index = [1:size(Metadata, 1)]'; %#ok<NBRAK1> % add index so can chop up table as needed
 
 Metadata.Subgroup(strcmp(Metadata.Group, 'HC')) = 5;
@@ -16,6 +17,9 @@ Metadata.Subgroup(strcmp(Metadata.Group, 'HC')) = 5;
 % remove 1 year later follow-up sessions
 Metadata(contains(Metadata.Dataset, 'SleepLearning') & ...
     contains(Metadata.Session, {'Session_2', 'Session_3'}), :) = [];
+
+% remove learning task
+Metadata(contains(Metadata.Task, 'Learning'), :) = [];
 
 % rename to classic session 1 and 2 for SleepLearning
 Metadata.Session(strcmp(Metadata.Session, 'Session_1_1')) = {'Session_1'};

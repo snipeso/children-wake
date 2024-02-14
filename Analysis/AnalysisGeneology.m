@@ -98,8 +98,8 @@ chART.save_figure('Power', ResultsFolder, PlotProps)
 
 Bands = struct();
 Bands.Theta = [4 7];
-Bands.LowAlpha = [8 11];
-Bands.HighAlpha = [12 16];
+Bands.Alpha = [8 11];
+Bands.Beta = [12 16];
 
 
 % log power
@@ -110,7 +110,7 @@ xlabel('Frequency (Hz)')
 ylabel('Log power')
 % xlim([2 18])
 xlim([1 20])
-legend(flip({'Theta_{ }', 'Alpha_{low}','Alpha_{high}'}), 'position', [ 0.5887    0.6237    0.3450    0.3125])
+legend(flip({'Theta_{ }', 'Alpha','Beta_{low}'}), 'position', [ 0.5887    0.6237    0.3450    0.3125])
 legend boxoff  
 
 ylim([-1.7, 3])
