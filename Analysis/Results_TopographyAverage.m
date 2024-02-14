@@ -60,6 +60,8 @@ CLims.PeriodicPower = [0.1 .44];
 
 
 Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
+MeasuresTitles = {'Amplitude', 'Density', 'Slope', 'Intercept', 'Power', 'Periodic power'};
+
 MeasureUnits = {'\muV', '% recording', '', 'log power', 'log power', 'log power'};
 nMeasures = numel(Measures);
 
@@ -82,11 +84,11 @@ for MeasureIdx = 1:nMeasures
         chART.plot.eeglab_topoplot(AverageData, Chanlocs, [], CLims.(Measures{MeasureIdx}), '', 'Linear', PlotProps);
 
         if MeasureIdx == 1
-            title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
+            title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2)), ' y.o.'])
         end
 
         if AgeIdx ==1
-            chART.plot.vertical_text(Measures{MeasureIdx}, .15, .5, PlotProps)
+            chART.plot.vertical_text(MeasuresTitles{MeasureIdx}, .15, .5, PlotProps)
         end
 
         topo_corner_text(['N=', num2str(nParticipants)],PlotProps)
