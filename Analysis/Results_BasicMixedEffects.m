@@ -13,7 +13,7 @@ Hours = Parameters.Hours;
 
 OutcomeMeasures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 OutcomeMeasuresTitles = {'Amplitude', 'Density', 'Slope', 'Intercept', 'Power', 'Periodic power'};
-MeasureUnits = {'\muV', '% recording', 'a.u.', 'log power', 'log power', 'log power'};
+MeasureUnits = {'\muV', '% Recording', 'A.U.', 'Log power', 'Log power', 'Log power'};
 
 %%% set paths
 Paths = Parameters.Paths;
@@ -154,15 +154,16 @@ for VariableIdx = 1:numel(OutcomeMeasures)
     plot_scattercloud(MetadataAverage, 'Age', OutcomeMeasures{VariableIdx}, ...
         PlotProps, '', true, XLim)
     ylabel(MeasureUnits{VariableIdx})
+    xlabel('Age')
     if VariableIdx ~=numel(OutcomeMeasures)
         legend off
     end
 
     if VariableIdx==1
         chART.plot.vertical_text('Overnight change', .55, .5, PlotProps)
+        xlabel('Age (years)')
     end
 
-    xlabel('Age')
     disp(['Overnight', OutcomeMeasures{VariableIdx}, ...
         'N=', num2str(numel(unique(MetadataAverage.Participant)))])
 end

@@ -20,7 +20,7 @@ nChannels = 123;
 Tasks = {'Oddball', 'GoNoGo', 'Alertness', 'Fixation'}; % oddball first is important; its the reference. Learning excluded because different in morning
 Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 MeasuresTitles = {'Amplitude', 'Density', 'Slope', 'Intercept', 'Power', 'Periodic power'};
-MeaureLabels = append('\beta ',{'\muV', '%', '', 'log power', 'log power', 'log power'});
+MeaureLabels = append('\beta ',{'\muV', '%', 'a.u.', 'log power', 'log power', 'log power'});
 ColorParameter = 'Estimate';
 nMeasures = numel(Measures);
 

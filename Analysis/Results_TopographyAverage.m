@@ -62,7 +62,7 @@ CLims.PeriodicPower = [0.1 .44];
 Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 MeasuresTitles = {'Amplitude', 'Density', 'Slope', 'Intercept', 'Power', 'Periodic power'};
 
-MeasureUnits = {'\muV', '% recording', '', 'log power', 'log power', 'log power'};
+MeasureUnits = {'\muV', '% recording', 'a.u.', 'log power', 'log power', 'log power'};
 nMeasures = numel(Measures);
 
 figure('Units','centimeters','OuterPosition',[0 0 25 30])
