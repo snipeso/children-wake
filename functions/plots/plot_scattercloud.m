@@ -31,7 +31,7 @@ end
 for GroupIdx = 1:nGroups
     Indexes = ismember(Table.(ColorgroupColumn), Groups(GroupIdx));
     scatter(Table.(XColumn)(Indexes), Table.(YColumn)(Indexes), PlotProps.Scatter.Size, ...
-       'MarkerFaceColor', Colors(GroupIdx,:), ...
+        'MarkerFaceColor', Colors(GroupIdx,:), ...
         'MarkerEdgeColor','none', ...
         'MarkerFaceAlpha', PlotProps.Scatter.Alpha)
     colormap(PlotProps.Color.Maps.Linear)
@@ -46,10 +46,11 @@ ylim(YLim)
 
 if p<.05
 
-h = lsline;
+    h = lsline;
 
-for GroupIdx = 1:numel(Groups)
-    set(h(GroupIdx),'color', Colors(numel(Groups)+1-GroupIdx,:), 'LineWidth', PlotProps.Line.Width)
+    for GroupIdx = 1:numel(Groups)
+        set(h(GroupIdx),'color', Colors(numel(Groups)+1-GroupIdx,:), 'LineWidth', PlotProps.Line.Width)
+    end
 end
 
 if R>0
@@ -61,11 +62,12 @@ else
 end
 
 RhoString = num2str(R, '%.2f');
-text(Start, YLim(end), ['\rho=', RhoString(2:end)], ...
+RhoString = replace(RhoString, '0.', '.')
+text(Start, YLim(end), ['\rho=', RhoString], ...
     'FontName', PlotProps.Text.FontName, 'FontSize', PlotProps.Text.AxisSize, 'HorizontalAlignment', HA)
 chART.utils.pad_axis('y', .05)
 chART.utils.pad_axis('x', .05)
-end
+
 
 if nGroups>1
     legend(Groups)

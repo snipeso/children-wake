@@ -109,7 +109,7 @@ for MeasureIdx = 1:nMeasures
         colorbar off
 
         if MeasureIdx == 1
-            title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
+              title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2)), ' y.o.'], 'FontSize', PlotProps.Text.TitleSize)
         end
 
         if AgeIdx ==1
@@ -196,7 +196,7 @@ for BandIdx = 1:nBands
         colorbar off
 
         if BandIdx == 1
-            title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
+             title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2)), ' y.o.'], 'FontSize', PlotProps.Text.TitleSize)
         end
 
         if AgeIdx ==1

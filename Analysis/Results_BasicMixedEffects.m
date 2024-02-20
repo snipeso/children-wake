@@ -13,6 +13,7 @@ Hours = Parameters.Hours;
 
 OutcomeMeasures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
 OutcomeMeasuresTitles = {'Amplitude', 'Density', 'Slope', 'Intercept', 'Power', 'Periodic power'};
+MeasureUnits = {'\muV', '% recording', 'a.u.', 'log power', 'log power', 'log power'};
 
 %%% set paths
 Paths = Parameters.Paths;
@@ -48,7 +49,7 @@ table_demographics(Metadata, 'Hour', ResultsFolder, 'Hour')
 
 %% run mixed models
 
-FormulaString = ' ~ Task + Hour*Age + Group + Sex + (1|Participant) + (1|Participant:SessionUnique)';
+FormulaString = ' ~ Task + Hour*Age + Group + Sex + (1|Participant) + (1|Participant:SessionUnique)'; % MAIN ONE
 % FormulaString = ' ~ Task + Hour*Age + (1|Participant) + (1|Participant:SessionUnique)'; % this model provides the better BIC
 
 
@@ -91,6 +92,7 @@ end
 close all
 PlotProps = Parameters.PlotProps.Manuscript;
 PlotProps.Figure.Padding = 20;
+PlotProps.Axes.xPadding = 18;
 Grid = [3 numel(OutcomeMeasures)];
 
 % PlotProps.Text.FontName = 'Tw Cen MT';
@@ -131,13 +133,14 @@ for VariableIdx = 1:numel(OutcomeMeasures)
         chART.sub_plot([], Grid, [HourIdx, VariableIdx], [], true, '', PlotProps);
         plot_scattercloud(MetadataAverage, 'Age', OutcomeMeasures{VariableIdx}, ...
             PlotProps, '', false, XLim, YLimits(VariableIdx, :))
+        ylabel(MeasureUnits{VariableIdx})
         legend off
 
         if HourIdx==1
             title(OutcomeMeasuresTitles{VariableIdx})
         end
         if VariableIdx==1
-            ylabel(HourLabels{HourIdx}, 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
+            chART.plot.vertical_text(HourLabels{HourIdx}, .55, .5, PlotProps)
         end
         disp([ Hours{HourIdx}, OutcomeMeasures{VariableIdx}, ...
             'N=', num2str(numel(unique(MetadataAverage.Participant)))])
@@ -150,12 +153,15 @@ for VariableIdx = 1:numel(OutcomeMeasures)
 
     plot_scattercloud(MetadataAverage, 'Age', OutcomeMeasures{VariableIdx}, ...
         PlotProps, '', true, XLim)
+    ylabel(MeasureUnits{VariableIdx})
     if VariableIdx ~=numel(OutcomeMeasures)
         legend off
     end
+
     if VariableIdx==1
-        ylabel('Overnight change', 'FontWeight','bold', 'FontSize',PlotProps.Text.TitleSize)
+        chART.plot.vertical_text('Overnight change', .55, .5, PlotProps)
     end
+
     xlabel('Age')
     disp(['Overnight', OutcomeMeasures{VariableIdx}, ...
         'N=', num2str(numel(unique(MetadataAverage.Participant)))])

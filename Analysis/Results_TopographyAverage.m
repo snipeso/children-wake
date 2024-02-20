@@ -117,7 +117,7 @@ Measures = {'Amplitude', 'Quantity', 'Power', 'PeriodicPower'};
 MeasureUnits = {'\muV', '% recording', 'log power', 'log power'};
 nMeasures = numel(Measures);
 
-for MeasureIdx = 1:nMeasures
+for MeasureIdx = 2 %1:nMeasures
     Topographies = BurstInformationTopographyBands.(Measures{MeasureIdx});
     nBands = size(Topographies, 3);
 
@@ -135,7 +135,7 @@ for MeasureIdx = 1:nMeasures
             if nParticipants<2 % handle too little data and titles
                 if BandIdx == 1
                     chART.sub_plot([], [nBands, nAges+1], [BandIdx, AgeIdx], [], false, '', PlotProps);
-                    title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))], 'FontSize', PlotProps.Text.TitleSize)
+                    title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2)), ' y.o.'], 'FontSize', PlotProps.Text.TitleSize)
                     axis off
                 end
 
@@ -153,7 +153,7 @@ for MeasureIdx = 1:nMeasures
             chART.sub_plot([], [nBands, nAges+1], [BandIdx, AgeIdx], [], false, '', PlotProps);
             chART.plot.eeglab_topoplot(AverageData, Chanlocs, [], CLims.(Measures{MeasureIdx})(BandIdx, :), '', 'Linear', PlotProps);
             if BandIdx == 1
-                title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2))])
+                title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2)), ' y.o.'])
             end
 
             if AgeIdx == 1
