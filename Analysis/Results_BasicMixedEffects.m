@@ -51,7 +51,7 @@ table_demographics(Metadata, 'Hour', ResultsFolder, 'Hour')
 
 FormulaString = ' ~ Task + Hour*Age + Group + Sex + (1|Participant) + (1|Participant:SessionUnique)'; % MAIN ONE
 % FormulaString = ' ~ Task + Hour*Age + (1|Participant) + (1|Participant:SessionUnique)'; % this model provides the better BIC
-
+% FormulaString = ' ~ Task + Hour*Age + Group + Sex + (1|Participant) + (1|Participant:SessionUnique) + (1|Participant:Dataset)'; % control
 
 %%% setup metadata for statistics
 MetadataStat = Metadata;
