@@ -1,11 +1,12 @@
-function [MetadataPatients, MetadataControls] = match_participants(Metadata, PatientIndexes)
+function [MetadataPatients, MetadataControls] = match_participants(Datatable, PatientIndexes)
 % matches participants by gender, task and age (should be unique Patients)
+% 
 
 MaxAgeGap = 1; % in years
 
 
-MetadataPatients = Metadata(PatientIndexes, :);
-MetadataControls = Metadata(~PatientIndexes, :);
+MetadataPatients = Datatable(PatientIndexes, :);
+MetadataControls = Datatable(~PatientIndexes, :);
 
 [UniquePatients, Indexes] = unique(MetadataPatients.Participant);
 [~, Order] = sort(MetadataPatients.Subgroup(Indexes));
@@ -52,7 +53,7 @@ end
 
 MetadataPatients(strcmp(MetadataPatients.ControlParticipant, 'none'), :) = [];
 MetadataPatients = sortrows(MetadataPatients, 'Participant');
-MetadataControls = Metadata(contains(Metadata.Participant, MetadataPatients.ControlParticipant), :);
+MetadataControls = Datatable(contains(Datatable.Participant, MetadataPatients.ControlParticipant), :);
 MetadataControls = sortrows(MetadataControls, 'Participant');
 
 
