@@ -26,7 +26,7 @@ CacheDir = Paths.Cache;
 CacheName = 'AllBursts.mat';
 
 %%% load data
-load(fullfile(CacheDir, CacheName), 'Metadata', "BurstInformationClusters", 'Frequencies')
+load(fullfile(CacheDir, CacheName), 'Metadata', "BurstInformationClusters", 'Frequencies', 'AverageSpectrograms', 'AllFrequencies')
 Metadata.Task(strcmp(Metadata.Task, 'Oddball')) = {'1Oddball'};
 Metadata = basic_metadata_cleanup(Metadata, {'Ages', Ages, 'Tasks', Tasks});
 
