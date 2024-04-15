@@ -197,10 +197,8 @@ chART.save_figure('Intercept', ResultsFolder, PlotProps)
 
 
 % histogram quantity and amplitude
-
-
 Frequencies = 4:.333:17;
-[HistogramAmplitude, HistogramQuantities] = assemble_burst_distributions(Bursts, Frequencies);
+[HistogramAmplitude, HistogramQuantities] = assemble_burst_distributions(Bursts, Frequencies, EEG.pnts);
 
 figure('Units','centimeters', 'Position', PlotSize)
 chART.sub_plot([], [1 1], [1 1], [], true, '', PlotProps);
