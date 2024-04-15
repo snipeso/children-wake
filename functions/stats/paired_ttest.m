@@ -35,20 +35,10 @@ if isempty(Data2) && numel(Dims1) == 2 % A
         end
     end
 
-    % get vector of diamond matrix so can replace things properly
-    Indexes = 1:Dims1(2)^2;
-    Indexes = reshape(Indexes, Dims1(2), []);
-    pValues_long = pValues(:);
-    Indexes_long = Indexes(:);
-    Nans = isnan(pValues_long); % there is probably a more elegant way to do this
-    pValues_long(Nans) = [];
-    Indexes_long(Nans) = [];
+    % correct for multiple comparisons across whole matrix
+    [FDR, h, crit_p] = fdr_matrix(pValues, StatsP);
 
-    % identify still significant values
-    [sig, crit_p, ~,  pValues_fdr] = fdr_bh(pValues_long, StatsP.Alpha, StatsP.ttest.dep);
 
-    h = nan(Dims1(2));
-    h(Indexes_long) = sig;
     Stats.N = N;
     Stats.sig = h;
     Stats.t = tValues;
@@ -56,8 +46,6 @@ if isempty(Data2) && numel(Dims1) == 2 % A
     Stats.crit_p = crit_p;
     Stats.df = df;
 
-    FDR = nan(Dims1(2));
-    FDR(Indexes_long) = pValues_fdr;
     Stats.p_fdr = FDR;
 
     % get effect sizes
@@ -142,11 +130,11 @@ function N = totN(Data1, Data2)
 Dims = size(Data1);
 
 if any(Dims==1)
-N = nnz(~(isnan(Data1) | isnan(Data2)));
+    N = nnz(~(isnan(Data1) | isnan(Data2)));
 else
-D1 = mean(Data1, 2);
-D2 = mean(Data2, 2);
-N = nnz(~(isnan(D1) | isnan(D2)));
+    D1 = mean(Data1, 2);
+    D2 = mean(Data2, 2);
+    N = nnz(~(isnan(D1) | isnan(D2)));
 
 end
 

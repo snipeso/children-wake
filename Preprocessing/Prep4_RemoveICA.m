@@ -157,6 +157,7 @@ for Indx_D = 1:numel(Datasets)
                 find_bad_segments(NewEEG, WindowLength, -inf, EEG_Channels.notEEG, false, MinDataKeep, CorrelationFrequencyRange, 150); % mine; just a quick check
             NewEEG.data(:, BadWindows_t) = [];
             disp(['Removing ', num2str(nnz(BadWindows_t)/numel(BadWindows_t)*100), '% data in time'])
+            
             NewEEG = pop_select(NewEEG, 'nochannel', BadCh);
             disp(['Removing ', num2str(numel(BadCh)), ' channels'])
             NewEEG = eeg_checkset(NewEEG);
