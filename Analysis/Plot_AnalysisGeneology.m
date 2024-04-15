@@ -200,18 +200,7 @@ chART.save_figure('Intercept', ResultsFolder, PlotProps)
 
 
 Frequencies = 4:.333:17;
-nFrequencies = numel(Frequencies)-1;
-DiscreteFrequencies = discretize([Bursts.BurstFrequency], Frequencies);
- HistogramAmplitude = nan(1, numel(Frequencies)-1);
- HistogramQuantities = HistogramAmplitude;
-for FreqIdx = 1:nFrequencies
-    BurstTemp = Bursts(DiscreteFrequencies==FreqIdx);
-        HistogramQuantities(FreqIdx) = 100*sum([BurstTemp.DurationPoints])/EEG.pnts;
-            if numel(BurstTemp)<10
-                continue
-            end
-    HistogramAmplitude(FreqIdx) = mean([BurstTemp.Amplitude]);
-end
+[HistogramAmplitude, HistogramQuantities] = assemble_burst_distributions(Bursts, Frequencies);
 
 figure('Units','centimeters', 'Position', PlotSize)
 chART.sub_plot([], [1 1], [1 1], [], true, '', PlotProps);
