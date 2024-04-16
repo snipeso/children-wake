@@ -8,13 +8,15 @@ close all
 
 Parameters = analysisParameters();
 Paths = Parameters.Paths;
-Ages = Parameters.Ages;
-Ages = Ages(2:end, :); % exclude youngest group; too few
-nAges = size(Ages, 1);
+
 nChannels = 123;
 % Tasks = {'Oddball', 'GoNoGo', 'Alertness', 'Fixation'}; % oddball first is important; its the reference
 Tasks = {'1Oddball' '3Oddball'}; % oddball for now, when have time, do another model
 ColorParameter = 'Estimate';
+
+Ages = Parameters.Ages;
+Ages = Ages(2:end, :); % exclude youngest group; too few
+nAges = size(Ages, 1);
 
 %%% paths
 ResultsFolder = fullfile(Paths.Results, 'Spectrogram');
@@ -27,14 +29,17 @@ CacheName = 'AllBursts.mat';
 
 %%% load data
 load(fullfile(CacheDir, CacheName), 'Metadata', "BurstInformationClusters", 'Frequencies', 'AverageSpectrograms', 'AllFrequencies')
-Metadata.Task(strcmp(Metadata.Task, 'Oddball')) = {'1Oddball'};
-Metadata = basic_metadata_cleanup(Metadata, {'Ages', Ages, 'Tasks', Tasks});
+
+MetadataOddball = Metadata;
+MetadataOddball.Task(strcmp(Metadata.Task, 'Oddball')) = {'1Oddball'};
+MetadataOddball = basic_metadata_cleanup(MetadataOddball, {'Ages', Ages, 'Tasks', Tasks});
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% 
+%%%
 
 %% Plot spectrogram
+
 
 PlotProps = Parameters.PlotProps.Manuscript;
 PlotProps.Figure.Padding = 25;
@@ -47,8 +52,8 @@ nMeasures = numel(Measures);
 
 EquidistantAges = 4:4:25;
 
-Metadata.EquispacedAges = discretize(Metadata.Age, EquidistantAges);
-OvernightMetadata = pair_recordings(Metadata, 'Hour', {'eve', 'mor'});
+MetadataOddball.EquispacedAges = discretize(MetadataOddball.Age, EquidistantAges);
+OvernightMetadata = pair_recordings(MetadataOddball, 'Hour', {'eve', 'mor'});
 
 figure('Units','centimeters','OuterPosition',[0 0 10 22])
 
@@ -102,4 +107,114 @@ for MeasureIdx = 1:nMeasures
     end
 end
 chART.save_figure('FrequencyByAgeChange', ResultsFolder, PlotProps)
+
+
+%% suppl figure frequencies by age group
+
+Ages = Parameters.Ages;
+nAges = size(Ages, 1);
+
+MetadataSpectro = basic_metadata_cleanup(Metadata, {'Ages', Ages});
+MegaGrid = [2, 1];
+
+PlotProps = Parameters.PlotProps.Manuscript;
+PlotProps.Axes.yPadding = 20;
+
+MiniGridA = [1 nAges];
+
+Tasks = {'GoNoGo', 'Alertness', 'Fixation'};
+nTasks = numel(Tasks);
+
+MiniGridB = [1 nTasks];
+
+figure('Units','centimeters','OuterPosition',[0 0 25 18])
+
+%%% A: spectrograms by age
+Space = chART.sub_figure(MegaGrid, [1 1], [], 'A', PlotProps);
+for AgeIdx = 1:nAges
+
+    % assemble data
+    TaskIndexes = contains(MetadataSpectro.Task, {'Oddball'});
+    AgeIndexes = MetadataSpectro.AgeGroups==AgeIdx;
+    HourIndexes = strcmp(MetadataSpectro.Hour, 'eve');
+    MetadataTemp = MetadataSpectro(TaskIndexes & AgeIndexes & HourIndexes, :);
+
+    Evening = average_by_column(MetadataTemp, AverageSpectrograms, 'Participant', [1:size(MetadataTemp, 1)]'); % NB: I did not make sure that each recording was paired to another
+
+    HourIndexes = strcmp(MetadataSpectro.Hour, 'mor');
+    MetadataTemp = MetadataSpectro(TaskIndexes & AgeIndexes & HourIndexes, :);
+    Morning = average_by_column(MetadataTemp, AverageSpectrograms, 'Participant', [1:size(MetadataTemp, 1)]');
+
+    % plot
+    chART.sub_plot(Space, MiniGridA, [1 AgeIdx], [], true, '', PlotProps);
+    plot_spectrogram(Evening, Morning, AllFrequencies, PlotProps)
+    title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2)), ' y.o.'])
+    if AgeIdx >1
+        legend off
+        ylabel('')
+    end
+    ylim([.02 90])
+end
+
+
+%%% B: spectrograms by task
+Space = chART.sub_figure(MegaGrid, [2 1], [], 'B', PlotProps);
+for TaskIdx = 1:nTasks
+
+    % assemble data
+    TaskIndexes = contains(MetadataSpectro.Task, Tasks{TaskIdx});
+    HourIndexes = strcmp(MetadataSpectro.Hour, 'eve');
+    MetadataTemp = MetadataSpectro(TaskIndexes & HourIndexes, :);
+    Evening = average_by_column(MetadataTemp, AverageSpectrograms, 'Participant', [1:size(MetadataTemp, 1)]'); % NB: I did not make sure that each recording was paired to another
+
+    HourIndexes = strcmp(MetadataSpectro.Hour, 'mor');
+    MetadataTemp = MetadataSpectro(TaskIndexes & HourIndexes, :);
+    Morning = average_by_column(MetadataTemp, AverageSpectrograms, 'Participant', [1:size(MetadataTemp, 1)]');
+
+    % plot
+    chART.sub_plot(Space, MiniGridB, [1 TaskIdx], [], true, '', PlotProps);
+    plot_spectrogram(Evening, Morning, AllFrequencies, PlotProps)
+    title(Tasks{TaskIdx})
+    ylim([.02 90])
+    if TaskIdx > 1
+        legend off
+        ylabel('')
+    end
+end
+
+
+chART.save_figure('Spectrograms', ResultsFolder, PlotProps)
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% functions
+
+
+function plot_spectrogram(Evening, Morning, Freqs, PlotProps)
+% Power is a P x H x F matrix
+
+Colors = chART.color_picker([2, 3]);
+EveningColor = squeeze(Colors([ 2 3], :, 1));
+MorningColor = squeeze(Colors([ 2 3], :, 2));
+
+hold on
+plot(Freqs, Evening, 'Color', [EveningColor(2, :), .2], 'LineWidth', PlotProps.Line.Width/4, 'HandleVisibility','off')
+plot(Freqs, Morning, 'Color', [MorningColor(2, :), .2], 'LineWidth', PlotProps.Line.Width/4, 'HandleVisibility','off')
+
+chART.set_axis_properties(PlotProps)
+
+plot(Freqs, mean(Evening, 1, 'omitnan'), 'Color', EveningColor(1, :), 'LineWidth', PlotProps.Line.Width)
+plot(Freqs, mean(Morning, 1, 'omitnan'), 'Color', MorningColor(1, :), 'LineWidth', PlotProps.Line.Width)
+
+set(gca, 'YScale', 'log', 'XScale', 'log', 'XGrid', 'on', 'XMinorTick','off', 'XMinorGrid', 'off')
+xticks([2 4 8 16 32])
+xlim([1 40])
+legend({'Evening', 'Morning'})
+xlabel('Frequency (Hz)')
+ylabel('Power (\muV^2/Hz)')
+set(legend, 'ItemTokenSize', [10 10], 'location', 'southwest')
+end
+
+
+
 
