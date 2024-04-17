@@ -39,7 +39,12 @@ end
 chART.set_axis_properties(PlotProps)
 
 xlim(XLim)
+
+if ~isempty(YLim)
 ylim(YLim)
+else
+    YLim = ylim;
+end
 
 
 [R, p] = corr(Table.(XColumn),  Table.(YColumn));
@@ -62,7 +67,7 @@ else
 end
 
 RhoString = num2str(R, '%.2f');
-RhoString = replace(RhoString, '0.', '.')
+RhoString = replace(RhoString, '0.', '.');
 text(Start, YLim(end), ['\rho=', RhoString], ...
     'FontName', PlotProps.Text.FontName, 'FontSize', PlotProps.Text.AxisSize, 'HorizontalAlignment', HA)
 chART.utils.pad_axis('y', .05)

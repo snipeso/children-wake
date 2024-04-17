@@ -15,6 +15,10 @@ OutcomeMeasures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'Peri
 OutcomeMeasuresTitles = {'Amplitude', 'Density', 'Slope', 'Intercept', 'Power', 'Periodic power'};
 MeasureUnits = {'\muV', '% Recording', 'A.U.', 'Log power', 'Log power', 'Log power'};
 
+ErrorMeasures = {'Error', 'RSquared'};
+ErrorMeasuresTitles = ErrorMeasures;
+ErrorUnits = {'error', 'R^2'};
+
 %%% set paths
 Paths = Parameters.Paths;
 
@@ -70,12 +74,14 @@ MetadataStat = make_categorical(MetadataStat, 'Sex', {'f', 'm'}); % compare male
 %%% run models
 clc
 
-for MeasureIdx = 1:numel(OutcomeMeasures)
-    formula = [OutcomeMeasures{MeasureIdx}, FormulaString];
+
+OutcomeMeasures_Extended = [OutcomeMeasures, ErrorMeasures];
+for MeasureIdx = 1:numel(OutcomeMeasures_Extended)
+    formula = [OutcomeMeasures_Extended{MeasureIdx}, FormulaString];
     Model = fitlme(MetadataStat, formula);
 
     % Display the model summary
-    disp(['____________________ ', OutcomeMeasures{MeasureIdx}, ' ____________________'])
+    disp(['____________________ ', OutcomeMeasures_Extended{MeasureIdx}, ' ____________________'])
     disp(Model);
     disp_mixed_stat(Model, 'Age')
     disp_mixed_stat(Model, 'Group_2')
@@ -84,8 +90,9 @@ for MeasureIdx = 1:numel(OutcomeMeasures)
     disp_mixed_stat(Model, 'Age:Hour_2')
 
 
-    save_model(Model, fullfile(ResultsFolder, ['BasicModel_', OutcomeMeasures{MeasureIdx}, '.txt']))
+    save_model(Model, fullfile(ResultsFolder, ['BasicModel_', OutcomeMeasures_Extended{MeasureIdx}, '.txt']))
 end
+
 
 
 %% scatterplot of basic information
@@ -271,3 +278,84 @@ colormap(PlotProps.Color.Maps.Linear)
 set(gca, 'xtick', 1:nMeasures, 'xticklabels', OutcomeMeasures, 'XAxisLocation','top', ...
     'ytick', 1:nMeasures, 'yticklabels', OutcomeMeasures, 'TickLength', [0 0])
 axis square
+
+
+
+
+%% plot errors
+
+
+PlotProps = Parameters.PlotProps.Manuscript;
+PlotProps.Figure.Padding = 20;
+PlotProps.Axes.xPadding = 20;
+Grid = [3 numel(ErrorMeasures)];
+
+% fix y lims, so same for mor and eve
+YLimits = [0 .09; % error
+    .975 1.005; % r^2
+    ];
+XLim = [3 25];
+
+HourLabels = {'Evening', 'Morning'};
+
+% select only some of the data
+MetadataScatter = Metadata;
+MetadataScatter = MetadataScatter(contains(MetadataScatter.Task, {'Oddball'}), :);
+
+OvernightMetadata = pair_recordings(MetadataScatter, 'Hour', {'eve', 'mor'});
+
+clc
+figure('Units','centimeters','OuterPosition',[0 0 11 18])
+
+for VariableIdx = 1:numel(ErrorMeasures)
+
+    %%% plot age x v split by evening and morning, averaged across sessions
+    for HourIdx = 1:numel(Hours)
+
+        % select data of either evening or morning
+        MetadataHour = MetadataScatter(strcmp(MetadataScatter.Hour, Hours(HourIdx)), :);
+
+        % average sessions and multiple tasks (1oddball and 3 oddball)
+        MetadataAverage = unique_metadata(MetadataHour, 'Participant');
+
+        % plot
+        chART.sub_plot([], Grid, [HourIdx, VariableIdx], [], true, '', PlotProps);
+        plot_scattercloud(MetadataAverage, 'Age', ErrorMeasures{VariableIdx}, ...
+            PlotProps, '', false, XLim, YLimits(VariableIdx, :))
+        ylabel(ErrorUnits{VariableIdx})
+        legend off
+
+        if HourIdx==1
+            title(ErrorMeasuresTitles{VariableIdx})
+        end
+        if VariableIdx==1
+            chART.plot.vertical_text(HourLabels{HourIdx}, .55, .5, PlotProps)
+        end
+        disp([ Hours{HourIdx}, ErrorMeasures{VariableIdx}, ...
+            'N=', num2str(numel(unique(MetadataAverage.Participant)))])
+
+    end
+
+    %%% plot overnight change
+    chART.sub_plot([], Grid, [3, VariableIdx], [], true, '', PlotProps);
+    MetadataAverage = unique_metadata(OvernightMetadata, 'Participant');
+
+    plot_scattercloud(MetadataAverage, 'Age', ErrorMeasures{VariableIdx}, ...
+        PlotProps, '', true, XLim)
+    ylabel(ErrorUnits{VariableIdx})
+    xlabel('Age')
+    if VariableIdx ~=numel(ErrorMeasures)
+        legend off
+    end
+
+    if VariableIdx==1
+        chART.plot.vertical_text('Overnight change', .55, .5, PlotProps)
+        xlabel('Age (years)')
+    end
+
+    disp(['Overnight', ErrorMeasures{VariableIdx}, ...
+        'N=', num2str(numel(unique(MetadataAverage.Participant)))])
+end
+chART.save_figure('BasicScatterAge_Errors', ResultsFolder, PlotProps)
+
+
