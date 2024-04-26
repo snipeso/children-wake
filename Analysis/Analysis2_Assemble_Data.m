@@ -8,10 +8,6 @@ close all
 Parameters = analysisParameters();
 Paths = Parameters.Paths;
 Datasets = Parameters.Datasets;
-Hours = Parameters.Hours;
-
-Variables = {''};
-VariablesCluster = {};
 
 Frequencies = 4:16;
 nFrequencies = numel(Frequencies)-1;
@@ -121,7 +117,6 @@ for RecordingIdx = 1:nRecordings
 
         % load in power spectra
         Path = fullfile(SourcePower, Folder, Dataset, Task);
-
         DataOut = load_datafile(Path, Participant, Session, Hour, ...
             {'Power', 'Freqs'}, '.mat');
         Power = DataOut{1};
