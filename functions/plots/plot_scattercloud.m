@@ -47,7 +47,7 @@ else
 end
 
 
-[R, p] = corr(Table.(XColumn),  Table.(YColumn));
+[R, p] = corr(Table.(XColumn),  Table.(YColumn), 'Rows', 'complete');
 
 if p<.05
 
