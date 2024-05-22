@@ -126,7 +126,7 @@ YLimits = [5, 42; % amplitudes
     .3, 2.5; % intercept
     -1.6, 2; % power
     -.05, .705; % periodic power
-    0 1000];
+    100 750];
 XLim = [3 25];
 
 HourLabels = {'Evening', 'Morning'};
@@ -137,7 +137,7 @@ MetadataScatter = Metadata;
 OvernightMetadata = pair_recordings(MetadataScatter, 'Hour', {'eve', 'mor'});
 
 clc
-figure('Units','centimeters','OuterPosition',[0 0 25 18])
+figure('Units','centimeters','OuterPosition',[0 0 27 18])
 
 for VariableIdx = 1:numel(OutcomeMeasures)
 
@@ -220,6 +220,7 @@ for Idx1 = 1:numel(OutcomeMeasures)
             axis off
             continue
         end
+        
 
         plot_scattercloud(Metadata, OutcomeMeasures{Idx1}, OutcomeMeasures{Idx2}, PlotProps, '', false)
         set(gca, 'XTick' ,[], 'YTick', [])
@@ -236,7 +237,41 @@ for Idx1 = 1:numel(OutcomeMeasures)
 end
 chART.save_figure('CorrelateVariables', ResultsFolder, PlotProps)
 
+%% Correlate overnight changes
 
+Grid = [numel(OutcomeMeasures) numel(OutcomeMeasures)];
+figure('Units','centimeters','OuterPosition',[0 0 18 18])
+for Idx1 = 1:numel(OutcomeMeasures)
+    for Idx2 = 1:numel(OutcomeMeasures)
+        chART.sub_plot([], Grid, [Idx2, Idx1], [], false, '', PlotProps);
+
+        if Idx1==Idx2
+            if Idx1==1
+                chART.set_axis_properties(PlotProps)
+                title(OutcomeMeasuresTitles{Idx1})
+                ylabel(OutcomeMeasures{Idx2})
+            end
+            axis off
+            continue
+        end
+
+         % MetadataAverage = unique_metadata(OvernightMetadata, 'Participant');
+         CorrectedMetadata = correct_for_age(OvernightMetadata);
+
+        plot_scattercloud(CorrectedMetadata, OutcomeMeasures{Idx1}, OutcomeMeasures{Idx2}, PlotProps, '', false)
+        set(gca, 'XTick' ,[], 'YTick', [])
+        axis square
+        if Idx2 == numel(OutcomeMeasures)
+            xlabel(OutcomeMeasuresTitles{Idx1})
+        elseif Idx2==1
+            title(OutcomeMeasuresTitles{Idx1})
+        end
+        if Idx1==1
+            ylabel(OutcomeMeasuresTitles{Idx2})
+        end
+    end
+end
+chART.save_figure('CorrelateVariablesOvernight', ResultsFolder, PlotProps)
 
 %% mixed model to correct for multiple recordings etc.
 
@@ -280,8 +315,14 @@ for Idx1 = 1:numel(OutcomeMeasures)
         TValues.(OutcomeMeasures{Idx1})(Idx2) = t;
     end
 end
+
+disp(Stats)
 writetable(Stats, fullfile(ResultsFolder, 'CorrelationsOutcomeVariables.xlsx'))
 writetable(TValues, fullfile(ResultsFolder, 'CorrelationsOutcomeVariables_TValues.csv'))
+
+
+
+
 
 %%
 figure('Units','centimeters','InnerPosition',[0 0 12 8])

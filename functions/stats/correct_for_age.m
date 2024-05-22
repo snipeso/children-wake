@@ -10,10 +10,11 @@ x = Metadata.Age;
 for Variable = OutcomeVariables
 
     y = Metadata.(Variable{1});
+    ynanless= y(~isnan(y));
     try
-    p = polyfit(x,y,1);
+    p = polyfit(x,ynanless,1);
     catch
-        a=1
+        a=1;
     end
     y1 = polyval(p,x);
 
