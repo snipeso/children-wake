@@ -11,9 +11,9 @@ close all
 Parameters = analysisParameters();
 Hours = Parameters.Hours;
 
-OutcomeMeasures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower', 'SWASlope'};
-OutcomeMeasuresTitles = {'Amplitude', 'Density', 'Exponent', 'Intercept', 'Power', 'Periodic power', 'Slope'};
-MeasureUnits = {'\muV', '% Recording', 'A.U.', 'Log power', 'Log power', 'Log power', 'A.U.'};
+OutcomeMeasures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower', 'SWASlope', 'SWAAmp'};
+OutcomeMeasuresTitles = {'Amplitude', 'Density', 'Exponent', 'Intercept', 'Power', 'Periodic power', 'SW Slope', 'SW Amplitude'};
+MeasureUnits = {'\muV', '% Recording', 'A.U.', 'Log power', 'Log power', 'Log power', 'A.U.', '\muV'};
 
 ErrorMeasures = {'Error', 'RSquared'};
 ErrorMeasuresTitles = ErrorMeasures;
@@ -36,6 +36,7 @@ end
 %%% load data
 load(fullfile(CacheDir, CacheName), 'Metadata')
 SlopeCSV = readtable('D:\Data\AllWake\ValeriaSlopes\RecodedSlopes.csv');
+AmpCSV = readtable('D:\Data\AllWake\ValeriaSlopes\RecodedAmplitudes.csv');
 
 % fixes to metadata
 Metadata = basic_metadata_cleanup(Metadata);
@@ -56,10 +57,18 @@ for RowIdx = 1:size(Metadata)
          HourIdx = 2;
     end
     
+    % slopes
     Slope = SlopeCSV(strcmp(SlopeCSV.subject, Participant) & ...
         strcmp(SlopeCSV.session, Session) & SlopeCSV.time==HourIdx & ismember(SlopeCSV.bin, [4 5]), :);
 
     Metadata.SWASlope(RowIdx) =  mean(Slope{:, 6:end-1}, 'all', 'omitnan');
+
+    % amplitudes
+        Amp = AmpCSV(strcmp(AmpCSV.subject, Participant) & ...
+        strcmp(AmpCSV.session, Session) & AmpCSV.time==HourIdx & ismember(AmpCSV.bin, [4 5]), :);
+
+    Metadata.SWAAmp(RowIdx) =  mean(Amp{:, 6:end-2}, 'all', 'omitnan');
+
 end
 
 
@@ -126,7 +135,8 @@ YLimits = [5, 42; % amplitudes
     .3, 2.5; % intercept
     -1.6, 2; % power
     -.05, .705; % periodic power
-    100 750];
+    100 750;
+    10 150];
 XLim = [3 25];
 
 HourLabels = {'Evening', 'Morning'};
@@ -137,7 +147,7 @@ MetadataScatter = Metadata;
 OvernightMetadata = pair_recordings(MetadataScatter, 'Hour', {'eve', 'mor'});
 
 clc
-figure('Units','centimeters','OuterPosition',[0 0 27 18])
+figure('Units','centimeters','OuterPosition',[0 0 30 18])
 
 for VariableIdx = 1:numel(OutcomeMeasures)
 
@@ -320,97 +330,5 @@ disp(Stats)
 writetable(Stats, fullfile(ResultsFolder, 'CorrelationsOutcomeVariables.xlsx'))
 writetable(TValues, fullfile(ResultsFolder, 'CorrelationsOutcomeVariables_TValues.csv'))
 
-
-
-
-
-%%
-figure('Units','centimeters','InnerPosition',[0 0 12 8])
-imagesc(AllT)
-chART.plot.vertical_colorbar('t-values', PlotProps)
-chART.set_axis_properties(PlotProps)
-colormap(PlotProps.Color.Maps.Linear)
-set(gca, 'xtick', 1:nMeasures, 'xticklabels', OutcomeMeasures, 'XAxisLocation','top', ...
-    'ytick', 1:nMeasures, 'yticklabels', OutcomeMeasures, 'TickLength', [0 0])
-axis square
-
-
-
-
-%% plot errors
-
-
-PlotProps = Parameters.PlotProps.Manuscript;
-PlotProps.Figure.Padding = 20;
-PlotProps.Axes.xPadding = 20;
-Grid = [3 numel(ErrorMeasures)];
-
-% fix y lims, so same for mor and eve
-YLimits = [0 .09; % error
-    .975 1.005; % r^2
-    ];
-XLim = [3 25];
-
-HourLabels = {'Evening', 'Morning'};
-
-% select only some of the data
-MetadataScatter = Metadata;
-MetadataScatter = MetadataScatter(contains(MetadataScatter.Task, {'Oddball'}), :);
-
-OvernightMetadata = pair_recordings(MetadataScatter, 'Hour', {'eve', 'mor'});
-
-clc
-figure('Units','centimeters','OuterPosition',[0 0 11 18])
-
-for VariableIdx = 1:numel(ErrorMeasures)
-
-    %%% plot age x v split by evening and morning, averaged across sessions
-    for HourIdx = 1:numel(Hours)
-
-        % select data of either evening or morning
-        MetadataHour = MetadataScatter(strcmp(MetadataScatter.Hour, Hours(HourIdx)), :);
-
-        % average sessions and multiple tasks (1oddball and 3 oddball)
-        MetadataAverage = unique_metadata(MetadataHour, 'Participant');
-
-        % plot
-        chART.sub_plot([], Grid, [HourIdx, VariableIdx], [], true, '', PlotProps);
-        plot_scattercloud(MetadataAverage, 'Age', ErrorMeasures{VariableIdx}, ...
-            PlotProps, '', false, XLim, YLimits(VariableIdx, :))
-        ylabel(ErrorUnits{VariableIdx})
-        legend off
-
-        if HourIdx==1
-            title(ErrorMeasuresTitles{VariableIdx})
-        end
-        if VariableIdx==1
-            chART.plot.vertical_text(HourLabels{HourIdx}, .55, .5, PlotProps)
-        end
-        disp([ Hours{HourIdx}, ErrorMeasures{VariableIdx}, ...
-            'N=', num2str(numel(unique(MetadataAverage.Participant)))])
-
-    end
-
-    %%% plot overnight change
-    chART.sub_plot([], Grid, [3, VariableIdx], [], true, '', PlotProps);
-    MetadataAverage = unique_metadata(OvernightMetadata, 'Participant');
-
-    plot_scattercloud(MetadataAverage, 'Age', ErrorMeasures{VariableIdx}, ...
-        PlotProps, '', true, XLim)
-    ylabel(ErrorUnits{VariableIdx})
-    xlabel('Age')
-    if VariableIdx ~=numel(ErrorMeasures)
-        legend off
-    end
-
-    if VariableIdx==1
-        chART.plot.vertical_text('Overnight change', .55, .5, PlotProps)
-        xlabel('Age (years)')
-    end
-
-    disp(['Overnight', ErrorMeasures{VariableIdx}, ...
-        'N=', num2str(numel(unique(MetadataAverage.Participant)))])
-end
-chART.save_figure('BasicScatterAge_Errors', ResultsFolder, PlotProps)
 
 

@@ -1,6 +1,8 @@
 Codes = readtable(fullfile('D:\Data\AllWake\Metadata', 'ParticipantCodes.csv'));
 Metadata = readtable(fullfile('D:\Data\AllWake\Metadata', 'Metadata_Children_Wake.csv'));
-CSV = readtable('D:\Data\AllWake\ValeriaSlopes\Table1_slope_FHLH_allelectrodes.xlsx');
+% CSV = readtable('D:\Data\AllWake\ValeriaSlopes\Table1_slope_FHLH_allelectrodes.xlsx');
+CSV = readtable('D:\Data\AllWake\ValeriaSlopes\Table1_amp_FHLH_allelectrodes.xlsx');
+
 
 RecodedData = table();
 for ParticipantIdx = 1:size(Codes, 1)
@@ -26,4 +28,4 @@ for RowIdx = 1:size(RecodedData, 1)
     RecodedData.group(RowIdx) = Group(end);
 end
 
-% writetable(RecodedData, fullfile('D:\Data\AllWake\ValeriaSlopes\', 'RecodedSlopes.csv'))
+writetable(RecodedData, fullfile('D:\Data\AllWake\ValeriaSlopes\', 'RecodedAmplitudes.csv'))

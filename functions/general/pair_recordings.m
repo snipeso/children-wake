@@ -6,7 +6,7 @@ function PairedMetadata = pair_recordings(Metadata, ColumnName, Categories)
 
 PairedMetadata = table();
 
-OutcomeVariables =  {'Globality', 'Amplitude', 'Duration', 'Quantity',  'Slope', 'Intercept','Power', 'PeriodicPower', 'SWASlope', 'Error', 'RSquared'};
+OutcomeVariables =  {'Globality', 'Amplitude', 'Duration', 'Quantity',  'Slope', 'Intercept','Power', 'PeriodicPower', 'SWASlope', 'SWAAmp', 'Error', 'RSquared'};
 
 Metadata.IndexesCategory1 = Metadata.Index;
 Metadata.IndexesCategory2 = Metadata.IndexesCategory1;
