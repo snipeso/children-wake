@@ -13,7 +13,7 @@ Hours = Parameters.Hours;
 
 OutcomeMeasures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower', 'SWASlope', 'SWAAmp'};
 OutcomeMeasuresTitles = {'Amplitude', 'Density', 'Exponent', 'Intercept', 'Power', 'Periodic power', 'SW Slope', 'SW Amplitude'};
-MeasureUnits = {'\muV', '% Recording', 'A.U.', 'Log power', 'Log power', 'Log power', 'A.U.', '\muV'};
+MeasureUnits = {'\muV', '% Recording', 'A.U.', 'Log power', 'Log power', 'Log power', 'A.U.', 'log \muV'};
 
 ErrorMeasures = {'Error', 'RSquared'};
 ErrorMeasuresTitles = ErrorMeasures;
@@ -36,7 +36,8 @@ end
 %%% load data
 load(fullfile(CacheDir, CacheName), 'Metadata')
 SlopeCSV = readtable('D:\Data\AllWake\ValeriaSlopes\RecodedSlopes.csv');
-AmpCSV = readtable('D:\Data\AllWake\ValeriaSlopes\RecodedAmplitudes.csv');
+% AmpCSV = readtable('D:\Data\AllWake\ValeriaSlopes\RecodedAmplitudes.csv');
+AmpCSV = readtable('D:\Data\AllWake\ValeriaSlopes\RecodedAmplitudesUnmatched.csv');
 
 % fixes to metadata
 Metadata = basic_metadata_cleanup(Metadata);
@@ -45,7 +46,9 @@ Metadata(~ismember(Metadata.Condition, 'base'), :) = [];
 Metadata(~contains(Metadata.Task, {'Alertness', 'Oddball'}), :) = [];
 
 
-%% add slope info to metadata table
+AmpCSV = AmpCSV(ismember(AmpCSV.channel, Parameters.Channels.NotEdge), :);
+
+%%% add slope info to metadata table
 
 for RowIdx = 1:size(Metadata)
     Participant = Metadata.Participant(RowIdx);
@@ -65,10 +68,11 @@ for RowIdx = 1:size(Metadata)
     Metadata.SWASlope(RowIdx) =  mean(Slope, 'all', 'omitnan');
 
     % amplitudes
-        Amp = AmpCSV{strcmp(AmpCSV.subject, Participant) & ...
-        strcmp(AmpCSV.session, Session) & AmpCSV.time==HourIdx & ismember(AmpCSV.bin, [4 5]), 6:end-2};
+        % Amp = AmpCSV{strcmp(AmpCSV.subject, Participant) & ...
+        % strcmp(AmpCSV.session, Session) & AmpCSV.time==HourIdx & ismember(AmpCSV.bin, [4 5]), 6:end-2};
+        Amp = AmpCSV.amp(strcmp(AmpCSV.subject, Participant) & ...
+        strcmp(AmpCSV.session, Session) & AmpCSV.time==HourIdx);
 
-        Amp = log(Amp);
     Metadata.SWAAmp(RowIdx) =  mean(Amp, 'all', 'omitnan');
 
 end
@@ -147,7 +151,7 @@ YLimits = [5, 42; % amplitudes
     -1.6, 2; % power
     -.05, .705; % periodic power
     4.8 6.5;
-    3.3 5];
+    2.5 4.5];
 
 XLim = [3 25];
 
