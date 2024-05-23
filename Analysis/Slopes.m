@@ -58,16 +58,18 @@ for RowIdx = 1:size(Metadata)
     end
     
     % slopes
-    Slope = SlopeCSV(strcmp(SlopeCSV.subject, Participant) & ...
-        strcmp(SlopeCSV.session, Session) & SlopeCSV.time==HourIdx & ismember(SlopeCSV.bin, [4 5]), :);
+    Slope = SlopeCSV{strcmp(SlopeCSV.subject, Participant) & ...
+        strcmp(SlopeCSV.session, Session) & SlopeCSV.time==HourIdx & ismember(SlopeCSV.bin, [4 5]), 6:end-1};
 
-    Metadata.SWASlope(RowIdx) =  mean(Slope{:, 6:end-1}, 'all', 'omitnan');
+    Slope = log(Slope);
+    Metadata.SWASlope(RowIdx) =  mean(Slope, 'all', 'omitnan');
 
     % amplitudes
-        Amp = AmpCSV(strcmp(AmpCSV.subject, Participant) & ...
-        strcmp(AmpCSV.session, Session) & AmpCSV.time==HourIdx & ismember(AmpCSV.bin, [4 5]), :);
+        Amp = AmpCSV{strcmp(AmpCSV.subject, Participant) & ...
+        strcmp(AmpCSV.session, Session) & AmpCSV.time==HourIdx & ismember(AmpCSV.bin, [4 5]), 6:end-2};
 
-    Metadata.SWAAmp(RowIdx) =  mean(Amp{:, 6:end-2}, 'all', 'omitnan');
+        Amp = log(Amp);
+    Metadata.SWAAmp(RowIdx) =  mean(Amp, 'all', 'omitnan');
 
 end
 
@@ -137,6 +139,16 @@ YLimits = [5, 42; % amplitudes
     -.05, .705; % periodic power
     100 750;
     10 150];
+
+YLimits = [5, 42; % amplitudes
+    70, 550; % quantities
+    .7 2.25; % slope
+    .3, 2.5; % intercept
+    -1.6, 2; % power
+    -.05, .705; % periodic power
+    4.8 6.5;
+    3.3 5];
+
 XLim = [3 25];
 
 HourLabels = {'Evening', 'Morning'};
