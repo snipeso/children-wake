@@ -52,6 +52,21 @@ table_demographics(Metadata, 'Hour', ResultsFolder, 'Hour')
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Analyses
 
+
+%% save table to publish
+
+MetadataPublish = Metadata;
+
+OriginalTableLables = MetadataPublish.Properties.VariableNames;
+for Idx = 1:numel(OutcomeMeasuresTitles)
+
+    IdxTable = strcmp(OriginalTableLables, OutcomeMeasures{Idx});
+    MetadataPublish.Properties.VariableNames(IdxTable) = genvarname(OutcomeMeasuresTitles(Idx));
+end
+
+writetable(MetadataPublish, fullfile(ResultsFolder, 'WakeSleepAllData.csv'))
+
+
 %% run mixed models
 
 FormulaString = ' ~ Task + Hour*Age + Group + Sex + (1|Participant) + (1|Participant:SessionUnique)'; % MAIN ONE

@@ -11,11 +11,9 @@ close all
 Parameters = analysisParameters();
 Hours = Parameters.Hours;
 
-OutcomeMeasures = {Parameters.OutcomeMeasures.OriginalLabels, 'SWASlope', 'SWAAmp'};
-OutcomeMeasuresTitles = {Parameters.OutcomeMeasures.Titles, 'SW Slope', 'SW Amplitude'};
-MeasureUnits = {Parameters.OutcomeMeasures.Units, 'A.U.', 'log \muV'};
-
-ErrorMeasures = {'Error', 'RSquared'};
+OutcomeMeasures = [Parameters.OutcomeMeasures.OriginalLabels, 'SWASlope', 'SWAAmp'];
+OutcomeMeasuresTitles = [Parameters.OutcomeMeasures.Titles, 'SW Slope', 'SW Amplitude'];
+MeasureUnits = [Parameters.OutcomeMeasures.Units, 'A.U.', '\muV'];
 
 %%% set paths
 Paths = Parameters.Paths;
@@ -25,7 +23,7 @@ CacheDir = Paths.Cache;
 CacheName = 'AllBursts.mat';
 
 % where to save figures
-ResultsFolder = fullfile(Paths.Results, 'SleepSlopeStats');
+ResultsFolder = fullfile(Paths.Results, 'SleepWakeStats');
 if ~exist(ResultsFolder,'dir')
     mkdir(ResultsFolder)
 end
@@ -33,59 +31,67 @@ end
 
 %%% load data
 load(fullfile(CacheDir, CacheName), 'Metadata')
-SlopeCSV = readtable('D:\Data\AllWake\ValeriaSlopes\RecodedSlopes.csv');
-% AmpCSV = readtable('D:\Data\AllWake\ValeriaSlopes\RecodedAmplitudes.csv');
-AmpCSV = readtable('D:\Data\AllWake\ValeriaSlopes\RecodedAmplitudesUnmatched.csv');
+
+SlopeCSV = readtable(fullfile(Paths.Core, 'ValeriaSlopes', 'RecodedSlopes.csv'));
+AmplitudeCSV = readtable(fullfile(Paths.Core, 'ValeriaSlopes', 'RecodedAmplitudesUnmatched.csv'));
+
 
 % fixes to metadata
 Metadata = basic_metadata_cleanup(Metadata);
-Metadata(~ismember(Metadata.Participant, SlopeCSV.subject), :) = [];
-Metadata(~ismember(Metadata.Condition, 'base'), :) = [];
-Metadata(~contains(Metadata.Task, {'Alertness', 'Oddball'}), :) = [];
+Metadata(~ismember(Metadata.Participant, SlopeCSV.subject), :) = []; % only subjects for which sleep data is available
+Metadata(~ismember(Metadata.Condition, 'base'), :) = []; % only baseline nights were included in sleep analysis
+Metadata(~contains(Metadata.Task, {'Alertness', 'Oddball'}), :) = []; % only use oddball-like tasks
 
+AmplitudeCSV = AmplitudeCSV(ismember(AmplitudeCSV.channel, Parameters.Channels.NotEdge), :); % exclude edge channels (already done for slopes)
 
-AmpCSV = AmpCSV(ismember(AmpCSV.channel, Parameters.Channels.NotEdge), :);
 
 %%% add slope info to metadata table
 
 for RowIdx = 1:size(Metadata)
+
     Participant = Metadata.Participant(RowIdx);
     Session = Metadata.Session(RowIdx);
     Hour = Metadata.Hour(RowIdx);
+
+    % convert string to index
     if strcmp(Hour, 'eve')
         HourIdx = 1;
     else
-         HourIdx = 2;
+        HourIdx = 2;
     end
-    
+
     % slopes
     Slope = SlopeCSV{strcmp(SlopeCSV.subject, Participant) & ...
-        strcmp(SlopeCSV.session, Session) & SlopeCSV.time==HourIdx & ismember(SlopeCSV.bin, [4 5]), 6:end-1};
+        strcmp(SlopeCSV.session, Session) & SlopeCSV.time==HourIdx, 6:end-1};
 
-    Slope = log(Slope);
     Metadata.SWASlope(RowIdx) =  mean(Slope, 'all', 'omitnan');
 
     % amplitudes
-        % Amp = AmpCSV{strcmp(AmpCSV.subject, Participant) & ...
-        % strcmp(AmpCSV.session, Session) & AmpCSV.time==HourIdx & ismember(AmpCSV.bin, [4 5]), 6:end-2};
-        Amp = AmpCSV.amp(strcmp(AmpCSV.subject, Participant) & ...
-        strcmp(AmpCSV.session, Session) & AmpCSV.time==HourIdx);
+    Amp = power(exp(1), AmplitudeCSV.amp(strcmp(AmplitudeCSV.subject, Participant) & ...
+        strcmp(AmplitudeCSV.session, Session) & AmplitudeCSV.time==HourIdx)); % the data was saved log-transformed, so switching it back here
 
     Metadata.SWAAmp(RowIdx) =  mean(Amp, 'all', 'omitnan');
-
 end
 
 
 
+%% save data used for stats to publish
+
+MetadataPublish = Metadata;
+
+OriginalTableLables = MetadataPublish.Properties.VariableNames;
+for Idx = 1:numel(OutcomeMeasuresTitles)
+
+    IdxTable = strcmp(OriginalTableLables, OutcomeMeasures{Idx});
+    MetadataPublish.Properties.VariableNames(IdxTable) = genvarname(OutcomeMeasuresTitles(Idx));
+end
+
+writetable(MetadataPublish, fullfile(ResultsFolder, 'WakeSleepAllData.csv'))
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Analyses
 
 %% run mixed models
-
-FormulaString = ' ~ Hour*Age + (1|Participant)'; % MAIN ONE
-% FormulaString = ' ~ Task + Hour*Age + (1|Participant) + (1|Participant:SessionUnique)'; % this model provides the better BIC
-% FormulaString = ' ~ Task + Hour*Age + Group + Sex + (1|Participant) + (1|Participant:SessionUnique) + (1|Participant:Dataset)'; % control
 
 %%% setup metadata for statistics
 MetadataStat = Metadata;
@@ -99,31 +105,55 @@ MetadataStat = make_categorical(MetadataStat, 'Hour', {'eve', 'mor'}); % compare
 MetadataStat = make_categorical(MetadataStat, 'Sex', {'f', 'm'}); % compare males to females
 
 
-%%% run models
-clc
+%%% mixed model to correct for multiple recordings etc.
+
+FormulaFixed = '~ Hour*Age +';
+FormulaRandom = '+ (1|Participant)';
+
+Stats = table();
+Stats.OutcomeMeasures = OutcomeMeasures';
+TValues = Stats;
+nMeasures = numel(OutcomeMeasures);
+AllT = nan(nMeasures, nMeasures);
+for Idx1 = 1:numel(OutcomeMeasures)
+    for Idx2 = 1:numel(OutcomeMeasures)
+
+        if Idx1==Idx2
+            continue
+        end
+
+        formula = [OutcomeMeasures{Idx1}, FormulaFixed, OutcomeMeasures{Idx2}, FormulaRandom];
+        Model = fitlme(MetadataStat, formula);
+
+        RowIdx = strcmp(Model.Coefficients.Name, OutcomeMeasures{Idx2});
 
 
-OutcomeMeasures_Extended = [OutcomeMeasures, ErrorMeasures];
-for MeasureIdx = 1:numel(OutcomeMeasures_Extended)
-    formula = [OutcomeMeasures_Extended{MeasureIdx}, FormulaString];
-    Model = fitlme(MetadataStat, formula);
+        beta = Model.Coefficients.Estimate(RowIdx);
+        t = Model.Coefficients.tStat(RowIdx);
+        AllT(Idx2, Idx1) = t;
+        df = Model.Coefficients.DF(RowIdx);
+        p = Model.Coefficients.pValue(RowIdx);
+        pString = extractAfter(num2str(p, '%.3f'), '.');
+        if p < .001
+            pString = '<.001';
+        else
+            pString = ['=.',pString];
+        end
 
-    % Display the model summary
-    disp(['____________________ ', OutcomeMeasures_Extended{MeasureIdx}, ' ____________________'])
-    disp(Model);
-    disp_mixed_stat(Model, 'Age')
-    disp_mixed_stat(Model, 'Group_2')
-    disp_mixed_stat(Model, 'Hour_2')
-    disp_mixed_stat(Model, 'Sex_2')
-    disp_mixed_stat(Model, 'Age:Hour_2')
-
-
-    save_model(Model, fullfile(ResultsFolder, ['BasicModel_', OutcomeMeasures_Extended{MeasureIdx}, '.txt']))
+        StatString = ['b=', num2str(beta, '%.2f'), '; t=', num2str(t, '%.1f'), '; p', pString, '; df=', num2str(df)];
+        Stats.(OutcomeMeasures{Idx1})(Idx2) = {StatString};
+        TValues.(OutcomeMeasures{Idx1})(Idx2) = t;
+    end
 end
 
+disp(Stats)
+writetable(Stats, fullfile(ResultsFolder, 'CorrelationsOutcomeVariables.xlsx'))
+writetable(TValues, fullfile(ResultsFolder, 'CorrelationsOutcomeVariables_TValues.csv'))
 
 
-%% scatterplot of basic information
+%% scatterplot of basic information (quality check)
+
+
 close all
 PlotProps = Parameters.PlotProps.Manuscript;
 PlotProps.Figure.Padding = 20;
@@ -139,17 +169,8 @@ YLimits = [5, 42; % amplitudes
     .3, 2.5; % intercept
     -1.6, 2; % power
     -.05, .705; % periodic power
-    100 750;
-    10 150];
-
-YLimits = [5, 42; % amplitudes
-    70, 550; % quantities
-    .7 2.25; % slope
-    .3, 2.5; % intercept
-    -1.6, 2; % power
-    -.05, .705; % periodic power
-    4.8 6.5;
-    2.5 4.5];
+    100 500;
+    15 100];
 
 XLim = [3 25];
 
@@ -219,7 +240,7 @@ chART.save_figure('BasicScatterAge', ResultsFolder, PlotProps)
 
 
 
-%% correlate measures
+%% correlate measures (quality check)
 
 PlotProps = Parameters.PlotProps.Manuscript;
 PlotProps.Figure.Padding = 25;
@@ -244,7 +265,7 @@ for Idx1 = 1:numel(OutcomeMeasures)
             axis off
             continue
         end
-        
+
 
         plot_scattercloud(Metadata, OutcomeMeasures{Idx1}, OutcomeMeasures{Idx2}, PlotProps, '', false)
         set(gca, 'XTick' ,[], 'YTick', [])
@@ -279,8 +300,8 @@ for Idx1 = 1:numel(OutcomeMeasures)
             continue
         end
 
-         % MetadataAverage = unique_metadata(OvernightMetadata, 'Participant');
-         CorrectedMetadata = correct_for_age(OvernightMetadata);
+        % MetadataAverage = unique_metadata(OvernightMetadata, 'Participant');
+        CorrectedMetadata = correct_for_age(OvernightMetadata);
 
         plot_scattercloud(CorrectedMetadata, OutcomeMeasures{Idx1}, OutcomeMeasures{Idx2}, PlotProps, '', false)
         set(gca, 'XTick' ,[], 'YTick', [])
@@ -297,50 +318,23 @@ for Idx1 = 1:numel(OutcomeMeasures)
 end
 chART.save_figure('CorrelateVariablesOvernight', ResultsFolder, PlotProps)
 
-%% mixed model to correct for multiple recordings etc.
 
-FormulaFixed = '~ Hour*Age +';
-FormulaRandom = '+ (1|Participant)';
+%% run models for each measure (quality check)
+clc
 
+FormulaString = ' ~ Hour*Age + (1|Participant)'; % MAIN ONE
 
-Stats = nan(numel(OutcomeMeasures), numel(OutcomeMeasures), 4); % estimates, tStats, DF, pValues
-Stats = table();
-Stats.OutcomeMeasures = OutcomeMeasures';
-TValues = Stats;
-nMeasures = numel(OutcomeMeasures);
-AllT = nan(nMeasures, nMeasures);
-for Idx1 = 1:numel(OutcomeMeasures)
-    for Idx2 = 1:numel(OutcomeMeasures)
+for MeasureIdx = 1:numel(OutcomeMeasures)
+    formula = [OutcomeMeasures{MeasureIdx}, FormulaString];
+    Model = fitlme(MetadataStat, formula);
 
-        if Idx1==Idx2
-            continue
-        end
-
-        formula = [OutcomeMeasures{Idx1}, FormulaFixed, OutcomeMeasures{Idx2}, FormulaRandom];
-        Model = fitlme(MetadataStat, formula);
-
-        RowIdx = strcmp(Model.Coefficients.Name, OutcomeMeasures{Idx2});
+    % Display the model summary
+    disp(['____________________ ', OutcomeMeasures{MeasureIdx}, ' ____________________'])
+    disp(Model);
+    disp_mixed_stat(Model, 'Age')
+    disp_mixed_stat(Model, 'Hour_2')
+    disp_mixed_stat(Model, 'Age:Hour_2')
 
 
-        beta = Model.Coefficients.Estimate(RowIdx);
-        t = Model.Coefficients.tStat(RowIdx);
-        AllT(Idx2, Idx1) = t;
-        df = Model.Coefficients.DF(RowIdx);
-        p = Model.Coefficients.pValue(RowIdx);
-        pString = extractAfter(num2str(p, '%.3f'), '.');
-        if p < .001
-            pString = '<.001';
-        else
-            pString = ['=.',pString];
-        end
-
-        StatString = ['b=', num2str(beta, '%.2f'), '; t=', num2str(t, '%.1f'), '; p', pString, '; df=', num2str(df)];
-        Stats.(OutcomeMeasures{Idx1})(Idx2) = {StatString};
-        TValues.(OutcomeMeasures{Idx1})(Idx2) = t;
-    end
+    save_model(Model, fullfile(ResultsFolder, ['BasicModel_', OutcomeMeasures{MeasureIdx}, '.txt']))
 end
-
-disp(Stats)
-writetable(Stats, fullfile(ResultsFolder, 'CorrelationsOutcomeVariables.xlsx'))
-writetable(TValues, fullfile(ResultsFolder, 'CorrelationsOutcomeVariables_TValues.csv'))
-
