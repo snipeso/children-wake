@@ -46,7 +46,9 @@ Parameters.Labels.Frequency = 'Frequency (Hz)';
 Parameters.Labels.Amplitude = 'Amplitude (\muV)';
 Parameters.Labels.Time = 'Time (s)';
 Parameters.Labels.t = 't-values';
-
+Parameters.OutcomeMeasures.Titles = {'Amplitude', 'Density', 'Exponent', 'Intercept', 'Power', 'Periodic power'};
+Parameters.OutcomeMeasures.OriginalLabels = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'}; % this is how I originally labeled the different measures; then changed with revisions
+Parameters.OutcomeMeasures.Units = {'\muV', '% Recording', 'A.U.', 'Log power', 'Log power', 'Log power'};
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -54,10 +56,12 @@ Parameters.Labels.t = 't-values';
 
 if exist( 'D:\LSM\Preprocessed', 'dir') % KISPI desktop
     Core = 'D:\AllWake\';
-    addpath('H:\Code\chART')
-    addpath('H:\Code\Matcycle')
-    addpath('H:\Code\fooof_mat\fooof_mat')
-    addpath('\\nausers01\user\sniso\Dokumente\MATLAB\eeglab2022.0')
+
+    % external toolboxes
+    addpath('H:\Code\chART') % https://github.com/snipeso/chart
+    addpath('H:\Code\Matcycle') % https://github.com/HuberSleepLab/Matcycle
+    addpath('H:\Code\fooof_mat\fooof_mat') % https://github.com/fooof-tools/fooof_mat
+    addpath('\\nausers01\user\sniso\Dokumente\MATLAB\eeglab2022.0') % https://sccn.ucsd.edu/eeglab/download.php
     elseif exist( 'X:\Data\Raw', 'dir')
     Core = 'X:\Data\';
 

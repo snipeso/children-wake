@@ -9,11 +9,12 @@ close all
 %%% setup variables and parameters
 
 Parameters = analysisParameters();
+
 Hours = Parameters.Hours;
 
-OutcomeMeasures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
-OutcomeMeasuresTitles = {'Amplitude', 'Density', 'Slope', 'Intercept', 'Power', 'Periodic power'};
-MeasureUnits = {'\muV', '% Recording', 'A.U.', 'Log power', 'Log power', 'Log power'};
+OutcomeMeasures = Parameters.OutcomeMeasures.OriginalLabels;
+OutcomeMeasuresTitles = Parameters.OutcomeMeasures.Titles;
+MeasureUnits = Parameters.OutcomeMeasures.Units;
 
 ErrorMeasures = {'Error', 'RSquared'};
 ErrorMeasuresTitles = ErrorMeasures;

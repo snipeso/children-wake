@@ -16,8 +16,6 @@ OutcomeMeasuresTitles = {'Amplitude', 'Density', 'Exponent', 'Intercept', 'Power
 MeasureUnits = {'\muV', '% Recording', 'A.U.', 'Log power', 'Log power', 'Log power', 'A.U.', 'log \muV'};
 
 ErrorMeasures = {'Error', 'RSquared'};
-ErrorMeasuresTitles = ErrorMeasures;
-ErrorUnits = {'error', 'R^2'};
 
 %%% set paths
 Paths = Parameters.Paths;
