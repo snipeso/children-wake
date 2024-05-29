@@ -142,6 +142,7 @@ Parameters.Triggers = Triggers;
 
 Parameters.PlotProps.Manuscript = chART.load_plot_properties({'Iota', 'Manuscript'});
 Parameters.PlotProps.Manuscript.Figure.Width = 22;
+Parameters.PlotProps.Manuscript.Text.FontName = 'Helvetica';
 
 Parameters.PlotProps.Powerpoint = chART.load_plot_properties({'Iota', 'Powerpoint'});
 Parameters.PlotProps.Poster = chART.load_plot_properties({'Iota', 'Poster'});
