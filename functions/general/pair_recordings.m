@@ -6,7 +6,9 @@ function PairedMetadata = pair_recordings(Metadata, ColumnName, Categories)
 
 PairedMetadata = table();
 
-OutcomeVariables =  {'Globality', 'Amplitude', 'Duration', 'Quantity',  'Slope', 'Intercept','Power', 'PeriodicPower', 'SWASlope', 'SWAAmp', 'Error', 'RSquared'};
+AllOutcomeVariables =  {'Globality', 'Amplitude', 'Duration', 'Quantity',  'Slope', 'Intercept','Power', 'PeriodicPower', 'SWASlope', 'SWAAmp', 'Error', 'RSquared'};
+
+AllOutcomeVariables(~ismember(AllOutcomeVariables, Metadata.Properties.VariableNames)) = [];
 
 Metadata.IndexesCategory1 = Metadata.Index;
 Metadata.IndexesCategory2 = Metadata.IndexesCategory1;
@@ -44,8 +46,8 @@ for Cat1RowIdx = 1:size(Metadata1, 1)
     PairedMetadata = cat(1, PairedMetadata, Metadata1(Cat1RowIdx, :));
 
     % replace with difference values
-    PairedMetadata(end, OutcomeVariables) = ...
-        Metadata2(MorRowIdx, OutcomeVariables) - Metadata1(Cat1RowIdx, OutcomeVariables);
+    PairedMetadata(end, AllOutcomeVariables) = ...
+        Metadata2(MorRowIdx, AllOutcomeVariables) - Metadata1(Cat1RowIdx, AllOutcomeVariables);
 
     % save morning data index
     PairedMetadata.IndexesCategory2(end) = Metadata2.IndexesCategory2(MorRowIdx);
