@@ -1,4 +1,5 @@
-
+% This is just some basic code to plot the little example data used in
+% figure 1.
 clear
 clc
 close all
@@ -13,21 +14,15 @@ if ~exist(ResultsFolder,'dir')
     mkdir(ResultsFolder)
 end
 
-% Filename_Core = 'P137_SleepLearning_Session11_eve_1Oddball_n_1.mat';
 Filename_Core = 'P139_SleepLearning_Session11_eve_1Oddball_n_1.mat';
 [EEG, Bursts, ~, Power, Freqs] = load_single_participant(Filename_Core, Paths);
 
 Bursts = burst_bands(Bursts, Bands);
 
-% cycy.plot.plot_all_bursts(EEG, 15, Bursts, 'NewBand');
-
-%%
-
 AperiodicGray = [.66 .66 .66];
 
 DurationAperiodic = 15;
 Start = 245;
-% Start = 250;
 Aperiodic = EEG.data(end, Start*EEG.srate:(Start+DurationAperiodic)*EEG.srate);
 
 HighAlpha = EEG.data(labels2indexes(51, EEG.chanlocs), 77*EEG.srate:78*EEG.srate);
@@ -47,16 +42,8 @@ Aperiodic(StartTheta:StartTheta+DurationTheta-1) = Theta;
 
 t = linspace(0, DurationAperiodic, numel(Aperiodic));
 
-figure('Units','centimeters', 'Position',[0 0 40 3])
-chART.sub_plot([], [1 1], [1 1], [], '', '', PlotProps)
-plot(t, Aperiodic, 'LineWidth', 1.5, 'Color', 'k')
-axis off
-ylim([-40 40])
-xlim([0 15])
-chART.save_figure('EEG', ResultsFolder, PlotProps)
 
-
-% plot single channel snippet (composite?)
+%  single channel snippet in time (composite)
 LW_Bursts = 2;
 figure('Units','centimeters', 'Position', [0 0 25 5.5])
 chART.sub_plot([], [1 1], [1 1], [], '', '', PlotProps)
@@ -74,15 +61,13 @@ xlim([2.5 11.5])
 chART.save_figure('Bursts', ResultsFolder, PlotProps)
 
 
-%%
-
 PlotProps.Text.AxisSize = 10;
 PlotSize = [0 0 5.5 5.5];
 LW_Plot = 1.5;
 PowerAverage = mean(Power(labels2indexes([11, 60, 51, 129], EEG.chanlocs), :), 1);
 PowerAverageSmooth = smooth_frequencies(PowerAverage, Freqs, 2);
 
-
+% power spectrum
 figure('Units','centimeters', 'Position', PlotSize)
 chART.sub_plot([], [1 1], [1 1], [], true, '', PlotProps);
 plot(Freqs, PowerAverageSmooth, 'Color', 'k', 'LineWidth',PlotProps.Line.Width)
@@ -101,14 +86,12 @@ Bands.Theta = [4 7];
 Bands.Alpha = [8 11];
 Bands.Beta = [12 16];
 
-
-% log power
+% (log) Power
 figure('Units','centimeters', 'Position', PlotSize)
 chART.sub_plot([], [1 1], [1 1], [], true, '', PlotProps);
 plot_highlighted_spectrum(log(PowerAverageSmooth), Freqs, Bands, PlotProps)
 xlabel('Frequency (Hz)')
 ylabel('Log power')
-% xlim([2 18])
 xlim([1 20])
 legend(flip({'Theta_{ }', 'Alpha','Beta_{low}'}), 'position', [ 0.5887    0.6237    0.3450    0.3125])
 legend boxoff  
@@ -117,6 +100,7 @@ ylim([-1.7, 3])
 axis square
 box off
 chART.save_figure('LogPower', ResultsFolder, PlotProps)
+
 
 % log log power
 figure('Units','centimeters', 'Position', PlotSize)
@@ -133,7 +117,6 @@ ylim([-2 3])
 axis square
 box off
 chART.save_figure('LogLogPower', ResultsFolder, PlotProps)
-
 
 
 % FOOOF
