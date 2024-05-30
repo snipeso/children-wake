@@ -168,7 +168,7 @@ xlabel('Log frequency')
 ylabel('Log power')
 xlim(log([0.8 35]))
 ylim([-3 3])
-set(gca, 'XTick', [], 'YTick', [])
+set(gca, 'XTick', [], 'YTick', []) % NB. i remove the ticks because for slopes, the specific values dont really matter
 axis square
 box off
 chART.save_figure('Slope', ResultsFolder, PlotProps)
