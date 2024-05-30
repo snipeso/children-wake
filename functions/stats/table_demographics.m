@@ -23,7 +23,7 @@ end
 Table = cat(1, Table, new_row(Metadata, 'All'));
 disp(Table)
 
-writetable(Table, fullfile(Destination, [Filename, '.csv']))
+writetable(Table, fullfile(Destination, ['Demographics_', Filename, '.csv']))
 end
 
 

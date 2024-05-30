@@ -1,5 +1,5 @@
 % script to run main mixed effects models to determine the significance of
-% the most important factors for the paper's analysis.
+% the most important factors for the paper's analysis on the wake EEG data.
 
 clear
 clc
@@ -64,7 +64,7 @@ for Idx = 1:numel(OutcomeMeasuresTitles)
     MetadataPublish.Properties.VariableNames(IdxTable) = genvarname(OutcomeMeasuresTitles(Idx));
 end
 
-writetable(MetadataPublish, fullfile(ResultsFolder, 'WakeSleepAllData.csv'))
+writetable(MetadataPublish, fullfile(ResultsFolder, 'AllData_Wake.csv'))
 
 
 %% run mixed models
@@ -89,15 +89,22 @@ MetadataStat = make_categorical(MetadataStat, 'Sex', {'f', 'm'}); % compare male
 
 %%% run models
 clc
+if exist(fullfile(ResultsFolder, "BasicModel_AllStats.txt"), 'file')
+    delete(fullfile(ResultsFolder, "BasicModel_AllStats.txt"))
+end
 
-
+diary(fullfile(ResultsFolder, "BasicModel_AllStats.txt"))
+diary on
 OutcomeMeasures_Extended = [OutcomeMeasures, ErrorMeasures];
+OutcomeMeasures_ExtendedLabels = [OutcomeMeasuresTitles, ErrorMeasuresTitles];
 for MeasureIdx = 1:numel(OutcomeMeasures_Extended)
     formula = [OutcomeMeasures_Extended{MeasureIdx}, FormulaString];
     Model = fitlme(MetadataStat, formula);
 
     % Display the model summary
-    disp(['____________________ ', OutcomeMeasures_Extended{MeasureIdx}, ' ____________________'])
+    disp('   ')
+disp('   ')
+    disp(['____________________ ', OutcomeMeasures_ExtendedLabels{MeasureIdx}, ' ____________________'])
     disp(Model);
     disp_mixed_stat(Model, 'Age')
     disp_mixed_stat(Model, 'Group_2')
@@ -106,9 +113,9 @@ for MeasureIdx = 1:numel(OutcomeMeasures_Extended)
     disp_mixed_stat(Model, 'Age:Hour_2')
 
 
-    save_model(Model, fullfile(ResultsFolder, ['BasicModel_', OutcomeMeasures_Extended{MeasureIdx}, '.txt']))
+    save_model(Model, fullfile(ResultsFolder, ['BasicModel_', OutcomeMeasures_ExtendedLabels{MeasureIdx}, '.txt']))
 end
-
+diary off
 
 
 %% scatterplot of basic information

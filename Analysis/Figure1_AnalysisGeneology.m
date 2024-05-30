@@ -46,7 +46,7 @@ t = linspace(0, DurationAperiodic, numel(Aperiodic));
 %  single channel snippet in time (composite)
 LW_Bursts = 2;
 figure('Units','centimeters', 'Position', [0 0 25 5.5])
-chART.sub_plot([], [1 1], [1 1], [], '', '', PlotProps)
+chART.sub_plot([], [1 1], [1 1], [], '', '', PlotProps);
 plot(t, Aperiodic, 'LineWidth', 1.5, 'Color', AperiodicGray)
 hold on
 plot(t(StartTheta:StartTheta+DurationTheta-1), Aperiodic(StartTheta:StartTheta+DurationTheta-1), ...
