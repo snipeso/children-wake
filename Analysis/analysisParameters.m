@@ -154,6 +154,7 @@ TopoPlotProps.Axes.xPadding = 8;
 TopoPlotProps.Axes.yPadding = 5;
 TopoPlotProps.Figure.Padding = 20;
 TopoPlotProps.Stats.PlotN = true;
+TopoPlotProps.External.EEGLAB.TopoRes = 200;
 
 Parameters.PlotProps.TopoPlots = TopoPlotProps;
 

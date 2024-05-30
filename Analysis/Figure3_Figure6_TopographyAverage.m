@@ -1,4 +1,4 @@
-% plots just the average topographies for different ages
+% plots the average topographies for different ages
 
 clear
 clc
@@ -37,18 +37,10 @@ Metadata = basic_metadata_cleanup(Metadata, {'Ages', Ages, 'Tasks', Tasks});
 Metadata(~contains(Metadata.Task, Tasks), :) = []; % only look at first oddball and GoNoGo, since they are most similar
 
 % tabulate the age groups
-table_demographics(unique_metadata(Metadata), 'AgeGroups', ResultsFolder, 'DemographicsAgeGroupsAverage')
+table_demographics(unique_metadata(Metadata), 'AgeGroups', ResultsFolder, 'AgeGroupsAverage')
 
 
-%% Average topographies
-
-% CLims = struct();
-% CLims.Quantity = [5 40];
-% CLims.Amplitude = [10, 35];
-% CLims.Power = [-1 1.7];
-% CLims.PeriodicPower = [0.04 .44];
-% CLims.Slope = [1.3 2.1];
-% CLims.Intercept = [.8 2.3];
+%% Average topographies (Figure 3)
 
 CLims = struct();
 CLims.Quantity = [5 40];
@@ -59,8 +51,8 @@ CLims.Power = [-.7  1.7];
 CLims.PeriodicPower = [0.1 .44];
 
 
-Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
-MeasuresTitles = {'Amplitude', 'Density', 'Slope', 'Intercept', 'Power', 'Periodic power'};
+Measures = Parameters.OutcomeMeasures.OriginalLabels;
+MeasuresTitles = Parameters.OutcomeMeasures.Titles;
 
 MeasureUnits = {'\muV', '% recording', 'a.u.', 'log power', 'log power', 'log power'};
 nMeasures = numel(Measures);
@@ -105,7 +97,7 @@ chART.save_figure('TopographyAverage', ResultsFolder, PlotProps)
 
 
 
-%% Average topographies, split by band
+%% Average topographies, split by band (Figure 6)
 
 CLims = struct();
 CLims.Quantity = [0 5; 3 30; 0 6.5];
@@ -113,7 +105,8 @@ CLims.Amplitude = [-1, 18; 10, 30; 1, 16];
 CLims.Power = [-.5 2.5; -.25 2.25; -1.5 .5];
 CLims.PeriodicPower = [0.05 .3; .2 .8; -.05 .4];
 
-Measures = {'Amplitude', 'Quantity', 'Power', 'PeriodicPower'};
+Measures = Parameters.OutcomeMeasures.OriginalLabels([1, 2, 5, 6]); % exclude aperiodic labels
+MeasuresTitles = Parameters.OutcomeMeasures.Titles([1, 2, 5, 6]);
 MeasureUnits = {'\muV', '% recording', 'log power', 'log power'};
 nMeasures = numel(Measures);
 
