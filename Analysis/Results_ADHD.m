@@ -12,9 +12,9 @@ Paths = Parameters.Paths;
 nChannels = 123;
 Tasks = {'Oddball', 'Learning', 'GoNoGo', 'Alertness', 'Fixation'}; % oddball first is important; its the reference
 
-Measures = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'};
-MeasureTitles = {'Amplitude', 'Density', 'Slope', 'Intercept', 'Power', 'Periodic power'};
-MeasureLabels = append('\beta ',{'\muV', '%', '', 'log power', 'log power', 'log power'});
+Measures =  Parameters.OutcomeMeasures.OriginalLabels;
+MeasureTitles = Parameters.OutcomeMeasures.Titles;
+MeasureLabels = Parameters.OutcomeMeasures.Units;
 
 nMeasures = numel(Measures);
 
