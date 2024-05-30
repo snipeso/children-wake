@@ -118,7 +118,8 @@ end
 diary off
 
 
-%% scatterplot of basic information
+%% scatterplot of basic information (Figure 2)
+
 close all
 PlotProps = Parameters.PlotProps.Manuscript;
 PlotProps.Figure.Padding = 20;
@@ -203,59 +204,13 @@ chART.save_figure('BasicScatterAge', ResultsFolder, PlotProps)
 
 
 
-
-%% correlate measures
-
-PlotProps = Parameters.PlotProps.Manuscript;
-PlotProps.Figure.Padding = 25;
-PlotProps.Text.TitleSize = 10;
-PlotProps.Axes.yPadding = 5;
-PlotProps.Axes.xPadding = 5;
-PlotProps.Scatter.Size = 5;
-PlotProps.Scatter.Alpha = .4;
-
-Grid = [numel(OutcomeMeasures) numel(OutcomeMeasures)];
-figure('Units','centimeters','OuterPosition',[0 0 18 18])
-for Idx1 = 1:numel(OutcomeMeasures)
-    for Idx2 = 1:numel(OutcomeMeasures)
-        chART.sub_plot([], Grid, [Idx2, Idx1], [], false, '', PlotProps);
-
-        if Idx1==Idx2
-            if Idx1==1
-                chART.set_axis_properties(PlotProps)
-                title(OutcomeMeasuresTitles{Idx1})
-                ylabel(OutcomeMeasures{Idx2})
-            end
-            axis off
-            continue
-        end
-
-        plot_scattercloud(Metadata, OutcomeMeasures{Idx1}, OutcomeMeasures{Idx2}, PlotProps, '', false)
-        set(gca, 'XTick' ,[], 'YTick', [])
-        axis square
-        if Idx2 == numel(OutcomeMeasures)
-            xlabel(OutcomeMeasuresTitles{Idx1})
-        elseif Idx2==1
-            title(OutcomeMeasuresTitles{Idx1})
-        end
-        if Idx1==1
-            ylabel(OutcomeMeasuresTitles{Idx2})
-        end
-    end
-end
-chART.save_figure('CorrelateVariables', ResultsFolder, PlotProps)
-
-
-
 %% mixed model to correct for multiple recordings etc.
 
 FormulaFixed = '~ Task + Hour*Age +';
 FormulaRandom = '+ (1|Participant) + (1|Participant:SessionUnique)';
 
-
-Stats = nan(numel(OutcomeMeasures), numel(OutcomeMeasures), 4); % estimates, tStats, DF, pValues
 Stats = table();
-Stats.OutcomeMeasures = OutcomeMeasures';
+Stats.OutcomeMeasures = genvarname(OutcomeMeasuresTitles)';
 TValues = Stats;
 nMeasures = numel(OutcomeMeasures);
 AllT = nan(nMeasures, nMeasures);
@@ -285,27 +240,18 @@ for Idx1 = 1:numel(OutcomeMeasures)
         end
 
         StatString = ['b=', num2str(beta, '%.2f'), '; t=', num2str(t, '%.1f'), '; p', pString, '; df=', num2str(df)];
-        Stats.(OutcomeMeasures{Idx1})(Idx2) = {StatString};
-        TValues.(OutcomeMeasures{Idx1})(Idx2) = t;
+        Stats.(genvarname(OutcomeMeasuresTitles{Idx1}))(Idx2) = {StatString};
+        TValues.(genvarname(OutcomeMeasuresTitles{Idx1}))(Idx2) = t;
     end
 end
+clc
+disp(Stats)
 writetable(Stats, fullfile(ResultsFolder, 'CorrelationsOutcomeVariables.xlsx'))
 writetable(TValues, fullfile(ResultsFolder, 'CorrelationsOutcomeVariables_TValues.csv'))
 
-%%
-figure('Units','centimeters','InnerPosition',[0 0 12 8])
-imagesc(AllT)
-chART.plot.vertical_colorbar('t-values', PlotProps)
-chART.set_axis_properties(PlotProps)
-colormap(PlotProps.Color.Maps.Linear)
-set(gca, 'xtick', 1:nMeasures, 'xticklabels', OutcomeMeasures, 'XAxisLocation','top', ...
-    'ytick', 1:nMeasures, 'yticklabels', OutcomeMeasures, 'TickLength', [0 0])
-axis square
 
 
-
-
-%% plot errors
+%% plot errors (Suppl. Figure 2-1)
 
 
 PlotProps = Parameters.PlotProps.Manuscript;
@@ -314,8 +260,8 @@ PlotProps.Axes.xPadding = 20;
 Grid = [3 numel(ErrorMeasures)];
 
 % fix y lims, so same for mor and eve
-YLimits = [0 .09; % error
-    .975 1.005; % r^2
+YLimits = [0 max(Metadata.Error)+.005; % error
+    min(Metadata.RSquared)-.005 1.005; % r^2
     ];
 XLim = [3 25];
 
@@ -380,5 +326,49 @@ for VariableIdx = 1:numel(ErrorMeasures)
         'N=', num2str(numel(unique(MetadataAverage.Participant)))])
 end
 chART.save_figure('BasicScatterAge_Errors', ResultsFolder, PlotProps)
+
+
+
+%% correlate measures (Suppl. Figure 2-2)
+
+PlotProps = Parameters.PlotProps.Manuscript;
+PlotProps.Figure.Padding = 25;
+PlotProps.Text.TitleSize = 10;
+PlotProps.Axes.yPadding = 5;
+PlotProps.Axes.xPadding = 5;
+PlotProps.Scatter.Size = 5;
+PlotProps.Scatter.Alpha = .4;
+
+Grid = [numel(OutcomeMeasures) numel(OutcomeMeasures)];
+figure('Units','centimeters','OuterPosition',[0 0 18 18])
+for Idx1 = 1:numel(OutcomeMeasures)
+    for Idx2 = 1:numel(OutcomeMeasures)
+        chART.sub_plot([], Grid, [Idx2, Idx1], [], false, '', PlotProps);
+
+        if Idx1==Idx2
+            if Idx1==1
+                chART.set_axis_properties(PlotProps)
+                title(OutcomeMeasuresTitles{Idx1})
+                ylabel(OutcomeMeasures{Idx2})
+            end
+            axis off
+            continue
+        end
+
+        plot_scattercloud(Metadata, OutcomeMeasures{Idx1}, OutcomeMeasures{Idx2}, PlotProps, '', false)
+        set(gca, 'XTick' ,[], 'YTick', [])
+        axis square
+        if Idx2 == numel(OutcomeMeasures)
+            xlabel(OutcomeMeasuresTitles{Idx1})
+        elseif Idx2==1
+            title(OutcomeMeasuresTitles{Idx1})
+        end
+        if Idx1==1
+            ylabel(OutcomeMeasuresTitles{Idx2})
+        end
+    end
+end
+chART.save_figure('CorrelateVariables', ResultsFolder, PlotProps)
+
 
 
