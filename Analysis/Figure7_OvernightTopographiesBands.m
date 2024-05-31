@@ -1,4 +1,4 @@
-% plots the beta estimates for the overnight change
+% plots the beta estimates for the overnight change split by band
 clear
 clc
 close all
