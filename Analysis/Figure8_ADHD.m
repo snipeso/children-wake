@@ -14,7 +14,7 @@ Tasks = {'Oddball', 'Learning', 'GoNoGo', 'Alertness', 'Fixation'}; % oddball fi
 
 Measures =  Parameters.OutcomeMeasures.OriginalLabels;
 MeasureTitles = Parameters.OutcomeMeasures.Titles;
-MeasureLabels = Parameters.OutcomeMeasures.Units;
+MeaureLabels = append('\beta ',{'\muV', '%', 'a.u.', 'log power', 'log power', 'log power'});
 
 nMeasures = numel(Measures);
 
