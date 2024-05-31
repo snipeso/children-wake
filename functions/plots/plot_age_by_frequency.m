@@ -7,12 +7,19 @@ colormap(PlotProps.Color.Maps.(Colormap))
 
 xticks(Ages)
 yticks(5:2:15)
-h = colorbar;
-h.TickLength = 0;
-ylabel(h, Label, 'FontName', PlotProps.Text.FontName, 'FontSize', PlotProps.Text.AxisSize) % text style needs to be specified for label, because its weird
+PlotProps.Colorbar.Location = 'eastoutside';
+ylabel('Frequency (Hz)')
+ylim([5 15])
+set(gca, 'TickDir', 'in')
+% h = colorbar;
+% h.TickLength = 0;
+% ylabel(h, Label, 'FontName', PlotProps.Text.FontName, 'FontSize', PlotProps.Text.AxisSize) % text style needs to be specified for label, because its weird
 
 if strcmp(Colormap, 'Divergent')
     C = clim;
     Max = max(abs(C));
-    clim([-Max, Max])
+    chART.plot.pretty_colorbar(Colormap, [-Max, Max], Label, PlotProps)
+
+else
+    chART.plot.pretty_colorbar(Colormap, quantile(Data(:), [.1 .99]), Label, PlotProps)
 end

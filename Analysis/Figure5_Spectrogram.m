@@ -1,4 +1,4 @@
-
+% plots the age x frequency and spectrograms of the data
 clear
 clc
 close all
@@ -10,7 +10,6 @@ Parameters = analysisParameters();
 Paths = Parameters.Paths;
 
 nChannels = 123;
-% Tasks = {'Oddball', 'GoNoGo', 'Alertness', 'Fixation'}; % oddball first is important; its the reference
 Tasks = {'1Oddball' '3Oddball'}; % oddball for now, when have time, do another model
 ColorParameter = 'Estimate';
 
@@ -38,11 +37,11 @@ MetadataOddball = basic_metadata_cleanup(MetadataOddball, {'Ages', Ages, 'Tasks'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%
 
-%% Plot spectrogram
+%% Plot spectrogram (Figure 5)
 
 
 PlotProps = Parameters.PlotProps.Manuscript;
-PlotProps.Figure.Padding = 25;
+PlotProps.Figure.Padding = 28;
 PlotProps.Axes.yPadding = 20;
 
 Measures = {'Amplitude', 'Quantity', 'Power', 'PeriodicPower'};
@@ -66,14 +65,12 @@ for MeasureIdx = 1:nMeasures
     %%% plot average evening values
     chART.sub_plot([], [nMeasures, 1], [MeasureIdx, 1], [], true, '', PlotProps);
     plot_age_by_frequency(EveningAverage, EquidistantAges(1:end-1), Frequencies, 'Linear', Labels{MeasureIdx}, PlotProps)
-    ylim([5 15])
-    set(gca, 'TickDir', 'in')
     title(MeasureTitles{MeasureIdx}, 'FontSize', PlotProps.Text.TitleSize)
-    ylabel('Frequency (Hz)')
     if MeasureIdx == nMeasures
         xlabel('Age')
     end
 end
+colormap(PlotProps.Color.Maps.Linear)
 chART.save_figure('FrequencyByAge', ResultsFolder, PlotProps)
 
 % spectrum difference
@@ -98,18 +95,16 @@ for MeasureIdx = 1:nMeasures
     %%% plot differences
     chART.sub_plot([], [nMeasures, 1], [MeasureIdx, 1], [], true, '', PlotProps);
     plot_age_by_frequency(ChangeAverage, EquidistantAges(1:end-1), Frequencies, 'Divergent', 'difference', PlotProps)
-    ylim([5 15])
-    set(gca, 'TickDir', 'in')
     title(MeasureTitles{MeasureIdx}, 'FontSize', PlotProps.Text.TitleSize)
-    ylabel('Frequency (Hz)')
     if MeasureIdx == nMeasures
         xlabel('Age')
     end
 end
+colormap(PlotProps.Color.Maps.Divergent)
 chART.save_figure('FrequencyByAgeChange', ResultsFolder, PlotProps)
 
 
-%% suppl figure frequencies by age group
+%% suppl figure frequencies by age group (Suppl. Figure 5-1)
 
 Ages = Parameters.Ages;
 nAges = size(Ages, 1);
