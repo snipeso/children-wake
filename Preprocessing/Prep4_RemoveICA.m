@@ -17,7 +17,7 @@ EEG_Channels = P.EEG_Channels;
 
 Refresh = false;
 
-Spread = 0; % how many times more the main component has to be larger than the next largest component
+Spread = 0; % how many times more the main component has to be larger than the next largest component ("Spread" is a reference to the italian term "spread" referring to the difference between the yields of italian and german bonds) 
 SlopeRange = [8 30];
 MuscleSlopeMin = -.5;
 WindowLength = 3; % s, bad time windows

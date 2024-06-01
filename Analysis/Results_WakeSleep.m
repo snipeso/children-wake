@@ -151,7 +151,7 @@ for Idx1 = 1:numel(OutcomeMeasures)
             pString = [' = .',pString];
         end
 
-         StatString = ['beta = ', num2str(beta, '%.2f'), '; t = ', num2str(t, '%.1f'), '; p', pString, '; df = ', num2str(df)];
+         StatString = ['beta = ', num2str(beta, '%.2f'), ', t = ', num2str(t, '%.1f'), ', p', pString, ', df = ', num2str(df)];
         % StatString = ['b=', num2str(beta, '%.2f'), '; t=', num2str(t, '%.1f'), '; p', pString, '; df=', num2str(df)];
         Stats.(OutcomeMeasures{Idx1})(Idx2) = {StatString};
         TValues.(OutcomeMeasures{Idx1})(Idx2) = t;
