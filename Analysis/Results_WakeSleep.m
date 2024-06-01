@@ -44,6 +44,7 @@ Metadata(~contains(Metadata.Task, {'Alertness', 'Oddball'}), :) = []; % only use
 
 AmplitudeCSV = AmplitudeCSV(ismember(AmplitudeCSV.channel, Parameters.Channels.NotEdge), :); % exclude edge channels (already done for slopes)
 
+ KeepChannels = unique(AmplitudeCSV.channel);
 
 %%% add slope info to metadata table
 
@@ -64,7 +65,7 @@ for RowIdx = 1:size(Metadata)
     Slope = SlopeCSV{strcmp(SlopeCSV.subject, Participant) & ...
         strcmp(SlopeCSV.session, Session) & SlopeCSV.time==HourIdx, 6:end-1};
 
-    Metadata.SWASlope(RowIdx) =  mean(Slope, 'all', 'omitnan');
+    Metadata.SWASlope(RowIdx) =  mean(Slope(:, KeepChannels), 'all', 'omitnan');
 
     % amplitudes
     Amp = power(exp(1), AmplitudeCSV.amp(strcmp(AmplitudeCSV.subject, Participant) & ...
@@ -90,6 +91,16 @@ writetable(MetadataPublish, fullfile(ResultsFolder, 'WakeSleepAllData.csv'))
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Analyses
+
+%% demographics
+
+UniqueMetadata = unique_metadata(Metadata, 'Participant');
+
+disp(['n female: ', num2str(nnz(strcmp(UniqueMetadata.Sex, 'f')))])
+disp(['n: ', num2str(size(UniqueMetadata, 1))])
+disp(['age: ', num2str(mean(UniqueMetadata.Age, 1))])
+disp(['age min: ', num2str(min(UniqueMetadata.Age))])
+disp(['age max: ', num2str(max(UniqueMetadata.Age))])
 
 %% run mixed models
 
@@ -135,12 +146,13 @@ for Idx1 = 1:numel(OutcomeMeasures)
         p = Model.Coefficients.pValue(RowIdx);
         pString = extractAfter(num2str(p, '%.3f'), '.');
         if p < .001
-            pString = '<.001';
+            pString = ' < .001';
         else
-            pString = ['=.',pString];
+            pString = [' = .',pString];
         end
 
-        StatString = ['b=', num2str(beta, '%.2f'), '; t=', num2str(t, '%.1f'), '; p', pString, '; df=', num2str(df)];
+         StatString = ['beta = ', num2str(beta, '%.2f'), '; t = ', num2str(t, '%.1f'), '; p', pString, '; df = ', num2str(df)];
+        % StatString = ['b=', num2str(beta, '%.2f'), '; t=', num2str(t, '%.1f'), '; p', pString, '; df=', num2str(df)];
         Stats.(OutcomeMeasures{Idx1})(Idx2) = {StatString};
         TValues.(OutcomeMeasures{Idx1})(Idx2) = t;
     end
