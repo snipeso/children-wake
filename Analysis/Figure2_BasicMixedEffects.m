@@ -118,6 +118,11 @@ end
 diary off
 
 
+%% average error and r squared
+
+disp_stats_descriptive(MetadataStat.Error, 'Error', '', 3);
+disp_stats_descriptive(MetadataStat.RSquared, 'rsquared', '', 3);
+
 %% scatterplot of basic information (Figure 2)
 
 close all

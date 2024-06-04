@@ -252,7 +252,7 @@ chART.save_figure('BasicScatterAge', ResultsFolder, PlotProps)
 
 
 
-%% correlate measures (quality check)
+%% correlate measures (Suppl. Figure 2-2)
 
 PlotProps = Parameters.PlotProps.Manuscript;
 PlotProps.Figure.Padding = 25;
@@ -263,7 +263,7 @@ PlotProps.Scatter.Size = 5;
 PlotProps.Scatter.Alpha = .4;
 
 Grid = [numel(OutcomeMeasures) numel(OutcomeMeasures)];
-figure('Units','centimeters','OuterPosition',[0 0 18 18])
+figure('Units','centimeters','OuterPosition',[0 0 20 20])
 for Idx1 = 1:numel(OutcomeMeasures)
     for Idx2 = 1:numel(OutcomeMeasures)
         chART.sub_plot([], Grid, [Idx2, Idx1], [], false, '', PlotProps);
@@ -296,8 +296,13 @@ chART.save_figure('CorrelateVariables', ResultsFolder, PlotProps)
 
 %% Correlate overnight changes
 
+MetadataScatter = Metadata;
+
+OvernightMetadata = pair_recordings(MetadataScatter, 'Hour', {'eve', 'mor'});
+
+
 Grid = [numel(OutcomeMeasures) numel(OutcomeMeasures)];
-figure('Units','centimeters','OuterPosition',[0 0 18 18])
+figure('Units','centimeters','OuterPosition',[0 0 20 20])
 for Idx1 = 1:numel(OutcomeMeasures)
     for Idx2 = 1:numel(OutcomeMeasures)
         chART.sub_plot([], Grid, [Idx2, Idx1], [], false, '', PlotProps);

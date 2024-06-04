@@ -46,8 +46,9 @@ Metadata = sortrows(Metadata, 'Age');
 
 nRecordings = size(Metadata, 1);
 
-figure('Units','normalized','OuterPosition',[0 0 1 1])
-Grid = [6 10];
+ figure('Units','normalized','OuterPosition',[0 0 .5 1])
+% Grid = [6 10];
+Grid = [10 6];
 Indx = 1;
 
 for idxRecording = 1:nRecordings
@@ -84,8 +85,8 @@ for idxRecording = 1:nRecordings
         Indx = Indx+1;
         plot_multicolored_histogram(HistogramQuantities, Frequencies(1:end-1), Bands, PlotProps)
         xlim([2 18])
-        xlabel('Frequency (Hz)')
-        ylabel('% recording')
+        % xlabel('Frequency (Hz)')
+        % ylabel('% recording')
         title([num2str(Metadata.Age(idxRecording), '%.1f'), ' y.o.'])
 
         if Indx == Grid(1)*Grid(2)
