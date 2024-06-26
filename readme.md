@@ -21,26 +21,13 @@ Preprequisites:
 Steps:
 
 1. Prep1_Raw2MAT.m: extract data from EGI format into EEGLAB struct, saved to MAT files
-2. Prep2_Filter.m: filter, downsample data
+2. Prep2_Filter.m: filter, downsample data. The core preprocessing function is [filter_and_downsample_eeg()](./functions/eeg/filter_and_downsample_eeg.m).
 3. Prep3_GetICA.m: Remove bad channels and timepoints, run ICA. Removes slow! 
 4. Prep4_RemoveICA.m: Remove artifact components based on 1/f slopes
 
 
 ### Analysis
 
-
-
-# NB
-Orginal repo was AllWake
-
-## TODO
-- run preprocessing (maybe rerun) on all data + adults
-- Make sure I have all the function dependencies, especially from AllWake for preprocessing
-- if time: run FOOOF, show change in slopes
-- get Koffein metadata
-- quality check: plot all participants and their sessions in one plot (see how differnt mor/eve can be), and use to exclude bad participants
-- handedness of BMSSL
-- finish loading in birthdates BMSSLL!!
 
 
 
