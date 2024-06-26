@@ -377,3 +377,24 @@ chART.save_figure('CorrelateVariables', ResultsFolder, PlotProps)
 
 
 
+%% calculate how many intact datasets there were 
+
+Datasets = {'SleepLearning', 'Providence', 'ADHD', 'BMSAdults', 'BMS', 'BMSSL'};
+nRecordings = [8, 2, 4, 4, 16, 12]; % total expected recordings per dataset
+% average recordings (/expected recordings)
+
+UniqueMetadata = unique_metadata(Metadata);
+nParticipants = size(UniqueMetadata, 1);
+UniqueMetadata.nRecordings = nan(nParticipants, 1);
+
+for ParticipantIdx = 1:nParticipants
+    Subset = Metadata.Index(strcmp(Metadata.Participant, UniqueMetadata.Participant{ParticipantIdx}));
+    UniqueMetadata.nRecordings(ParticipantIdx) = numel(Subset);
+end
+
+clc
+for DatasetIdx = 1:numel(Datasets)
+    Average = mean(UniqueMetadata.nRecordings(strcmp(UniqueMetadata.Dataset, Datasets{DatasetIdx})));
+    disp([Datasets{DatasetIdx}, ' = ', num2str(round(Average, 1)), '/', num2str(nRecordings(DatasetIdx))])
+end
+
