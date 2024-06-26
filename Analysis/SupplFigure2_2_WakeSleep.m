@@ -104,6 +104,14 @@ disp(['age max: ', num2str(max(UniqueMetadata.Age))])
 
 %% run mixed models
 
+clc
+if exist(fullfile(ResultsFolder, "SleepWakeModel_AllStats.txt"), 'file')
+    delete(fullfile(ResultsFolder, "SleepWakeModel_AllStats.txt"))
+end
+
+diary(fullfile(ResultsFolder, "SleepWakeModel_AllStats.txt"))
+diary on
+
 %%% setup metadata for statistics
 MetadataStat = Metadata;
 
@@ -114,11 +122,12 @@ MetadataStat.Participant = categorical(MetadataStat.Participant);
 
 MetadataStat = make_categorical(MetadataStat, 'Hour', {'eve', 'mor'}); % compare morning to evening
 MetadataStat = make_categorical(MetadataStat, 'Sex', {'f', 'm'}); % compare males to females
+MetadataStat = make_categorical(MetadataStat, 'Task', {'Oddball', '2Alertness'}); % compare males to females
 
 
 %%% mixed model to correct for multiple recordings etc.
 
-FormulaFixed = '~ Hour*Age +';
+FormulaFixed = '~ Hour*Age + Task +';
 FormulaRandom = '+ (1|Participant)';
 
 Stats = table();
@@ -138,7 +147,6 @@ for Idx1 = 1:numel(OutcomeMeasures)
 
         RowIdx = strcmp(Model.Coefficients.Name, OutcomeMeasures{Idx2});
 
-
         beta = Model.Coefficients.Estimate(RowIdx);
         t = Model.Coefficients.tStat(RowIdx);
         AllT(Idx2, Idx1) = t;
@@ -155,8 +163,18 @@ for Idx1 = 1:numel(OutcomeMeasures)
         % StatString = ['b=', num2str(beta, '%.2f'), '; t=', num2str(t, '%.1f'), '; p', pString, '; df=', num2str(df)];
         Stats.(OutcomeMeasures{Idx1})(Idx2) = {StatString};
         TValues.(OutcomeMeasures{Idx1})(Idx2) = t;
+
+            % Display the model
+            if strcmp(OutcomeMeasures{Idx1}, 'SWASlope') || strcmp(OutcomeMeasures{Idx1}, 'SWAAmp')
+    disp('   ')
+disp('   ')
+    disp(['____________________ ',OutcomeMeasuresTitles{Idx2} ' vs ' OutcomeMeasuresTitles{Idx1}, ' ____________________'])
+    disp(Model);
+            end
     end
 end
+
+diary off
 
 disp(Stats)
 writetable(Stats, fullfile(ResultsFolder, 'CorrelationsOutcomeVariables.xlsx'))
@@ -272,6 +290,12 @@ for Idx1 = 1:numel(OutcomeMeasures)
             if Idx1==1
                 chART.set_axis_properties(PlotProps)
                 title(OutcomeMeasuresTitles{Idx1})
+                set(gca, 'YTick', [], 'XTick', [])
+                axis square
+                ax = gca;
+axis(ax,'off')
+ylabel(ax,OutcomeMeasuresTitles{Idx2})
+ax.YLabel.Visible = 'on';
                 ylabel(OutcomeMeasures{Idx2})
             end
             axis off
@@ -279,8 +303,9 @@ for Idx1 = 1:numel(OutcomeMeasures)
         end
 
 
-        plot_scattercloud(Metadata, OutcomeMeasures{Idx1}, OutcomeMeasures{Idx2}, PlotProps, '', false)
+        plot_scattercloud(Metadata, OutcomeMeasures{Idx1}, OutcomeMeasures{Idx2}, PlotProps, 'Dataset', false)
         set(gca, 'XTick' ,[], 'YTick', [])
+        legend off
         axis square
         if Idx2 == numel(OutcomeMeasures)
             xlabel(OutcomeMeasuresTitles{Idx1})
