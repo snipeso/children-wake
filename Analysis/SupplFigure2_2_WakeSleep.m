@@ -87,6 +87,16 @@ for Idx = 1:numel(OutcomeMeasuresTitles)
     MetadataPublish.Properties.VariableNames(IdxTable) = genvarname(OutcomeMeasuresTitles(Idx));
 end
 
+% recode dataset names
+Datasets = {'SleepLearning', 'Providence', 'ADHD', 'BMSAdults', 'BMS', 'BMSSL'};
+DatasetsNew = {'Dataset2008', 'Dataset2009', 'Dataset2010', 'Dataset2016', 'Dataset2017', 'Dataset2019'};
+
+for DatasetIdx = 1:numel(Datasets)
+    MetadataPublish.Dataset(strcmp(MetadataPublish.Dataset, Datasets{DatasetIdx})) = ...
+        repmat(DatasetsNew(DatasetIdx), nnz(strcmp(MetadataPublish.Dataset, Datasets{DatasetIdx})), 1);
+end
+
+
 writetable(MetadataPublish, fullfile(ResultsFolder, 'WakeSleepAllData.csv'))
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

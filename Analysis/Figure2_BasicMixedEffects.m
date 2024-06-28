@@ -35,10 +35,12 @@ end
 
 
 %%% load data
+CacheName = 'AllBursts.mat';
 load(fullfile(CacheDir, CacheName), 'Metadata')
 
 % fixes to metadata
 Metadata = basic_metadata_cleanup(Metadata);
+% Metadata. = Durations(:, end-1:end);
 
 % overview of final dataset
 Patients = Metadata(contains(Metadata.Group, 'ADHD'), :);
@@ -397,4 +399,29 @@ for DatasetIdx = 1:numel(Datasets)
     Average = mean(UniqueMetadata.nRecordings(strcmp(UniqueMetadata.Dataset, Datasets{DatasetIdx})));
     disp([Datasets{DatasetIdx}, ' = ', num2str(round(Average, 1)), '/', num2str(nRecordings(DatasetIdx))])
 end
+
+
+%% identify duration of each dataset, save data to publish
+
+CacheName = 'Durations.mat';
+load(fullfile(CacheDir, CacheName), 'Metadata')
+Durations = Metadata;
+
+CacheName = 'AllBursts.mat';
+load(fullfile(CacheDir, CacheName), 'Metadata')
+Metadata = basic_metadata_cleanup(Metadata);
+Metadata.Dataset = Durations.Dataset; % recoded dataset names
+Metadata.RecordingDuration = Durations.RecordingDuration;
+
+% rename columns
+OriginalTableLables = Metadata.Properties.VariableNames;
+for Idx = 1:numel(OutcomeMeasuresTitles)
+
+    IdxTable = strcmp(OriginalTableLables, OutcomeMeasures{Idx});
+    Metadata.Properties.VariableNames(IdxTable) = genvarname(OutcomeMeasuresTitles(Idx));
+end
+
+
+Destination = 'D:\Dropbox\Research\Publications and Presentations\Sleep\Papers\KidsBursts\Version6_ImagingNeuroscience\SupplMaterial';
+writetable(Metadata, fullfile(Destination, 'Data1_AllWakeData.csv'))
 

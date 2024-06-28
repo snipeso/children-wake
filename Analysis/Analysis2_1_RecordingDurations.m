@@ -25,7 +25,7 @@ Metadata = readtable(fullfile(Paths.Metadata, 'Metadata_Children_Wake.csv'));
 Metadata = Metadata(contains(Metadata.Dataset, Datasets), :);
 nRecordings = size(Metadata, 1); % this does not consider tasks
 Metadata.Task = repmat({''}, nRecordings, 1);
-Metadata.Duration =  nan(nRecordings, 1);
+Metadata.RecordingDuration =  nan(nRecordings, 1);
 TaskMetadata = table(); % set up new metadata table that also takes into account task
 
 
@@ -48,14 +48,14 @@ for RecordingIdx = 1:nRecordings
         if isempty(DataOut); continue; end
 
         EEGMetadata = DataOut{1};
-        
+
         RecordingDuration = EEGMetadata.pnts/EEGMetadata.srate/60; % in minutes
 
         % load in variables that apply to whole recording
         TaskMetadata = cat(1, TaskMetadata, Metadata(RecordingIdx, :));
         NewIdx = size(TaskMetadata, 1);
         TaskMetadata.Task{NewIdx} = Task;
-        TaskMetadata.Duration(NewIdx) =RecordingDuration; % burst durations
+        TaskMetadata.RecordingDuration(NewIdx) =RecordingDuration; % burst durations
     end
     disp(num2str(RecordingIdx))
 end
@@ -63,6 +63,17 @@ end
 Metadata = TaskMetadata;
 
 % save
+Metadata = basic_metadata_cleanup(Metadata);
+
+
+% recode dataset names
+Datasets = {'SleepLearning', 'Providence', 'ADHD', 'BMSAdults', 'BMS', 'BMSSL'};
+DatasetsNew = {'Dataset2008', 'Dataset2009', 'Dataset2010', 'Dataset2016', 'Dataset2017', 'Dataset2019'};
+
+for DatasetIdx = 1:numel(Datasets)
+    Metadata.Dataset(strcmp(Metadata.Dataset, Datasets{DatasetIdx})) = ...
+        repmat(DatasetsNew(DatasetIdx), nnz(strcmp(Metadata.Dataset, Datasets{DatasetIdx})), 1);
+end
+
 save(fullfile(CacheDir, CacheName), 'Metadata')
 
- Metadata = basic_metadata_cleanup(Metadata);
