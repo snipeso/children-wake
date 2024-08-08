@@ -6,253 +6,171 @@ close all
 % parameters
 
 Parameters = simulationParameters();
+Paths = Parameters.Paths;
+ResultsFolder = Paths.Results;
 
+% sim parameters
 Duration = 60*6; % the data's average
 SampleRate = 250;
 
 AllMeasures = struct();
-AllMeasures.Amplitudes = linspace(0, 100, 10);
-ProtoAmp = 20;
-AllMeasures.Densities = linspace(0, 1, 10);
-ProtoDens = .2;
-AllMeasures.Slopes = linspace(0, 4, 10);
-ProtoSlope = 1.5;
-AllMeasures.Intercepts = linspace(-2, 2, 10);
-ProtoInt = -0.5;
+AllMeasures.Amplitudes = linspace(0, 100, 20);
+AllMeasures.Densities = linspace(0, 1, 20);
+AllMeasures.Exponents = linspace(0, 4, 20);
+AllMeasures.Offsets = linspace(-2, 2, 20);
+BurstFrequency = 10;
+BurstDuration = 1;
 
 ProtoMeasures = struct();
 ProtoMeasures.Amplitudes = 20;
-ProtoMeasures.Densities = .2;
-ProtoMeasures.Slopes = 1.5;
-ProtoMeasures.Intercepts = -.5;
+ProtoMeasures.Densities = .5;
+ProtoMeasures.Exponents = 1.5;
+ProtoMeasures.Offsets = -.5;
+
+% analysis parameters
+SmoothSpan = 2;
+BurstRange = [8 12];
+PowerRange = [4 16];
+
+CriteriaSet = struct();
+CriteriaSet.PeriodConsistency = .5;
+CriteriaSet.AmplitudeConsistency = .4;
+CriteriaSet.FlankConsistency = .5;
+CriteriaSet.ShapeConsistency = .2;
+CriteriaSet.MonotonicityInTime = .4;
+CriteriaSet.MonotonicityInAmplitude = .4;
+CriteriaSet.ReversalRatio = .6;
+CriteriaSet.MinCyclesPerBurst = 4;
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Run
 
+PlotProps = Parameters.PlotProps.Manuscript;
+
 % setup outcome structure
 MeasureLabels = fieldnames(AllMeasures);
 nMeasures = numel(MeasureLabels);
 
+OutcomeLabels = [MeasureLabels; 'Power'; 'PeriodicPower'];
+nOutcomes = numel(OutcomeLabels);
 Outcomes = struct();
-for MeasureIdx = 1:nMeasures
-Outcomes.(MeasureLabels{MeasureIdx}) = nan(size(AllMeasures.(MeasureLabels{MeasureIdx})));
+for OutcomeIdx = 1:nOutcomes
+    for MeasureIdx = 1:nMeasures
+        Outcomes.(MeasureLabels{MeasureIdx}).(OutcomeLabels{OutcomeIdx}) = nan(size(AllMeasures.(MeasureLabels{MeasureIdx})));
+    end
 end
-Outcomes.Power = nan(size(AllMeasures.(MeasureLabels{MeasureIdx})));
-Outcomes.PeriodicPower = nan(size(AllMeasures.(MeasureLabels{MeasureIdx})));
 
 % run simulations
 for MeasureIdx = 1:nMeasures
 
-    X = AllMeasures.(MeasureLabels{MeasureIdx});
+    Mes = MeasureLabels{MeasureIdx};
+    X = AllMeasures.(Mes);
 
     Measures = ProtoMeasures;
 
-    figure
-hold on
+    Colors = chART.utils.resize_colormap(PlotProps.Color.Maps.Linear, numel(X)+2);
+
+    figure('Units','centimeters', 'Position', [0 0 10 10])
+    hold on
     for Idx = 1:numel(X)
-        Measures.(MeasureLabels{MeasureIdx}) = X(Idx);
-          
-    [Aperiodic, t] = cycy.utils.simulate_aperiodic_eeg(Measures.Slopes, Measures.Intercepts, Duration, SampleRate);
 
-    fAperiodic = cycy.utils.highpass_filter(Aperiodic, SampleRate, 0.8, 0.4, 'equiripple', 1, 80);
-    fAperiodic = cycy.utils.lowpass_filter(fAperiodic, SampleRate, 40, 45);
+        % run simulation
+        Measures.(Mes) = X(Idx);
 
-    [Periodic, ~] = cycy.sim.simulate_periodic_eeg(Duration, SampleRate, BurstFrequency, BurstAmplitude, BurstDuration, BurstDensity);
+        [Aperiodic, t] = cycy.sim.simulate_aperiodic_eeg(-Measures.Exponents, Measures.Offsets, Duration, SampleRate);
 
-    sumData = fAperiodic + Periodic;
+        fAperiodic = cycy.utils.highpass_filter(Aperiodic, SampleRate, 0.8, 0.4, 'equiripple', 1, 80);
+        fAperiodic = cycy.utils.lowpass_filter(fAperiodic, SampleRate, 50, 55);
 
-    [Power, Freqs] = cycy.utils.compute_power_fft(sumData, SampleRate);
-    PowerSmooth = cycy.utils.smooth_spectrum(Power, Freqs, SmoothSpan);
+        [Periodic, ~] = cycy.sim.simulate_periodic_eeg(BurstFrequency, Measures.Amplitudes, Measures.Densities, BurstDuration, Duration, SampleRate);
 
- plot(Freqs, PowerSmooth)
- chART.set_axis_properties(PlotProps)
- xlabel('Frequency (Hz)')
+        sumData = fAperiodic + Periodic;
+
+        % calculate new power spectrum
+        [Power, Freqs] = cycy.utils.compute_power_fft(sumData, SampleRate);
+        PowerSmooth = cycy.utils.smooth_spectrum(Power, Freqs, SmoothSpan);
+
+        % plot spectrum
+        plot(Freqs, PowerSmooth, 'Color', Colors(Idx, :), 'LineWidth',1.5)
+        chART.set_axis_properties(PlotProps)
+
+        % run FOOOF
+        [Exponent, Offset, PeriodicPower, FooofFrequencies] = fooof_spectrum(Power, Freqs);
+
+        % run cycle-by-cycle analysis
+        DataNarrowband = cycy.utils.highpass_filter(sumData, SampleRate, BurstRange(1)); % if you want, you can specify other aspects of the filter; see function
+        DataNarrowband = cycy.utils.lowpass_filter(DataNarrowband, SampleRate, BurstRange(2));
+
+        Cycles = cycy.detect_cycles(sumData, DataNarrowband);
+        AugmentedCycles = cycy.measure_cycle_properties(sumData, Cycles, SampleRate);
+        [Bursts, Diagnostics] = cycy.aggregate_cycles_into_bursts(AugmentedCycles, CriteriaSet);
+
+        % assign outcome measures
+        Range = dsearchn(Freqs', PowerRange');
+        Outcomes.(Mes).Power(Idx) = mean(log10(PowerSmooth(Range(1):Range(2))));
+
+        Range = dsearchn(FooofFrequencies', PowerRange');
+        Outcomes.(Mes).PeriodicPower(Idx) = mean(PeriodicPower(Range(1):Range(2)));
+
+        Outcomes.(Mes).Exponents(Idx) = Exponent;
+        Outcomes.(Mes).Offsets(Idx) = Offset;
+
+        if isempty(Bursts)
+            continue
+        end
+
+        Outcomes.(Mes).Amplitudes(Idx) = mean([Bursts.Amplitude]);
+        Outcomes.(Mes).Densities(Idx) = sum([Bursts.DurationPoints])/numel(sumData);
+
     end
+    set(gca, 'YScale', 'log', 'XScale', 'log');
+    title(Mes)
+    xlabel('Frequency (Hz)')
+    ylabel('Power')
+    xlim([3 50])
 
-
-
+    % chART.save_figure(['SimSpectrum_' Mes, '.png'], ResultsFolder, PlotProps)
+disp(['finished ', Mes])
 end
 
 
-% all
-figure('Units','centimeters', 'Position',[0 0 20 20])
+%% all
+
+PlotProps = Parameters.PlotProps.Manuscript;
+Grid = [nOutcomes, nMeasures];
+PlotProps.Axes.xPadding = 1;
+PlotProps.Axes.yPadding = 1;
 
 
+figure('Units','centimeters', 'Position',[0 0 20 25])
 
+for MeasureIdx = 1:nMeasures
+        Mes = MeasureLabels{MeasureIdx};
 
+    for OutcomeIdx = 1:nOutcomes
+        X = AllMeasures.(Mes);
+        Y = Outcomes.(Mes).(OutcomeLabels{OutcomeIdx});
 
+        chART.sub_plot([], Grid, [OutcomeIdx, MeasureIdx], [], true, '', PlotProps);
+        scatter(X, Y, 30, Colors(1:numel(X), :), "filled")
+        chART.set_axis_properties(PlotProps)
+        if OutcomeIdx == nOutcomes
+            xlabel(Mes)
+        elseif OutcomeIdx ==1
+            title(Mes)
+        end
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-%%% Simulate only aperiodic changes
-Duration = 50;
-SampleRate = 250;
-% Slopes = -1:-.5:-3;
-Slopes = -1.1:-.1:-2;
-Intercept = 0;
-BurstAmplitude = 5;
-BurstDuration = 1;
-BurstDensity = .5;
-BurstFrequency = 10;
-SmoothSpan = 2;
-
-figure
-hold on
-
-for Slope = Slopes
-    [Aperiodic, t] = cycy.utils.simulate_aperiodic_eeg(Slope, Intercept, Duration, SampleRate);
-
-    fAperiodic = cycy.utils.highpass_filter(Aperiodic, SampleRate, 0.8, 0.4, 'equiripple', 1, 80);
-    fAperiodic = cycy.utils.lowpass_filter(fAperiodic, SampleRate, 40, 45);
-
-    [Periodic, ~] = cycy.sim.simulate_periodic_eeg(BurstFrequency, BurstAmplitude, BurstDuration, BurstDensity, Duration, SampleRate);
-
-    sumData = fAperiodic + Periodic;
-
-    [Power, Freqs] = cycy.utils.compute_power_fft(sumData, SampleRate);
-    PowerSmooth = cycy.utils.smooth_spectrum(Power, Freqs, SmoothSpan);
-    plot(Freqs, PowerSmooth)
+        if MeasureIdx == 1
+            ylabel(OutcomeLabels{OutcomeIdx})
+        end
+    end
 end
-set(gca, 'YScale', 'log', 'XScale', 'log');
-title('Changing slope')
-
-% note: periodic power in this case DECREASES, which emphasizes why its not
-% appropriate measure for periodic activity
-
-
-%%
-
-%%% Simulate only aperiodic changes
-Duration = 50;
-SampleRate = 250;
-% Slopes = -1:-.5:-3;
-Slope = -1.5;
-Intercepts = -2:.2:2;
-BurstAmplitude = 5;
-BurstDuration = 1;
-BurstDensity = .5;
-BurstFrequency = 10;
-SmoothSpan = 2;
-
-figure
-hold on
-
-for Intercept = Intercepts
-    [Aperiodic, t] = cycy.utils.simulate_aperiodic_eeg(Slope, Intercept, Duration, SampleRate);
-
-    fAperiodic = cycy.utils.highpass_filter(Aperiodic, SampleRate, 0.8, 0.4, 'equiripple', 1, 80);
-    fAperiodic = cycy.utils.lowpass_filter(fAperiodic, SampleRate, 40, 45);
-
-    [Periodic, ~] = cycy.sim.simulate_periodic_eeg(BurstFrequency, BurstAmplitude, BurstDuration, BurstDensity, Duration, SampleRate);
-
-    sumData = fAperiodic + Periodic;
-
-    [Power, Freqs] = cycy.utils.compute_power_fft(sumData, SampleRate);
-    PowerSmooth = cycy.utils.smooth_spectrum(Power, Freqs, SmoothSpan);
-    plot(Freqs, PowerSmooth)
-end
-set(gca, 'YScale', 'log', 'XScale', 'log');
-title('Changing intercept')
-
-%%
-
-%%% Simulate only density changes
-Duration = 50;
-SampleRate = 250;
-Slope = -1.5;
-Intercept = 0;
-BurstAmplitude = 20;
-BurstDuration = 1;
-BurstDensities = .1:.1:1;
-BurstFrequency = 10;
-SmoothSpan = 2;
-
-figure
-hold on
-
-for BurstDensity = BurstDensities
-    [Aperiodic, t] = cycy.utils.simulate_aperiodic_eeg(Slope, Intercept, Duration, SampleRate);
-
-    fAperiodic = cycy.utils.highpass_filter(Aperiodic, SampleRate, 0.8, 0.4, 'equiripple', 1, 80);
-    fAperiodic = cycy.utils.lowpass_filter(fAperiodic, SampleRate, 40, 45);
-
-    [Periodic, ~] = cycy.sim.simulate_periodic_eeg(BurstFrequency, BurstAmplitude, BurstDuration, BurstDensity, Duration, SampleRate);
-
-    sumData = fAperiodic + Periodic;
-
-    [Power, Freqs] = cycy.utils.compute_power_fft(sumData, SampleRate);
-    PowerSmooth = cycy.utils.smooth_spectrum(Power, Freqs, SmoothSpan);
-    plot(Freqs, PowerSmooth)
-end
-set(gca, 'YScale', 'log', 'XScale', 'log');
-title('Changing density')
-
-
-%% simulate only Amplitude changes
 
 
 
-%%% Simulate only density changes
-Duration = 50;
-SampleRate = 250;
-% Slopes = -1:-.5:-3;
-Slope = -1.5;
-Intercept = 0;
-BurstAmplitudes = 10:10:100;
-BurstDuration = 1;
-BurstDensities = .3;
-BurstFrequency = 10;
-SmoothSpan = 2;
 
-figure
-hold on
 
-for BurstAmplitude = BurstAmplitudes
-    [Aperiodic, t] = cycy.utils.simulate_aperiodic_eeg(Slope, Intercept, Duration, SampleRate);
 
-    fAperiodic = cycy.utils.highpass_filter(Aperiodic, SampleRate, 0.8, 0.4, 'equiripple', 1, 80);
-    fAperiodic = cycy.utils.lowpass_filter(fAperiodic, SampleRate, 40, 45);
 
-    [Periodic, ~] = cycy.sim.simulate_periodic_eeg(BurstFrequency, BurstAmplitude, BurstDuration, BurstDensity, Duration, SampleRate);
 
-    sumData = fAperiodic + Periodic;
-
-    [Power, Freqs] = cycy.utils.compute_power_fft(sumData, SampleRate);
-    PowerSmooth = cycy.utils.smooth_spectrum(Power, Freqs, SmoothSpan);
-    plot(Freqs, PowerSmooth)
-end
-set(gca, 'YScale', 'log', 'XScale', 'log');
-
-title('Changing amplitude')

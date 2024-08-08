@@ -1,4 +1,4 @@
-function [Slope, Intercept, WhitenedPower, FooofFrequencies, Fit] = fooof_spectrum(Power, Frequencies)
+function [Slope, Intercept, PeriodicPower, FooofFrequencies, Fit] = fooof_spectrum(Power, Frequencies)
 
 simple_fooof_fittingRange = [2 35];
 
@@ -11,11 +11,11 @@ Intercept = FooofModel.aperiodic_params(1);
 Slope = FooofModel.aperiodic_params(2);
 Fit = [FooofModel.error, FooofModel.r_squared];
 
-WhitenedPower = FooofModel.power_spectrum-FooofModel.ap_fit;
+PeriodicPower = FooofModel.power_spectrum-FooofModel.ap_fit;
 catch
     warning('couldnt fit fooof')
     Slope = nan;
     Intercept = nan;
-    WhitenedPower = nan(1, numel(Frequencies));
+    PeriodicPower = nan(1, numel(Frequencies));
     FooofFrequencies = Frequencies;
 end
