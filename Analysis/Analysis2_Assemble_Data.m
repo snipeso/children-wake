@@ -123,7 +123,7 @@ for RecordingIdx = 1:nRecordings
         AllFrequencies = DataOut{2};
 
         FreqRange = dsearchn(AllFrequencies', [Frequencies(1); Frequencies(end)]);
-        TaskMetadata.Power(NewIdx) = mean(mean(log(Power(NotEdgeChanIndex, FreqRange(1):FreqRange(2))), 2), 1);
+        TaskMetadata.Power(NewIdx) = mean(mean(log10(Power(NotEdgeChanIndex, FreqRange(1):FreqRange(2))), 2), 1);
 
 
         %%% load in data for topographies
@@ -136,7 +136,7 @@ for RecordingIdx = 1:nRecordings
                 % power stuff
                 FreqRange = dsearchn(AllFrequencies', [Band(1); Band(2)]);
                 BurstInformationTopographyBands.Power(NewIdx, ChannelIdx, BandIdx) = ...
-                    mean(log(Power(ChannelIdx, FreqRange(1):FreqRange(2))), 2);
+                    mean(log10(Power(ChannelIdx, FreqRange(1):FreqRange(2))), 2);
 
                 % whitened power
                 [~, ~, WhitenedPower, FooofFrequencies] = fooof_spectrum(Power(ChannelIdx, :), AllFrequencies, [2 35]);
@@ -180,7 +180,7 @@ for RecordingIdx = 1:nRecordings
 
             % power
             FreqRange = dsearchn(AllFrequencies', [Frequencies(1); Frequencies(end)]);
-            BurstInformationTopography.Power(NewIdx, ChannelIdx) = mean(log(Power(ChannelIdx, FreqRange(1):FreqRange(2))), 2);
+            BurstInformationTopography.Power(NewIdx, ChannelIdx) = mean(log10(Power(ChannelIdx, FreqRange(1):FreqRange(2))), 2);
 
             % slopes and stuff
             [Slope, Intercept, WhitenedPower, FooofFrequencies] = fooof_spectrum(Power(ChannelIdx, :), AllFrequencies, [2 35]);
@@ -235,7 +235,7 @@ for RecordingIdx = 1:nRecordings
                 mean(WhitenedPower(FooofPowerFrequencies==FrequencyIdx));
 
             BurstInformationClusters.Power(NewIdx, FrequencyIdx) = ...
-                mean(mean(log(Power(NotEdgeChanIndex, PowerFrequencies==FrequencyIdx))));
+                mean(mean(log10(Power(NotEdgeChanIndex, PowerFrequencies==FrequencyIdx))));
         end
     end
     disp(num2str(RecordingIdx))

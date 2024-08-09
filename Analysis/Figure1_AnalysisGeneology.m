@@ -89,7 +89,7 @@ Bands.Beta = [12 16];
 % (log) Power
 figure('Units','centimeters', 'Position', PlotSize)
 chART.sub_plot([], [1 1], [1 1], [], true, '', PlotProps);
-plot_highlighted_spectrum(log(PowerAverageSmooth), Freqs, Bands, PlotProps)
+plot_highlighted_spectrum(log10(PowerAverageSmooth), Freqs, Bands, PlotProps)
 xlabel('Frequency (Hz)')
 ylabel('Log power')
 xlim([1 20])
@@ -106,13 +106,13 @@ chART.save_figure('LogPower', ResultsFolder, PlotProps)
 figure('Units','centimeters', 'Position', PlotSize)
 chART.sub_plot([], [1 1], [1 1], [], true, '', PlotProps);
 hold on
-plot(log(Freqs), log(PowerAverageSmooth), 'Color', 'k', 'LineWidth',PlotProps.Line.Width)
+plot(log10(Freqs), log10(PowerAverageSmooth), 'Color', 'k', 'LineWidth',PlotProps.Line.Width)
 plot([.2 2.9], [2.845, -1.453], 'Color', AperiodicGray, 'LineWidth',PlotProps.Line.Width*3, ...
     'LineStyle',':')
 chART.set_axis_properties(PlotProps)
 xlabel('Log frequency')
 ylabel('Log power')
-xlim(log([1 20]))
+xlim(log10([1 20]))
 ylim([-2 3])
 axis square
 box off
@@ -149,7 +149,7 @@ plot(X, Y2, 'Color', [.4 .4 .4], 'LineWidth',PlotProps.Line.Width*3, ...
     'LineStyle',':')
 xlabel('Log frequency')
 ylabel('Log power')
-xlim(log([0.8 35]))
+xlim(log10([0.8 35]))
 ylim([-3 3])
 set(gca, 'XTick', [], 'YTick', []) % NB. i remove the ticks because for slopes, the specific values dont really matter
 axis square
@@ -172,7 +172,7 @@ plot(X, Y2, 'Color', [.4 .4 .4], 'LineWidth',PlotProps.Line.Width*3, ...
     'LineStyle',':')
 xlabel('Log frequency')
 ylabel('Log power')
-xlim(log([0.8 35]))
+xlim(log10([0.8 35]))
 ylim([-2 4])
 axis square
 box off

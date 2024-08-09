@@ -1,7 +1,7 @@
 function PeakFreq = find_periodic_peak(Data, Freqs, Range)
 % recommendation: use smoothed data
 
-[~, PeakFreqs, ~, Prominence] = findpeaks(log(Data), Freqs);
+[~, PeakFreqs, ~, Prominence] = findpeaks(log10(Data), Freqs);
 
 % only look at peaks within range
 Keep = PeakFreqs >= Range(1) & PeakFreqs <= Range(2);

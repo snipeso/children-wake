@@ -71,7 +71,7 @@ for idxHour = 1:numel(Hours)
 
             for idxFrequency = 1:nFrequencies
 
-                Data = log(Power(:, dsearchn(Freqs', Frequencies(idxFrequency))));
+                Data = log10(Power(:, dsearchn(Freqs', Frequencies(idxFrequency))));
                 chART.sub_plot([], Grid, [idxRecording, idxFrequency], [], false, '', PlotProps);
                 chART.plot.eeglab_topoplot(Data, Chanlocs, [], [], '', 'Linear', PlotProps);
                 colorbar
