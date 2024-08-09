@@ -120,7 +120,7 @@ chART.save_figure('LogLogPower', ResultsFolder, PlotProps)
 
 
 % FOOOF
-[~, ~, WhitenedPower, FooofFrequencies] = fooof_spectrum(PowerAverage, Freqs);
+[~, ~, WhitenedPower, FooofFrequencies] = fooof_spectrum(PowerAverage, Freqs), [2 35];
 
 % periodic power
 figure('Units','centimeters', 'Position', PlotSize)

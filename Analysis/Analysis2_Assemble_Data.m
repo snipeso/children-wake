@@ -139,7 +139,7 @@ for RecordingIdx = 1:nRecordings
                     mean(log(Power(ChannelIdx, FreqRange(1):FreqRange(2))), 2);
 
                 % whitened power
-                [~, ~, WhitenedPower, FooofFrequencies] = fooof_spectrum(Power(ChannelIdx, :), AllFrequencies);
+                [~, ~, WhitenedPower, FooofFrequencies] = fooof_spectrum(Power(ChannelIdx, :), AllFrequencies, [2 35]);
                 FreqRangeFooof = dsearchn(FooofFrequencies', [Band(1); Band(2)]);
                 BurstInformationTopographyBands.PeriodicPower(NewIdx, ChannelIdx, BandIdx) = ...
                     mean(WhitenedPower(FreqRangeFooof(1):FreqRangeFooof(2)), 2);
@@ -183,7 +183,7 @@ for RecordingIdx = 1:nRecordings
             BurstInformationTopography.Power(NewIdx, ChannelIdx) = mean(log(Power(ChannelIdx, FreqRange(1):FreqRange(2))), 2);
 
             % slopes and stuff
-            [Slope, Intercept, WhitenedPower, FooofFrequencies] = fooof_spectrum(Power(ChannelIdx, :), AllFrequencies);
+            [Slope, Intercept, WhitenedPower, FooofFrequencies] = fooof_spectrum(Power(ChannelIdx, :), AllFrequencies, [2 35]);
             BurstInformationTopography.Slope(NewIdx, ChannelIdx) = Slope;
             BurstInformationTopography.Intercept(NewIdx, ChannelIdx) = Intercept;
 
@@ -196,7 +196,7 @@ for RecordingIdx = 1:nRecordings
         AverageSpectrograms(NewIdx, :) = AveragePower;
 
         % run fooof
-        [Slope, Intercept, WhitenedPower, FooofFrequencies, Fit] = fooof_spectrum(AveragePower, AllFrequencies);
+        [Slope, Intercept, WhitenedPower, FooofFrequencies, Fit] = fooof_spectrum(AveragePower, AllFrequencies, [2 35]);
         TaskMetadata.Slope(NewIdx) = Slope;
         TaskMetadata.Intercept(NewIdx) = Intercept;
         FreqRangeFooof = dsearchn(FooofFrequencies', [Frequencies(1); Frequencies(end)]);

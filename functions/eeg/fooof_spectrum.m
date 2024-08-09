@@ -1,6 +1,5 @@
-function [Slope, Intercept, PeriodicPower, FooofFrequencies, Fit] = fooof_spectrum(Power, Frequencies)
+function [Slope, Intercept, PeriodicPower, FooofFrequencies, Fit] = fooof_spectrum(Power, Frequencies, simple_fooof_fittingRange)
 
-simple_fooof_fittingRange = [2 35];
 
 Power = smooth_frequencies(Power, Frequencies, 2);
 
