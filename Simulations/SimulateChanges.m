@@ -16,18 +16,18 @@ WelchWindowOverlap = .5;
 Duration = 60*6; % the data's average
 SampleRate = 250;
 
-nPoints = 5;
+nPoints = 20;
 
 AllMeasures = struct();
 AllMeasures.Amplitudes = linspace(0, 50, nPoints);
 AllMeasures.Densities = linspace(0, 1, nPoints);
-AllMeasures.Exponents = linspace(.5, 2.5, nPoints);
-AllMeasures.Offsets = linspace(.5, 2.5, nPoints);
+AllMeasures.Exponents = linspace(0, 4, nPoints);
+AllMeasures.Offsets = linspace(.1, 3, nPoints);
 BurstFrequency = 10;
 BurstDuration = 1;
 
 ProtoMeasures = struct();
-ProtoMeasures.Amplitudes = 20;
+ProtoMeasures.Amplitudes = 10;
 ProtoMeasures.Densities = .2;
 ProtoMeasures.Exponents = 1.5;
 ProtoMeasures.Offsets = 1.5;
@@ -82,9 +82,8 @@ for MeasureIdx = 1:nMeasures
 
         % run simulation
         Measures.(Mes) = X(Idx);
-
-        Offset = Measures.Offsets-log10(Duration/WelchWindow);
-        [Aperiodic, t] = cycy.sim.simulate_aperiodic_eeg(-Measures.Exponents, Offset, Duration, SampleRate, WelchWindow);
+        
+        [Aperiodic, t] = cycy.sim.simulate_aperiodic_eeg(-Measures.Exponents, Measures.Offsets, Duration, SampleRate, WelchWindow);
 
         fAperiodic = cycy.utils.highpass_filter(Aperiodic, SampleRate, 0.8, 0.4, 'equiripple', 1, 80);
         fAperiodic = cycy.utils.lowpass_filter(fAperiodic, SampleRate, 50, 55);
@@ -102,7 +101,7 @@ for MeasureIdx = 1:nMeasures
         chART.set_axis_properties(PlotProps)
 
         % run FOOOF
-        [Exponent, Offset, PeriodicPower, FooofFrequencies] = fooof_spectrum(Power, Freqs);
+        [Exponent, Offset, PeriodicPower, FooofFrequencies] = fooof_spectrum(Power, Freqs, [2 35]);
 
         % run cycle-by-cycle analysis
         DataNarrowband = cycy.utils.highpass_filter(sumData, SampleRate, BurstRange(1)); % if you want, you can specify other aspects of the filter; see function
@@ -122,7 +121,7 @@ for MeasureIdx = 1:nMeasures
         Outcomes.(Mes).Exponents(Idx) = Exponent;
         Outcomes.(Mes).Offsets(Idx) = Offset;
 
-                     Outcomes.(Mes).nBursts(Idx) = numel(Bursts);
+        Outcomes.(Mes).nBursts(Idx) = numel(Bursts);
         if isempty(Bursts) || numel(Bursts)<10
             continue
         end
@@ -137,26 +136,29 @@ for MeasureIdx = 1:nMeasures
     ylabel('Power')
     xlim([3 50])
 
-    ylim([10^-3 10^4])
+    ylim([10^-4 10^2])
     chART.save_figure(['SimSpectrum_' Mes, '.svg'], ResultsFolder, PlotProps)
-disp(['finished ', Mes])
+    disp(['finished ', Mes])
 end
 
 
 
-%% get figure limits
+
+%% plot all
+
+% get figure limits
 
 AllTable = table();
 for MeasureIdx = 1:nMeasures
-    
+
     T = struct2table(Outcomes.(MeasureLabels{MeasureIdx}));
 
-        T.(MeasureLabels{MeasureIdx}) = nan(nPoints, 1);
+    T.(MeasureLabels{MeasureIdx}) = nan(nPoints, 1);
 
     AllTable = [AllTable; T];
 end
 
-%% all
+
 
 PlotProps = Parameters.PlotProps.Manuscript;
 Grid = [nOutcomes, nMeasures];
@@ -169,7 +171,7 @@ YLims = [min(AllTable{:, :})', max(AllTable{:, :})'];
 figure('Units','centimeters', 'Position',[0 0 20 25])
 
 for MeasureIdx = 1:nMeasures
-        Mes = MeasureLabels{MeasureIdx};
+    Mes = MeasureLabels{MeasureIdx};
 
     for OutcomeIdx = 1:nOutcomes
         X = AllMeasures.(Mes);
@@ -180,7 +182,7 @@ for MeasureIdx = 1:nMeasures
         if strcmp(Mes, OutcomeLabels{OutcomeIdx})
             Color = chART.utils.pale_colors(Color, .3);
         end
- 
+
         chART.sub_plot([], Grid, [OutcomeIdx, MeasureIdx], [], true, '', PlotProps);
         hold on
         plot([ProtoMeasures.(Mes), ProtoMeasures.(Mes)], YLims(OutcomeIdx, :), 'Color', [.8 .8 .8])
@@ -200,7 +202,7 @@ for MeasureIdx = 1:nMeasures
     end
 end
 
-    chART.save_figure(['SimInteractions.svg'], ResultsFolder, PlotProps)
+chART.save_figure(['SimInteractions.svg'], ResultsFolder, PlotProps)
 
 
 
