@@ -33,14 +33,11 @@ if ~exist(ResultsFolder,'dir')
     mkdir(ResultsFolder)
 end
 
-
 %%% load data
-CacheName = 'AllBursts.mat';
 load(fullfile(CacheDir, CacheName), 'Metadata')
 
 % fixes to metadata
 Metadata = basic_metadata_cleanup(Metadata);
-% Metadata. = Durations(:, end-1:end);
 
 % overview of final dataset
 Patients = Metadata(contains(Metadata.Group, 'ADHD'), :);
@@ -129,8 +126,11 @@ disp_stats_descriptive(MetadataStat.RSquared, 'rsquared', '', 3);
 
 close all
 PlotProps = Parameters.PlotProps.Manuscript;
-PlotProps.Figure.Padding = 20;
-PlotProps.Axes.xPadding = 18;
+% PlotProps.Figure.Padding = 0;
+PlotProps.Axes.xPadding = 0;
+PlotProps.Axes.yPadding = 0;
+PlotProps.Debug = true;
+
 Grid = [3 numel(OutcomeMeasures)];
 
 % PlotProps.Text.FontName = 'Tw Cen MT';
@@ -140,7 +140,7 @@ YLimits = [5, 42; % amplitudes
     70, 550; % quantities
     .7 2.25; % slope
     .3, 2.5; % intercept
-    -1.6, 2; % power
+    -.8, 1; % power
     -.05, .705; % periodic power
     ];
 XLim = [3 25];
@@ -178,7 +178,7 @@ for VariableIdx = 1:numel(OutcomeMeasures)
             title(OutcomeMeasuresTitles{VariableIdx})
         end
         if VariableIdx==1
-            chART.plot.vertical_text(HourLabels{HourIdx}, .55, .5, PlotProps)
+            chART.plot.vertical_text(HourLabels{HourIdx}, .6, .5, PlotProps)
         end
         disp([ Hours{HourIdx}, OutcomeMeasures{VariableIdx}, ...
             'N=', num2str(numel(unique(MetadataAverage.Participant)))])
@@ -198,7 +198,7 @@ for VariableIdx = 1:numel(OutcomeMeasures)
     end
 
     if VariableIdx==1
-        chART.plot.vertical_text('Overnight change', .55, .5, PlotProps)
+        chART.plot.vertical_text('Overnight change', .6, .5, PlotProps)
         xlabel('Age (years)')
     end
 

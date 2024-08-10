@@ -16,18 +16,19 @@ WelchWindowOverlap = .5;
 Duration = 60*6; % the data's average
 SampleRate = 250;
 
-nPoints = 20;
+nPoints = 10;
 
 AllMeasures = struct();
 AllMeasures.Amplitudes = linspace(0, 50, nPoints);
 AllMeasures.Densities = linspace(0, 1, nPoints);
-AllMeasures.Exponents = linspace(0, 4, nPoints);
+% AllMeasures.Exponents = linspace(0, 4, nPoints);
+AllMeasures.Exponents = linspace(1.1, 2.5, nPoints);
 AllMeasures.Offsets = linspace(.1, 3, nPoints);
 BurstFrequency = 10;
 BurstDuration = 1;
 
 ProtoMeasures = struct();
-ProtoMeasures.Amplitudes = 10;
+ProtoMeasures.Amplitudes = 30;
 ProtoMeasures.Densities = .2;
 ProtoMeasures.Exponents = 1.5;
 ProtoMeasures.Offsets = 1.5;
@@ -162,8 +163,9 @@ end
 
 PlotProps = Parameters.PlotProps.Manuscript;
 Grid = [nOutcomes, nMeasures];
-PlotProps.Axes.xPadding = 1;
-PlotProps.Axes.yPadding = 1;
+% PlotProps.Figure.Padding = 50;
+PlotProps.Axes.xPadding = 2;
+PlotProps.Axes.yPadding = 2;
 
 
 YLims = [min(AllTable{:, :})', max(AllTable{:, :})'];

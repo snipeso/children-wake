@@ -6,10 +6,11 @@ function [LogPower, Frequencies, Exponent, Offset, PeriodicPower, FooofFrequenci
 
 % calculate new power spectrum
 [Power, Frequencies] = cycy.utils.compute_power(Signal, SampleRate, WelchWindow, WelchWindowOverlap);
+% [Power, Frequencies] = cycy.utils.compute_power_fft(Signal, SampleRate);
 PowerSmooth = cycy.utils.smooth_spectrum(Power, Frequencies, SmoothSpan);
 
 % run FOOOF
-[Exponent,  Offset, PeriodicPower, FooofFrequencies] = fooof_spectrum(PowerSmooth, Frequencies, [2 35]);
+[Exponent,  Offset, PeriodicPower, FooofFrequencies] = fooof_spectrum(PowerSmooth, Frequencies, [3 35]);
 
 % average power
 Range = dsearchn(Frequencies', PowerRange');
@@ -27,12 +28,10 @@ nBursts = numel(Bursts); % nBursts
 if isempty(Bursts) || numel(Bursts)<10
     Amplitude  = nan;
     Density = nan;
-    return
+else
+    Amplitude  = mean([Bursts.Amplitude]); % amplitudes
+    Density = sum([Bursts.DurationPoints])/numel(Signal); % density
 end
-
-Amplitude  = mean([Bursts.Amplitude]); % amplitudes
-Density = sum([Bursts.DurationPoints])/numel(Signal); % density
-
 
 if Plot
     hold on

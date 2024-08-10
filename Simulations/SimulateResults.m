@@ -20,11 +20,11 @@ Duration = 60*6; % the data's average
 SampleRate = 250;
 
 Aperiodic = struct();
-Aperiodic.Offset = 1.6; % target: 2.25
+Aperiodic.Offset = 2.25; % target: 2.25
 Aperiodic.Exponent = 1.9;
 
 Bursts = struct();
-Bursts.Amplitude = 20; % target: 30
+Bursts.Amplitude = 30;
 Bursts.Density = .5;
 Bursts.Frequency = 10;
 Bursts.Duration = 1;
@@ -58,6 +58,29 @@ disp(['Burst Density = ', num2str(EveningDensity)])
 disp(['Power = ', num2str(EveningLogPower)])
 disp(['Peroidic Power = ', num2str(EveningPeriodicPower)])
 
+
+
+
+
+%%% simulate Morning measurement for a 3 year old
+
+Aperiodic.Exponent = Aperiodic.Exponent+0.099;
+[Morning, t] = cycy.sim.eeg(Aperiodic, Bursts, Duration, SampleRate, WelchWindow);
+
+[MorningLogPower, Frequencies, MorningExponent, MorningOffset, MorningPeriodicPower, FooofFrequencies, ...
+    MorningAmplitude, MorningDensity, MorningnBursts] = simulate_analysis(Morning, ...
+    SampleRate, WelchWindow, WelchWindowOverlap, SmoothSpan, PowerRange, BurstRange, CriteriaSet, true);
+legend({'evening', 'morning'})
+
+disp('----------')
+disp('Difference: ')
+disp(['Exponent = ', num2str(EveningExponent-MorningExponent)])
+disp(['Offset = ', num2str(EveningOffset-MorningOffset)])
+disp(['nBursts = ', num2str(EveningnBursts-MorningnBursts)])
+disp(['Burst Amplitude = ', num2str(EveningAmplitude-MorningAmplitude)])
+disp(['Burst Density = ', num2str(EveningDensity-MorningDensity)])
+disp(['Power = ', num2str(EveningLogPower-MorningLogPower)])
+disp(['Peroidic Power = ', num2str(EveningPeriodicPower-MorningPeriodicPower)])
 
 
 
