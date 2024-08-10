@@ -6,7 +6,7 @@ Duration = 6*60;
 Exponent = 1;
 Offsets = -3:1:6;
 SampleRate = 250;
-WelchWindow = 4;
+WelchWindow = 8;
 WelchWindowOverlap = .5;
 SmoothSpan = 2;
 
@@ -16,7 +16,7 @@ FFTOffsets = WelchOffsets;
 
 for OIdx = 1:numel(Offsets)
     Offset = Offsets(OIdx);
- [Signal, t] = cycy.sim.simulate_aperiodic_eeg(Exponent, Offset, Duration, SampleRate, WelchWindow);
+ [Signal, t] = cycy.sim.simulate_aperiodic_eeg(Exponent, Offset, Duration, SampleRate);
  % [Signal, t] = cycy.sim.simulate_aperiodic_eeg(Exponent, Offset, Duration, SampleRate);
 
 

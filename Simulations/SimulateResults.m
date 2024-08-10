@@ -39,8 +39,6 @@ CriteriaSet.MonotonicityInAmplitude = .4;
 CriteriaSet.ReversalRatio = .6;
 CriteriaSet.MinCyclesPerBurst = 4;
 
-
-
 %%% simulate evening measurement for a 3 year old
 [Evening, t] = cycy.sim.eeg(Aperiodic, Bursts, Duration, SampleRate, WelchWindow);
 
