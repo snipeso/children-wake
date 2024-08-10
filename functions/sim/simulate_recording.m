@@ -15,7 +15,7 @@ Aperiodic.Offset = OffsetOG; % target: 2.25
 Aperiodic.Exponent = ExponentOG;
 
 Bursts = struct();
-Bursts.Amplitude = 30;
+Bursts.Amplitude = 20;
 Bursts.Density = DensityOG;
 Bursts.Frequency = 10;
 Bursts.Duration = 1;

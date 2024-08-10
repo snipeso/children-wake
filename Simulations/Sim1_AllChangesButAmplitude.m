@@ -13,7 +13,7 @@ ResultsFolder = Paths.Results;
 % where data can be found
 CacheDir = Paths.Cache;
 CacheName = 'AllBursts.mat';
-NewCacheName = 'AllButAmplitudes.mat';
+NewCacheName = 'AllButAmplitudes20.mat';
 
 
 %%% load data
