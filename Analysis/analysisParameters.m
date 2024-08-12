@@ -46,9 +46,9 @@ Parameters.Labels.Frequency = 'Frequency (Hz)';
 Parameters.Labels.Amplitude = 'Amplitude (\muV)';
 Parameters.Labels.Time = 'Time (s)';
 Parameters.Labels.t = 't-values';
-Parameters.OutcomeMeasures.Titles = {'Amplitude', 'Density', 'Exponent', 'Offset', 'Power', 'Periodic power'};
-Parameters.OutcomeMeasures.OriginalLabels = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'}; % this is how I originally labeled the different measures; then changed with revisions
-Parameters.OutcomeMeasures.Units = {'\muV', '% Recording', 'A.U.', 'Log power', 'Log power', 'Log power'};
+Parameters.OutcomeMeasures.Titles = {'Amplitude', 'Density', 'Exponent', 'Offset', 'Power', 'Periodic power', 'Aperiodic power'};
+Parameters.OutcomeMeasures.OriginalLabels = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower', 'AperiodicPower'}; % this is how I originally labeled the different measures; then changed with revisions
+Parameters.OutcomeMeasures.Units = {'\muV', '% Recording', 'A.U.', 'Log power', 'Log power', 'Log power', 'Log power'};
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

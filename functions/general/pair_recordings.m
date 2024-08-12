@@ -6,7 +6,7 @@ function PairedMetadata = pair_recordings(Metadata, ColumnName, Categories)
 
 PairedMetadata = table();
 
-AllOutcomeVariables =  {'Globality', 'Amplitude', 'Duration', 'Quantity',  'Slope', 'Intercept','Power', 'PeriodicPower', 'SWASlope', 'SWAAmp', 'Error', 'RSquared'};
+AllOutcomeVariables =  {'Globality', 'Amplitude', 'Duration', 'Quantity',  'Slope', 'Intercept','Power', 'PeriodicPower', 'AperiodicPower', 'SWASlope', 'SWAAmp', 'Error', 'RSquared'};
 
 AllOutcomeVariables(~ismember(AllOutcomeVariables, Metadata.Properties.VariableNames)) = [];
 

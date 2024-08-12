@@ -36,6 +36,7 @@ Metadata.Amplitude = nan(nRecordings, 1);
 Metadata.Duration =  nan(nRecordings, 1);
 Metadata.Power =  nan(nRecordings, 1);
 Metadata.PeriodicPower = nan(nRecordings, 1);
+Metadata.AperiodicPower =  nan(nRecordings, 1);
 Metadata.Slope =  nan(nRecordings, 1);
 Metadata.Intercept =  nan(nRecordings, 1);
 Metadata.Quantity =  nan(nRecordings, 1);
@@ -196,13 +197,14 @@ for RecordingIdx = 1:nRecordings
         AverageSpectrograms(NewIdx, :) = AveragePower;
 
         % run fooof
-        [Slope, Intercept, WhitenedPower, FooofFrequencies, Fit] = fooof_spectrum(AveragePower, AllFrequencies, [2 35]);
+        [Slope, Intercept, WhitenedPower, FooofFrequencies, Fit, AperiodicPower] = fooof_spectrum(AveragePower, AllFrequencies, [2 35]);
         TaskMetadata.Slope(NewIdx) = Slope;
         TaskMetadata.Intercept(NewIdx) = Intercept;
         FreqRangeFooof = dsearchn(FooofFrequencies', [Frequencies(1); Frequencies(end)]);
         TaskMetadata.PeriodicPower(NewIdx) = mean(WhitenedPower(FreqRangeFooof(1):FreqRangeFooof(2)));
         TaskMetadata.Error(NewIdx) = Fit(1);
         TaskMetadata.RSquared(NewIdx) = Fit(2);
+        TaskMetadata.AperiodicPower(NewIdx) = mean(AperiodicPower(FreqRangeFooof(1):FreqRangeFooof(2))); % TODO, change WhitenedPower to periodicPower
 
         %%% load in data for spectrogram
         BurstFrequencies = discretize([BurstClusters.BurstFrequency], Frequencies);

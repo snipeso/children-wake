@@ -129,7 +129,6 @@ PlotProps = Parameters.PlotProps.Manuscript;
 % PlotProps.Figure.Padding = 0;
 PlotProps.Axes.xPadding = 0;
 PlotProps.Axes.yPadding = 0;
-PlotProps.Debug = true;
 
 Grid = [3 numel(OutcomeMeasures)];
 
@@ -142,6 +141,7 @@ YLimits = [5, 42; % amplitudes
     .3, 2.5; % intercept
     -.8, 1; % power
     -.05, .705; % periodic power
+      -.07, .5; % periodic power
     ];
 XLim = [3 25];
 
