@@ -21,7 +21,9 @@ else
 end
 
 Colors = flip(chART.color_picker(nGroups), 1);
-% Colors = chART.color_picker(1, '', 'yellow');
+Colors = [222 67, 117]/255; % pink
+Colors = [21 82 255]/255; % pink
+
 
 hold on
 if PlotZeroLine

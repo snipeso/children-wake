@@ -29,7 +29,7 @@ Parameters.Sessions.Providence = {'Session1'};
 Parameters.Sessions.BMSAdults = {'Session1'};
 
 
-Parameters.Ages = [3 7;
+Parameters.Ages = [
     7 10;
     10 14;
     14 18;
@@ -46,9 +46,9 @@ Parameters.Labels.Frequency = 'Frequency (Hz)';
 Parameters.Labels.Amplitude = 'Amplitude (\muV)';
 Parameters.Labels.Time = 'Time (s)';
 Parameters.Labels.t = 't-values';
-Parameters.OutcomeMeasures.Titles = {'Amplitude', 'Density', 'Exponent', 'Offset', 'Power', 'Periodic power', 'Aperiodic power'};
-Parameters.OutcomeMeasures.OriginalLabels = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower', 'AperiodicPower'}; % this is how I originally labeled the different measures; then changed with revisions
-Parameters.OutcomeMeasures.Units = {'\muV', '% Recording', 'A.U.', 'Log power', 'Log power', 'Log power', 'Log power'};
+Parameters.OutcomeMeasures.Titles = {'Amplitude', 'Density', 'Exponent', 'Offset', 'Power', 'Periodic power'};
+Parameters.OutcomeMeasures.OriginalLabels = {'Amplitude', 'Quantity', 'Slope', 'Intercept', 'Power', 'PeriodicPower'}; % this is how I originally labeled the different measures; then changed with revisions
+Parameters.OutcomeMeasures.Units = {'\muV', '% Recording', 'A.U.', 'Log power', 'Log power', 'Log power'};
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -78,7 +78,7 @@ Paths.Core = Core;
 
 Paths.AnalyzedData  = fullfile(Core, 'Final'); % where data gets saved once its been turned into something else
 Paths.Cache = fullfile(Core, 'Cache', 'children-wake');
-Paths.Results = fullfile(Core, 'Results', 'children-wake');
+Paths.Results = fullfile(Core, 'Results', 'children-wake', 'poster');
 Paths.Metadata = fullfile(Core, 'Metadata');
 if ~exist(Paths.Results, 'dir')
     mkdir(Paths.Results)
@@ -143,10 +143,14 @@ Parameters.Triggers = Triggers;
 Parameters.PlotProps.Manuscript = chART.load_plot_properties({'Iota', 'Manuscript'});
 Parameters.PlotProps.Manuscript.Figure.Width = 22;
 Parameters.PlotProps.Manuscript.Text.FontName = 'Helvetica';
+Parameters.PlotProps.Manuscript.Color.Background = 'none';
 
 Parameters.PlotProps.Powerpoint = chART.load_plot_properties({'Iota', 'Powerpoint'});
 Parameters.PlotProps.Poster = chART.load_plot_properties({'Iota', 'Poster'});
 
+Parameters.PlotProps.Poster.Color.Background = 'none';
+
+Parameters.PlotProps.Manuscript = Parameters.PlotProps.Poster;
 TopoPlotProps = Parameters.PlotProps.Manuscript;
 TopoPlotProps.Text.LegendSize = 10;
 TopoPlotProps.Text.AxisSize = 10;
@@ -155,6 +159,7 @@ TopoPlotProps.Axes.yPadding = 5;
 TopoPlotProps.Figure.Padding = 20;
 TopoPlotProps.Stats.PlotN = true;
 TopoPlotProps.External.EEGLAB.TopoRes = 200;
+TopoPlotProps.Color.Background = 'none';
 
 Parameters.PlotProps.TopoPlots = TopoPlotProps;
 

@@ -52,19 +52,6 @@ table_demographics(Metadata, 'Hour', ResultsFolder, 'Hour')
 %%% Analyses
 
 
-%% save table to publish
-
-MetadataPublish = Metadata;
-
-OriginalTableLables = MetadataPublish.Properties.VariableNames;
-for Idx = 1:numel(OutcomeMeasuresTitles)
-
-    IdxTable = strcmp(OriginalTableLables, OutcomeMeasures{Idx});
-    MetadataPublish.Properties.VariableNames(IdxTable) = genvarname(OutcomeMeasuresTitles(Idx));
-end
-
-writetable(MetadataPublish, fullfile(ResultsFolder, 'AllData_Wake.csv'))
-
 
 %% run mixed models
 
@@ -132,12 +119,12 @@ PlotProps.Axes.yPadding = 0;
 
 Grid = [3 numel(OutcomeMeasures)];
 
-% PlotProps.Text.FontName = 'Tw Cen MT';
+PlotProps.Line.Width = 6;
 
 % fix y lims, so same for mor and eve
 YLimits = [5, 42; % amplitudes
     70, 550; % quantities
-    .7 2.25; % slope
+    1 2.1; % slope
     .3, 2.5; % intercept
     -.8, 1; % power
     -.05, .705; % periodic power
@@ -154,13 +141,11 @@ MetadataScatter = MetadataScatter(contains(MetadataScatter.Task, {'Oddball'}), :
 OvernightMetadata = pair_recordings(MetadataScatter, 'Hour', {'eve', 'mor'});
 
 clc
-figure('Units','centimeters','OuterPosition',[0 0 25 18])
 
+HourIdx = 1;
 for VariableIdx = 1:numel(OutcomeMeasures)
 
-    %%% plot age x v split by evening and morning, averaged across sessions
-    for HourIdx = 1:numel(Hours)
-
+figure('Units','centimeters','OuterPosition',[0 0 12 18])
         % select data of either evening or morning
         MetadataHour = MetadataScatter(strcmp(MetadataScatter.Hour, Hours(HourIdx)), :);
 
@@ -168,44 +153,28 @@ for VariableIdx = 1:numel(OutcomeMeasures)
         MetadataAverage = unique_metadata(MetadataHour, 'Participant');
 
         % plot
-        chART.sub_plot([], Grid, [HourIdx, VariableIdx], [], true, '', PlotProps);
         plot_scattercloud(MetadataAverage, 'Age', OutcomeMeasures{VariableIdx}, ...
             PlotProps, '', false, XLim, YLimits(VariableIdx, :))
         ylabel(MeasureUnits{VariableIdx})
+            xlabel('Age')
         legend off
 
-        if HourIdx==1
-            title(OutcomeMeasuresTitles{VariableIdx})
-        end
-        if VariableIdx==1
-            chART.plot.vertical_text(HourLabels{HourIdx}, .6, .5, PlotProps)
-        end
-        disp([ Hours{HourIdx}, OutcomeMeasures{VariableIdx}, ...
-            'N=', num2str(numel(unique(MetadataAverage.Participant)))])
-
-    end
+        title('Evening')
+        chART.save_figure(['BlueEvening_',  OutcomeMeasures{VariableIdx}], ResultsFolder, PlotProps)
 
     %%% plot overnight change
-    chART.sub_plot([], Grid, [3, VariableIdx], [], true, '', PlotProps);
+    figure('Units','centimeters','OuterPosition',[0 0 12 18])
     MetadataAverage = unique_metadata(OvernightMetadata, 'Participant');
 
     plot_scattercloud(MetadataAverage, 'Age', OutcomeMeasures{VariableIdx}, ...
         PlotProps, '', true, XLim)
     ylabel(MeasureUnits{VariableIdx})
     xlabel('Age')
-    if VariableIdx ~=numel(OutcomeMeasures)
-        legend off
-    end
+    title('Overnight Δ')
+        chART.save_figure(['BlueChange_',  OutcomeMeasures{VariableIdx}], ResultsFolder, PlotProps)
 
-    if VariableIdx==1
-        chART.plot.vertical_text('Overnight change', .6, .5, PlotProps)
-        xlabel('Age (years)')
-    end
-
-    disp(['Overnight', OutcomeMeasures{VariableIdx}, ...
-        'N=', num2str(numel(unique(MetadataAverage.Participant)))])
 end
-chART.save_figure('BasicScatterAge', ResultsFolder, PlotProps)
+
 
 
 

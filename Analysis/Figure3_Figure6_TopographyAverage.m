@@ -42,14 +42,20 @@ table_demographics(unique_metadata(Metadata), 'AgeGroups', ResultsFolder, 'AgeGr
 
 %% Average topographies (Figure 3)
 
+PlotProps = Parameters.PlotProps.TopoPlots;
+PlotProps.External.EEGLAB.MarkerSize = 3;
+PlotProps.Text.AxisSize = 16;
+PlotProps.Colorbar.Location= 'north';
+
 CLims = struct();
 CLims.Quantity = [5 40];
-CLims.Amplitude = [10, 35];
+CLims.Amplitude = [12, 30];
 CLims.Slope = [1.3 2.1];
 CLims.Intercept = [.8 2.3];
 CLims.Power = [-.7  1.7];
 CLims.PeriodicPower = [0.1 .44];
 
+Grid = [nAges+1, 1];
 
 Measures = Parameters.OutcomeMeasures.OriginalLabels;
 MeasuresTitles = Parameters.OutcomeMeasures.Titles;
@@ -57,8 +63,9 @@ MeasuresTitles = Parameters.OutcomeMeasures.Titles;
 MeasureUnits = {'\muV', '% recording', 'a.u.', 'log power', 'log power', 'log power'};
 nMeasures = numel(Measures);
 
-figure('Units','centimeters','OuterPosition',[0 0 25 30])
 for MeasureIdx = 1:nMeasures
+        figure('Units','centimeters','Position',[0 0 10 35])
+
     Topographies = BurstInformationTopography.(Measures{MeasureIdx});
     for AgeIdx = 1:nAges
 
@@ -72,26 +79,20 @@ for MeasureIdx = 1:nMeasures
         AverageData = mean(AverageSessions, 1, 'omitnan'); % average across participants since its not a stat.
 
         %%% plot
-        chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, AgeIdx], [], false, '', PlotProps);
+        chART.sub_plot([], Grid, [AgeIdx, 1], [], false, '', PlotProps);
         chART.plot.eeglab_topoplot(AverageData, Chanlocs, [], CLims.(Measures{MeasureIdx}), '', 'Linear', PlotProps);
-
-        if MeasureIdx == 1
-            title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2)), ' y.o.'])
-        end
-
-        if AgeIdx ==1
-            chART.plot.vertical_text(MeasuresTitles{MeasureIdx}, .15, .5, PlotProps)
-        end
-
-        topo_corner_text(['N=', num2str(nParticipants)],PlotProps)
+        
     end
 
     % plot colorbar
-    chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, nAges+1], [], false, '', PlotProps);
+    Axes= chART.sub_plot([], Grid, [nAges+1, 1], [], false, '', PlotProps);
+        axis off
+    Axes.Position(1) = .15;
+    Axes.Position(3) = .7;
     chART.plot.pretty_colorbar('Linear', CLims.(Measures{MeasureIdx}), MeasureUnits{MeasureIdx}, PlotProps)
+  chART.save_figure(['Topography_', Measures{MeasureIdx}], ResultsFolder, PlotProps)
 
 end
-chART.save_figure('TopographyAverage', ResultsFolder, PlotProps)
 
 
 

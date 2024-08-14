@@ -42,6 +42,7 @@ Aperiodic(StartTheta:StartTheta+DurationTheta-1) = Theta;
 
 t = linspace(0, DurationAperiodic, numel(Aperiodic));
 
+Pink = [21 82 255]/255;
 
 %  single channel snippet in time (composite)
 LW_Bursts = 2;
@@ -50,17 +51,17 @@ chART.sub_plot([], [1 1], [1 1], [], '', '', PlotProps);
 plot(t, Aperiodic, 'LineWidth', 1.5, 'Color', AperiodicGray)
 hold on
 plot(t(StartTheta:StartTheta+DurationTheta-1), Aperiodic(StartTheta:StartTheta+DurationTheta-1), ...
-    'Color',chART.color_picker(1, '', 'yellow'), 'LineWidth', LW_Bursts)
+    'Color',Pink, 'LineWidth', LW_Bursts)
 plot(t(StartLowAlpha:StartLowAlpha+DurationLowAlpha-1), Aperiodic(StartLowAlpha:StartLowAlpha+DurationLowAlpha-1), ...
-    'Color',chART.color_picker(1, '', 'orange'), 'LineWidth', LW_Bursts)
+    'Color',Pink, 'LineWidth', LW_Bursts)
 plot(t(StartHighAlpha:StartHighAlpha+DurationHighAlpha-1), Aperiodic(StartHighAlpha:StartHighAlpha+DurationHighAlpha-1), ...
-    'Color',chART.color_picker(1, '', 'red'), 'LineWidth', LW_Bursts)
+    'Color', Pink, 'LineWidth', LW_Bursts)
 axis off
 ylim([-50 50])
 xlim([2.5 11.5])
 chART.save_figure('Bursts', ResultsFolder, PlotProps)
 
-
+%%
 PlotProps.Text.AxisSize = 10;
 PlotSize = [0 0 5.5 5.5];
 LW_Plot = 1.5;
@@ -101,26 +102,39 @@ axis square
 box off
 chART.save_figure('LogPower', ResultsFolder, PlotProps)
 
+%%
+
+PlotProps = Parameters.PlotProps.Manuscript;
+PlotProps.Figure.Padding = 0;
+PlotSize = [0 0 12 12];
+
+LW_Plot = 5;
+PowerAverage = mean(Power(labels2indexes([11, 60, 51, 129], EEG.chanlocs), :), 1);
+PowerAverageSmooth = smooth_frequencies(PowerAverage, Freqs, 2);
+
 
 % log log power
 figure('Units','centimeters', 'Position', PlotSize)
 chART.sub_plot([], [1 1], [1 1], [], true, '', PlotProps);
 hold on
-plot(log10(Freqs), log10(PowerAverageSmooth), 'Color', 'k', 'LineWidth',PlotProps.Line.Width)
-plot([.2 2.9], [2.845, -1.453], 'Color', AperiodicGray, 'LineWidth',PlotProps.Line.Width*3, ...
+plot(log10(Freqs), log10(PowerAverageSmooth), 'Color', 'k', 'LineWidth',LW_Plot)
+plot(log10([1 20]), [1.2, -.73], 'Color', AperiodicGray, 'LineWidth',PlotProps.Line.Width*3, ...
     'LineStyle',':')
 chART.set_axis_properties(PlotProps)
 xlabel('Log frequency')
 ylabel('Log power')
 xlim(log10([1 20]))
-ylim([-2 3])
+ylim([-.8 1.3])
 axis square
 box off
 chART.save_figure('LogLogPower', ResultsFolder, PlotProps)
 
 
+%%
+
+
 % FOOOF
-[~, ~, WhitenedPower, FooofFrequencies] = fooof_spectrum(PowerAverage, Freqs), [2 35];
+[~, ~, WhitenedPower, FooofFrequencies] = fooof_spectrum(PowerAverage, Freqs, [2 35]);
 
 % periodic power
 figure('Units','centimeters', 'Position', PlotSize)
