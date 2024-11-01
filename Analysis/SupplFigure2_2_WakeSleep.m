@@ -23,7 +23,7 @@ CacheDir = Paths.Cache;
 CacheName = 'AllBursts.mat';
 
 % where to save figures
-ResultsFolder = fullfile(Paths.Results, 'SleepWakeStats');
+ResultsFolder = fullfile(Paths.Results, 'SleepWakeStatsStandaridzed');
 if ~exist(ResultsFolder,'dir')
     mkdir(ResultsFolder)
 end
@@ -134,6 +134,13 @@ MetadataStat = make_categorical(MetadataStat, 'Hour', {'eve', 'mor'}); % compare
 MetadataStat = make_categorical(MetadataStat, 'Sex', {'f', 'm'}); % compare males to females
 MetadataStat = make_categorical(MetadataStat, 'Task', {'Oddball', '2Alertness'}); % compare males to females
 
+for Idx1 = 1:numel(OutcomeMeasures)
+    Data = MetadataStat.(OutcomeMeasures{Idx1});
+    MEAN = mean(Data, 'omitnan');
+    STD = std(Data, 0, 'omitnan');
+    MetadataStat.(OutcomeMeasures{Idx1}) = (Data-MEAN)./STD;
+end
+
 
 %%% mixed model to correct for multiple recordings etc.
 
@@ -145,14 +152,14 @@ Stats.OutcomeMeasures = OutcomeMeasures';
 TValues = Stats;
 nMeasures = numel(OutcomeMeasures);
 AllT = nan(nMeasures, nMeasures);
-for Idx1 = 1:numel(OutcomeMeasures)
-    for Idx2 = 1:numel(OutcomeMeasures)
+for Idx1 = [7,8]%1:numel(OutcomeMeasures)
+    % for Idx2 = 1:numel(OutcomeMeasures)
+    % 
+    %     if Idx1==Idx2
+    %         continue
+    %     end
 
-        if Idx1==Idx2
-            continue
-        end
-
-        formula = [OutcomeMeasures{Idx1}, FormulaFixed, OutcomeMeasures{Idx2}, FormulaRandom];
+        formula = [OutcomeMeasures{Idx1}, FormulaFixed, OutcomeMeasures{4}, ' + ', OutcomeMeasures{1}, FormulaRandom];
         Model = fitlme(MetadataStat, formula);
 
         RowIdx = strcmp(Model.Coefficients.Name, OutcomeMeasures{Idx2});
@@ -181,7 +188,7 @@ disp('   ')
     disp(['____________________ ',OutcomeMeasuresTitles{Idx2} ' vs ' OutcomeMeasuresTitles{Idx1}, ' ____________________'])
     disp(Model);
             end
-    end
+    % end
 end
 
 diary off

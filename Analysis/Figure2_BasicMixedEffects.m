@@ -28,7 +28,7 @@ CacheDir = Paths.Cache;
 CacheName = 'AllBursts.mat';
 
 % where to save figures
-ResultsFolder = fullfile(Paths.Results, 'MainStats');
+ResultsFolder = fullfile(Paths.Results, 'MainStatsStandardized');
 if ~exist(ResultsFolder,'dir')
     mkdir(ResultsFolder)
 end
@@ -73,6 +73,10 @@ MetadataStat = make_categorical(MetadataStat, 'Group', {'HC', 'ADHD'}); % compar
 MetadataStat = make_categorical(MetadataStat, 'Sex', {'f', 'm'}); % compare males to females
 
 
+% z-score data
+
+
+
 %%% run models
 clc
 if exist(fullfile(ResultsFolder, "BasicModel_AllStats.txt"), 'file')
@@ -80,29 +84,34 @@ if exist(fullfile(ResultsFolder, "BasicModel_AllStats.txt"), 'file')
 end
 
 diary(fullfile(ResultsFolder, "BasicModel_AllStats.txt"))
-diary on
+% diary on
 OutcomeMeasures_Extended = [OutcomeMeasures, ErrorMeasures];
 OutcomeMeasures_ExtendedLabels = [OutcomeMeasuresTitles, ErrorMeasuresTitles];
 for MeasureIdx = 1:numel(OutcomeMeasures_Extended)
-    formula = [OutcomeMeasures_Extended{MeasureIdx}, FormulaString];
-    Model = fitlme(MetadataStat, formula);
-
-    % Display the model summary
-    disp('   ')
-disp('   ')
-    disp(['____________________ ', OutcomeMeasures_ExtendedLabels{MeasureIdx}, ' ____________________'])
-    disp(Model);
-    disp_mixed_stat(Model, 'Age')
-    disp_mixed_stat(Model, 'Group_2')
-    disp_mixed_stat(Model, 'Hour_2')
-    disp_mixed_stat(Model, 'Sex_2')
-    disp_mixed_stat(Model, 'Age:Hour_2')
-
-
-    save_model(Model, fullfile(ResultsFolder, ['BasicModel_', OutcomeMeasures_ExtendedLabels{MeasureIdx}, '.txt']))
+    Measure = OutcomeMeasures_Extended{MeasureIdx};
+    MetadataStat.(Measure) = zscore(MetadataStat.(Measure));
+%     formula = [OutcomeMeasures_Extended{MeasureIdx}, FormulaString];
+%     Model = fitlme(MetadataStat, formula);
+% 
+%     % Display the model summary
+%     disp('   ')
+% disp('   ')
+%     disp(['____________________ ', OutcomeMeasures_ExtendedLabels{MeasureIdx}, ' ____________________'])
+%     disp(Model);
+%     disp_mixed_stat(Model, 'Age')
+%     disp_mixed_stat(Model, 'Group_2')
+%     disp_mixed_stat(Model, 'Hour_2')
+%     disp_mixed_stat(Model, 'Sex_2')
+%     disp_mixed_stat(Model, 'Age:Hour_2')
+% 
+% 
+%     save_model(Model, fullfile(ResultsFolder, ['BasicModel_', OutcomeMeasures_ExtendedLabels{MeasureIdx}, '.txt']))
 end
-diary off
+% diary off
 
+FormulaString = ' ~ Task + Hour*Age + Group + Sex + (1|Participant) + (1|Participant:SessionUnique)'; % MAIN ONE
+ Model = fitlme(MetadataStat, formula);
+ disp(Model);
 
 %% average error and r squared
 
