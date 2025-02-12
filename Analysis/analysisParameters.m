@@ -104,6 +104,13 @@ end
 
 addExternalFunctions
 
+% sleep paths (different hard disk)
+SleepPaths = struct();
+SleepCore = 'I:\Sleep';
+SleepPaths.CleanEEG = fullfile(SleepCore, 'Preprocessed', 'Specparam', 'MAT');
+SleepPaths.DeltaFilter = fullfile(SleepCore, 'Preprocessed', 'DeltaFilter');
+
+Parameters.SleepPaths = SleepPaths;
 Parameters.Paths = Paths;
 
 
