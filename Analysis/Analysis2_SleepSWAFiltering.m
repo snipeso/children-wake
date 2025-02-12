@@ -9,7 +9,7 @@ Parameters = analysisParameters();
 Paths = Parameters.SleepPaths;
 Datasets = Parameters.Datasets;
 TaskList = Parameters.Tasks;
-RerunAnalysis = false; % false to skip files already analyzed
+RerunAnalysis = true; % false to skip files already analyzed
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -43,13 +43,29 @@ for DatasetCell = Datasets
             disp(['Loading ', Filename])
         end
 
-        load(fullfile(EEGSource, Filename), 'EEG')
+        load(fullfile(EEGSource, Filename), 'EEG', 'Artefacts', 'Scoring')
 
         % filter in delta range
         EEG = kispi_delta_filter(EEG);
 
-         save(fullfile(Destination, Filename), 'EEG', '-v7.3')
-            disp(['Finished ', Filename])
+        % interpolate bad channels
+        Artefacts(isnan(Artefacts))= 0; % I set REM and wake to nan; but the scripts assume they are 0s
+        EEG = kispi_interpolate_bad_channels(EEG, Artefacts);
+
+        % rereference to linked mastoids
+        EEG = pop_reref(EEG, [100 57]); % use net mastoids, since different studies used different location for gold electrodes
+
+        % detect slow waves
+        vissymb= Scoring;
+        artndxn = Artefacts;
+        outerring=[43 48 49 56 63 68 73 81 88 94 99 107 113 119 120 125 126 127 128]; %outer ring; these will be excluded no matter what
+        epochl = 20;
+
+        [chwaves, parameters, ampperc, incperc, upperc, dnperc] = detectSW_NPtoNP(EEG.data, EEG.srate, vissymb, artndxn, outerring, epochl);
+
+
+        save(fullfile(Destination, Filename), 'EEG', '-v7.3')
+        disp(['Finished ', Filename])
     end
 end
 

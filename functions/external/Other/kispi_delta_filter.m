@@ -1,6 +1,17 @@
 function EEG = kispi_delta_filter(EEG)
 % filters sleep data with filters that are fairly fast, and are good for
-% slow wave detection.
+% slow wave detection. Provided by Maria Dimitriades
+
+
+% filter to remove extra strong line noise
+srateFilt    = EEG.srate;
+PassFrq      = 30;
+StopFrq      = 48; % NB: this code breaks for uneven filter orders; I changed this value to make sure that didn't happen since I use a different sample rate from everyone else
+PassRipple   = 0.02;
+StopAtten    = 60;
+LoPassFilt   = designfilt('lowpassfir','PassbandFrequency',PassFrq,'StopbandFrequency',StopFrq,'PassbandRipple',PassRipple,'StopbandAttenuation',StopAtten, 'SampleRate',srateFilt, 'DesignMethod','kaiser');
+EEG  = firfilt(EEG, LoPassFilt.Coefficients);
+
 
 
 %  %% Filter the data in the slow wave range data
