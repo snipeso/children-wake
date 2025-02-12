@@ -1,4 +1,4 @@
-function [chwaves, parameters, meanSW_Xamplitude, mean_numberofSW, meanSW_ascendslope, meanSW_descendslope] = detectSW_NPtoNP(data_SW, fs, vissymb, artndxn, excludedchannels, epochl, savename)
+function [chwaves, parameters, meanSW_Xamplitude, mean_numberofSW, meanSW_ascendslope, meanSW_descendslope] = kispi_detectSW_NPtoNP(data_SW, fs, visnum, artndxn, excludedchannels, epochl)
 
 %% Slow wave detection as wave is considered to start with a negative peak and end with a negative peak
 %
@@ -10,7 +10,7 @@ function [chwaves, parameters, meanSW_Xamplitude, mean_numberofSW, meanSW_ascend
 % ------
 % data_SW  : Filtered EEG data (channels x samples) to run the wave analysis
 % channels : Array indicating on which electrodes to run the analysis
-% vissymb  : The scoring file (string file)
+% visnum  : The scoring array. Needs N2 and N3 to be -2 and -3
 % artndxn  : The artfact correction file indicating the artefact-free epochs
 % fs       : Sampling frequency
 % savename : [path, name] to save the output
@@ -35,7 +35,6 @@ function [chwaves, parameters, meanSW_Xamplitude, mean_numberofSW, meanSW_ascend
 % dnperc    : Mean down slope (uV/sec) for negative deflection in each percentile
 
 
-
 channels        = 1:size(data_SW,1);
 
 artndxn(excludedchannels,:) = 0;            % set all epochs of the excluded channels to 0
@@ -44,12 +43,11 @@ ndxgoodch       = find(sum(artndxn,2) > 0); % find the indices of the good chann
 ngoodch         = length(ndxgoodch);
 
 badepochs       = find(sum(artndxn(ndxgoodch,:)) ~= ngoodch);   % find the epochs where not all good channels have good epochs
-ndxdsleep       = find(vissymb == '2' | vissymb == '3');        % find indices of the epochs where the person is in deepsleep
-notdeepsleep    = setdiff((1:length(vissymb)),ndxdsleep);       % gives wake, n1, and rem epochs
+ndxdsleep       = find(visnum == -2 | visnum == -3);        % find indices of the epochs where the person is in deepsleep
+notdeepsleep    = setdiff((1:length(visnum)),ndxdsleep);       % gives wake, n1, and rem epochs
 rejep           = union(badepochs,notdeepsleep);                % find waking or rejected 20 sec epochs for all ch
 
-sleep           = NUMVIS(vissymb,0);        % -1 to -3 = NREM1-3, 0=REM, 1=Wake, 2=Muscle, 3=others; MD double check with ur NUMVIS
-totsamp_scor    = length(sleep)*epochl*fs;  % shorten data to only include scored data; each epoch is 20 seconds (1 epoch has 20 seconds so 1*20 = units in seconds), times the number of samples every second (seconds*sf)
+totsamp_scor    = length(visnum)*epochl*fs;  % shorten data to only include scored data; each epoch is 20 seconds (1 epoch has 20 seconds so 1*20 = units in seconds), times the number of samples every second (seconds*sf)
 data_SW         = data_SW(:,1:totsamp_scor);     % only take data until the last scored value
 
 parameters = {'np1' 'pcx' 'ppx' 'ncx' 'np2' 'negamp1' 'posamp' 'negamp2' 'sleep(waveep_np1_np1)'};
@@ -146,7 +144,7 @@ for channels = 1:size(channels,2)
             
             if ~isempty(pospeaks)
                 
-                eval(['waves',num2str(current_channel),'=[waves',num2str(current_channel),'; np1 pcx ppx ncx np2 negamp1 posamp negamp2 sleep(waveep_np1)];']) 
+                eval(['waves',num2str(current_channel),'=[waves',num2str(current_channel),'; np1 pcx ppx ncx np2 negamp1 posamp negamp2 visnum(waveep_np1)];']) 
             end
         end % end reject epochs loop
         
@@ -216,8 +214,3 @@ for channels = 1:size(channels,2)
     current_channel = channels(channels);
     eval(['if ~isempty(waves',num2str(current_channel),');chwaves(current_channel,[1:size(waves',num2str(current_channel),',1)],[1:size(waves',num2str(current_channel),',2)])=waves',num2str(current_channel),';end;']);
 end
-
-% % eval(['save ',savename,'_wavePerc_NPtoNP_SWFreqCriteria.mat meanSW_Xamplitude mean_numberofSW meanSW_ascendslope meanSW_descendslope -mat']);
-
-eval(['save ',savename,'_waves_NPtoNP_SWFreqCriteria.mat chwaves fs parameters -mat']);
-

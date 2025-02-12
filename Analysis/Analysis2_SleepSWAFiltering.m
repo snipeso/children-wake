@@ -61,7 +61,7 @@ for DatasetCell = Datasets
         outerring=[43 48 49 56 63 68 73 81 88 94 99 107 113 119 120 125 126 127 128]; %outer ring; these will be excluded no matter what
         epochl = 20;
 
-        [chwaves, parameters, ampperc, incperc, upperc, dnperc] = detectSW_NPtoNP(EEG.data, EEG.srate, vissymb, artndxn, outerring, epochl);
+        [chwaves, parameters, ampperc, incperc, upperc, dnperc] = kispi_detectSW_NPtoNP(EEG.data, EEG.srate, vissymb, artndxn, outerring, epochl);
 
 
         save(fullfile(Destination, Filename), 'EEG', '-v7.3')
