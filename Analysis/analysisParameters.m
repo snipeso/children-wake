@@ -109,6 +109,8 @@ SleepPaths = struct();
 SleepCore = 'I:\Sleep';
 SleepPaths.CleanEEG = fullfile(SleepCore, 'Preprocessed', 'Specparam', 'MAT');
 SleepPaths.DeltaFilter = fullfile(SleepCore, 'Preprocessed', 'DeltaFilter');
+SleepPaths.SlowWaves = fullfile(SleepCore, 'Final', 'EEG', 'SlowWaves_All');
+
 
 Parameters.SleepPaths = SleepPaths;
 Parameters.Paths = Paths;

@@ -21,7 +21,7 @@ for DatasetCell = Datasets
 
     % set paths and files
     EEGSource = fullfile(Paths.CleanEEG, Dataset);
-    Destination = fullfile(Paths.DeltaFilter, Dataset);
+    Destination = fullfile(Paths.SlowWaves, Dataset);
     if ~exist(Destination, 'dir')
         mkdir(Destination)
     end
@@ -34,7 +34,7 @@ for DatasetCell = Datasets
     end
 
     for Filename = Filenames'
-
+        
         % load in data
         if exist(fullfile(Destination, Filename), 'file') && ~RerunAnalysis
             disp(['Skipping ', Filename])
@@ -42,6 +42,8 @@ for DatasetCell = Datasets
         else
             disp(['Loading ', Filename])
         end
+
+        StartTime = tic;
 
         load(fullfile(EEGSource, Filename), 'EEG', 'Artefacts', 'Scoring')
 
@@ -56,16 +58,13 @@ for DatasetCell = Datasets
         EEG = pop_reref(EEG, [100 57]); % use net mastoids, since different studies used different location for gold electrodes
 
         % detect slow waves
-        vissymb= Scoring;
-        artndxn = Artefacts;
-        outerring=[43 48 49 56 63 68 73 81 88 94 99 107 113 119 120 125 126 127 128]; %outer ring; these will be excluded no matter what
-        epochl = 20;
+        EpochLength = 20;
+        CleanEpochs = find(ismember(Scoring, [-2, -3]) & sum(Artefacts)> 100);
 
-        [chwaves, parameters, ampperc, incperc, upperc, dnperc] = kispi_detectSW_NPtoNP(EEG.data, EEG.srate, vissymb, artndxn, outerring, epochl);
+        [SW] = kispi_slowwave_detection(EEG.data, EEG.srate, 'NegZeroCrossings', CleanEpochs, EpochLength, 'No');
 
-
-        save(fullfile(Destination, Filename), 'EEG', '-v7.3')
-        disp(['Finished ', Filename])
+        save(fullfile(Destination, Filename), 'SW', 'Scoring', 'Artefacts', 'EpochLength')
+        disp(['Finished ', Filename, ' in ', num2str(toc(StartTime)), ' s'])
     end
 end
 
