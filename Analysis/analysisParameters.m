@@ -67,6 +67,7 @@ if exist( 'D:\LSM\Preprocessed', 'dir') % KISPI desktop
 
 elseif exist( 'D:\Data\AllWake', 'dir')
     Core = 'D:\Data\AllWake';
+   elseif exist( 'D:\Data\AllWake', 'dir')
 else
     error('no data disk!')
     % Core = 'E:\'
@@ -106,11 +107,11 @@ addExternalFunctions
 
 % sleep paths (different hard disk)
 SleepPaths = struct();
-SleepCore = 'I:\Sleep';
+SleepCore = 'I:\Sleep'; % KISPI
+SleepCore = 'E:\Sleep'; % Home
 SleepPaths.CleanEEG = fullfile(SleepCore, 'Preprocessed', 'Specparam', 'MAT');
 SleepPaths.DeltaFilter = fullfile(SleepCore, 'Preprocessed', 'DeltaFilter');
 SleepPaths.SlowWaves = fullfile(SleepCore, 'Final', 'EEG', 'SlowWaves_All');
-
 
 Parameters.SleepPaths = SleepPaths;
 Parameters.Paths = Paths;

@@ -21,7 +21,6 @@ if ~exist(CacheDir, 'dir')
     mkdir(CacheDir)
 end
 
-
 % adjust channel indices because they got rereferenced to linked mastoids
 ChannelIndexes = 1:129;
 ChannelIndexes([57 100]) = []; % because rereferenced to linked mastoids, these channels are no longer in the signal
@@ -30,53 +29,48 @@ ExcludeChannels = [43 48 49 56 63 68 73 81 88 94 99 107 113 119 120 125 126 127 
 ExcludedChannelsNewIndexes = find(ismember(ChannelIndexes, ExcludeChannels));
 
 
-
-
-%TEMP
-Paths.Metadata = 'I:\Metadata';
-
-Metadata = readtable(fullfile(Paths.Metadata, 'Metadata_Children_Sleep.csv'));
-Metadata = Metadata(contains(Metadata.Dataset, Datasets), :);
-nRecordings = size(Metadata, 1); % this does not consider tasks
+MetadataSleep = readtable(fullfile(Paths.Metadata, 'Metadata_Children_Sleep.csv'));
+MetadataSleep = MetadataSleep(contains(MetadataSleep.Dataset, Datasets), :);
+nRecordings = size(MetadataSleep, 1); % this does not consider tasks
 
 Blank = nan(nRecordings, 1);
 
-Metadata.FH_Amplitude = Blank;
-Metadata.LH_Amplitude = Blank;
+MetadataSleep.FH_Amplitude = Blank;
+MetadataSleep.LH_Amplitude = Blank;
 
-Metadata.FH_Amplitude_Matched = Blank;
-Metadata.LH_Amplitude_Matched = Blank;
+MetadataSleep.FH_Amplitude_Matched = Blank;
+MetadataSleep.LH_Amplitude_Matched = Blank;
 
-Metadata.FH_Slope = Blank;
-Metadata.LH_Slope = Blank;
+MetadataSleep.FH_Slope = Blank;
+MetadataSleep.LH_Slope = Blank;
 
-Metadata.FH_Slope_Matched = Blank;
-Metadata.LH_Slope_Matched = Blank;
+MetadataSleep.FH_Slope_Matched = Blank;
+MetadataSleep.LH_Slope_Matched = Blank;
 
-Metadata.ProportionMatched = Blank;
+MetadataSleep.ProportionMatched = Blank;
 
 % measure the main  outcome measures but every other wave, to do stats test
 % to see what is the maximum predictability of that measure
 
-Metadata.FH_Amplitude_Even = Blank;
-Metadata.LH_Amplitude_Even = Blank;
+MetadataSleep.FH_Amplitude_Even = Blank;
+MetadataSleep.LH_Amplitude_Even = Blank;
 
-Metadata.FH_Amplitude_Odd = Blank;
-Metadata.LH_Amplitude_Odd = Blank;
+MetadataSleep.FH_Amplitude_Odd = Blank;
+MetadataSleep.LH_Amplitude_Odd = Blank;
 
-Metadata.FH_Slope_Matched_Even = Blank;
-Metadata.LH_Slope_Matched_Even = Blank;
+MetadataSleep.FH_Slope_Matched_Even = Blank;
+MetadataSleep.LH_Slope_Matched_Even = Blank;
 
-Metadata.FH_Slope_Matched_Odd = Blank;
-Metadata.LH_Slope_Matched_Odd = Blank;
+MetadataSleep.FH_Slope_Matched_Odd = Blank;
+MetadataSleep.LH_Slope_Matched_Odd = Blank;
 
 
-for RecordingIdx = 1:nRecordings
+for RecordingIdx = 1:100 %:nRecordings
 
     %%% load in data
-    Dataset = Metadata.Dataset{RecordingIdx};
-    Participant = Metadata.Participant{RecordingIdx};
-    Session = replace(Metadata.Session{RecordingIdx}, '_', '');
+    Dataset = MetadataSleep.Dataset{RecordingIdx};
+    Participant = MetadataSleep.Participant{RecordingIdx};
+    Session = replace(MetadataSleep.Session{RecordingIdx}, '_', '');
 
     Path = fullfile(Source, Dataset);
     DataOut = load_datafile(Path, Participant, Session, '', ...
@@ -88,8 +82,12 @@ for RecordingIdx = 1:nRecordings
     EpochLength = DataOut{3};
     SampleRate = SW.SampRate;
 
-%     load('I:\Sleep\Final\EEG\SlowWaves_All\ADHD\P008_ADHD_Session1.mat')
+    %     load('I:\Sleep\Final\EEG\SlowWaves_All\ADHD\P008_ADHD_Session1.mat')
 
+    if isempty(fieldnames(SW.waves))
+        warning(['No SW data for ', Participant, Session])
+        continue
+    end
 
     % find all the waves in first hour and last hour, excluding epochs and channels that were marked as
     % bad
@@ -110,7 +108,7 @@ for RecordingIdx = 1:nRecordings
     for ChIndx = 1:numel(SW.waves)
 
         % skip not EEG channels
-        if ismember(ChIndx, ExcludedChannelsNewIndexes) 
+        if ismember(ChIndx, ExcludedChannelsNewIndexes)
             continue
         end
 
@@ -118,6 +116,7 @@ for RecordingIdx = 1:nRecordings
         TimeToKeep = 60*60; % seconds
         FH_ScoreIndex = find(cumsum(Scoring<=-2) >= TimeToKeep/EpochLength, 1, 'first');
         FH_SampleRate = FH_ScoreIndex*EpochLength*SampleRate;
+
         FH_Indexes = SW.waves(ChIndx).ndx_trough<FH_SampleRate;
 
         LH_ScoreIndex =  find(nnz(Scoring<=-2)-cumsum(Scoring<=-2) >=  TimeToKeep/EpochLength, 1, 'last');
@@ -160,33 +159,35 @@ for RecordingIdx = 1:nRecordings
         LH_Slopes_Matched = cat(2,  LH_Slopes_Matched, LH_Slps(LH_MatchedWaves));
     end
 
-    Metadata.FH_Amplitude(RecordingIdx) = mean(FH_Amplitudes);
-    Metadata.LH_Amplitude(RecordingIdx) = mean(LH_Amplitudes);
+    % Add sleep info
+    MetadataSleep.FH_Amplitude(RecordingIdx) = mean(FH_Amplitudes);
+    MetadataSleep.LH_Amplitude(RecordingIdx) = mean(LH_Amplitudes);
 
-    Metadata.FH_Amplitude_Matched(RecordingIdx) = mean(FH_Amplitudes_Matched);
-    Metadata.LH_Amplitude_Matched(RecordingIdx) = mean(LH_Amplitudes_Matched);
+    MetadataSleep.FH_Amplitude_Matched(RecordingIdx) = mean(FH_Amplitudes_Matched);
+    MetadataSleep.LH_Amplitude_Matched(RecordingIdx) = mean(LH_Amplitudes_Matched);
 
-    Metadata.FH_Slope(RecordingIdx) = mean(FH_Slopes);
-    Metadata.LH_Slope(RecordingIdx) = mean(LH_Slopes);
+    MetadataSleep.FH_Slope(RecordingIdx) = mean(FH_Slopes);
+    MetadataSleep.LH_Slope(RecordingIdx) = mean(LH_Slopes);
 
-    Metadata.FH_Slope_Matched(RecordingIdx) = mean(FH_Slopes_Matched);
-    Metadata.LH_Slope_Matched(RecordingIdx) = mean(LH_Slopes_Matched);
+    MetadataSleep.FH_Slope_Matched(RecordingIdx) = mean(FH_Slopes_Matched);
+    MetadataSleep.LH_Slope_Matched(RecordingIdx) = mean(LH_Slopes_Matched);
 
-    Metadata.ProportionMatched(RecordingIdx) = numel(FH_Slopes_Matched)/numel(LH_Slopes);
+    MetadataSleep.ProportionMatched(RecordingIdx) = numel(FH_Slopes_Matched)/numel(LH_Slopes);
 
-    Metadata.FH_Amplitude_Even(RecordingIdx) = mean(FH_Amplitudes(2:2:numel(FH_Amplitudes)));
-    Metadata.LH_Amplitude_Even(RecordingIdx) = mean(LH_Amplitudes(2:2:numel(LH_Amplitudes)));
+    MetadataSleep.FH_Amplitude_Even(RecordingIdx) = mean(FH_Amplitudes(2:2:numel(FH_Amplitudes)));
+    MetadataSleep.LH_Amplitude_Even(RecordingIdx) = mean(LH_Amplitudes(2:2:numel(LH_Amplitudes)));
 
-    Metadata.FH_Amplitude_Odd(RecordingIdx) = mean(FH_Amplitudes(1:2:numel(FH_Amplitudes)));
-    Metadata.LH_Amplitude_Odd(RecordingIdx) = mean(LH_Amplitudes(1:2:numel(LH_Amplitudes)));
+    MetadataSleep.FH_Amplitude_Odd(RecordingIdx) = mean(FH_Amplitudes(1:2:numel(FH_Amplitudes)));
+    MetadataSleep.LH_Amplitude_Odd(RecordingIdx) = mean(LH_Amplitudes(1:2:numel(LH_Amplitudes)));
 
-    Metadata.FH_Slope_Matched_Even(RecordingIdx) = mean(FH_Slopes_Matched(2:2:numel(FH_Slopes_Matched)));
-    Metadata.LH_Slope_Matched_Even(RecordingIdx) = mean(LH_Slopes_Matched(2:2:numel(LH_Slopes_Matched)));
+    MetadataSleep.FH_Slope_Matched_Even(RecordingIdx) = mean(FH_Slopes_Matched(2:2:numel(FH_Slopes_Matched)));
+    MetadataSleep.LH_Slope_Matched_Even(RecordingIdx) = mean(LH_Slopes_Matched(2:2:numel(LH_Slopes_Matched)));
 
-    Metadata.FH_Slope_Matched_Odd(RecordingIdx) = mean(FH_Slopes_Matched(1:2:numel(FH_Slopes_Matched)));
-    Metadata.LH_Slope_Matched_Odd(RecordingIdx) = mean(LH_Slopes_Matched(1:2:numel(LH_Slopes_Matched)));
-    
+    MetadataSleep.FH_Slope_Matched_Odd(RecordingIdx) = mean(FH_Slopes_Matched(1:2:numel(FH_Slopes_Matched)));
+    MetadataSleep.LH_Slope_Matched_Odd(RecordingIdx) = mean(LH_Slopes_Matched(1:2:numel(LH_Slopes_Matched)));
+
     disp(['Finished ',num2str(RecordingIdx) '/', num2str(nRecordings) ])
 end
 
-save(fullfile(CacheDir, CacheName), 'Metadata')
+save(fullfile(CacheDir, CacheName), 'MetadataSleep')
+
