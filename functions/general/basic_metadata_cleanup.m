@@ -19,7 +19,9 @@ Metadata(contains(Metadata.Dataset, 'SleepLearning') & ...
     contains(Metadata.Session, {'Session_2', 'Session_3'}), :) = [];
 
 % remove learning task
+if ismember("Task", Metadata.Properties.VariableNames)
 Metadata(contains(Metadata.Task, 'Learning'), :) = [];
+end
 
 % rename to classic session 1 and 2 for SleepLearning
 Metadata.Session(strcmp(Metadata.Session, 'Session_1_1')) = {'Session_1'};

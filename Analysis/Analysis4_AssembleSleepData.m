@@ -21,7 +21,7 @@ end
 
 CacheDir = Paths.Cache;
 CacheNameSleep = 'AllSlowWaves.mat';
-load(fullfile(CacheDir, CacheNameSleep), 'SleepMetadata')
+load(fullfile(CacheDir, CacheNameSleep), 'MetadataSleep')
 
 % load in wake metadata
 CacheNameWake = 'AllBursts.mat';
@@ -32,8 +32,20 @@ Metadata = basic_metadata_cleanup(Metadata);
 Metadata(~contains(Metadata.Task, {'Alertness', 'Oddball'}), :) = []; % only use oddball-like tasks
 Metadata(contains(Metadata.Task, '3Oddball'), :) = [];
 
+% change names, especially so wake "slope" becomes "exponent"
+OutcomeMeasures = [Parameters.OutcomeMeasures.OriginalLabels];
+OutcomeMeasuresTitles = [Parameters.OutcomeMeasures.Titles];
+OriginalTableLables = Metadata.Properties.VariableNames;
+for Idx = 1:numel(OutcomeMeasuresTitles)
+
+    IdxTable = strcmp(OriginalTableLables, OutcomeMeasures{Idx});
+    Metadata.Properties.VariableNames(IdxTable) = genvarname(OutcomeMeasuresTitles(Idx));
+end
+
+MetadataSleep = basic_metadata_cleanup(MetadataSleep);
+
 % identify which columns in sleep to add to table
-SleepColumns = SleepMetadata.Properties.VariableNames;
+SleepColumns = MetadataSleep.Properties.VariableNames;
 WakeColumns = Metadata.Properties.VariableNames;
 SleepVariables = setdiff(SleepColumns, WakeColumns);
 
@@ -53,8 +65,8 @@ for RowIdx = 1:size(Metadata, 1)
     HourSleepVariables = SleepVariables(contains(SleepVariables, Stump));
 
     % identify sleep row index
-    SleepRowIdx = strcmp(SleepMetadata.Participant, Participant) & ...
-        strcmp(SleepMetadata.Session, Session);
+    SleepRowIdx = strcmp(MetadataSleep.Participant, Participant) & ...
+        strcmp(MetadataSleep.Session, Session);
     
     if ~any(SleepRowIdx)
         continue
@@ -69,7 +81,7 @@ for RowIdx = 1:size(Metadata, 1)
              Metadata.(['Sleep_', NewName]) = nan(size(Metadata, 1), 1);
         end
 
-        Metadata.(['Sleep_', NewName])(RowIdx) = SleepMetadata.(Variable{1})(SleepRowIdx);
+        Metadata.(['Sleep_', NewName])(RowIdx) = MetadataSleep.(Variable{1})(SleepRowIdx);
     end
 end
 
@@ -100,25 +112,15 @@ Metadata(~KeepRows, :) = [];
 
 
 %%% set up nice table for CSV
-MetadataPublish = Metadata;
-
-OutcomeMeasures = [Parameters.OutcomeMeasures.OriginalLabels, 'SWASlope', 'SWAAmp'];
-OutcomeMeasuresTitles = [Parameters.OutcomeMeasures.Titles, 'SW Slope', 'SW Amplitude'];
-OriginalTableLables = MetadataPublish.Properties.VariableNames;
-for Idx = 1:numel(OutcomeMeasuresTitles)
-
-    IdxTable = strcmp(OriginalTableLables, OutcomeMeasures{Idx});
-    MetadataPublish.Properties.VariableNames(IdxTable) = genvarname(OutcomeMeasuresTitles(Idx));
-end
 
 % recode dataset names
 Datasets = {'SleepLearning', 'Providence', 'ADHD', 'BMSAdults', 'BMS', 'BMSSL'};
 DatasetsNew = {'Dataset2008', 'Dataset2009', 'Dataset2010', 'Dataset2016', 'Dataset2017', 'Dataset2019'};
 
 for DatasetIdx = 1:numel(Datasets)
-    MetadataPublish.Dataset(strcmp(MetadataPublish.Dataset, Datasets{DatasetIdx})) = ...
-        repmat(DatasetsNew(DatasetIdx), nnz(strcmp(MetadataPublish.Dataset, Datasets{DatasetIdx})), 1);
+    Metadata.Dataset(strcmp(Metadata.Dataset, Datasets{DatasetIdx})) = ...
+        repmat(DatasetsNew(DatasetIdx), nnz(strcmp(Metadata.Dataset, Datasets{DatasetIdx})), 1);
 end
 
 
-writetable(MetadataPublish, fullfile(ResultsFolder, 'WakeSleepAllData.csv'))
+writetable(Metadata, fullfile(ResultsFolder, 'WakeSleepAllData.csv'))

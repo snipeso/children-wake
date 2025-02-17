@@ -65,7 +65,7 @@ MetadataSleep.FH_Slope_Matched_Odd = Blank;
 MetadataSleep.LH_Slope_Matched_Odd = Blank;
 
 
-for RecordingIdx = 1:100 %:nRecordings
+for RecordingIdx = 1:nRecordings
 
     %%% load in data
     Dataset = MetadataSleep.Dataset{RecordingIdx};
