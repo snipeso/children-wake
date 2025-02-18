@@ -124,3 +124,53 @@ end
 
 
 writetable(Metadata, fullfile(ResultsFolder, 'WakeSleepAllData.csv'))
+
+
+
+%%
+
+close all
+PlotProps = Parameters.PlotProps.Manuscript;
+
+OutcomeMeasuresAll = {'Amplitude', 'Duration', 'Exponent', 'Offset', 'Power', 'PeriodicPower', 'Sleep_Amplitude', 'Sleep_Slope_Matched'};
+OutcomeMeasuresTitlesAll = [OutcomeMeasuresTitles, 'SW Amplitudes', 'SW Slopes'];
+
+MetadataScatter = Metadata;
+
+MetadataScatter = MetadataScatter(strcmp(MetadataScatter.Dataset, 'Dataset2017') & strcmp(MetadataScatter.Condition, 'base') , :);
+
+OvernightMetadata = pair_recordings(MetadataScatter, 'Hour', {'eve', 'mor'});
+
+
+Grid = [numel(OutcomeMeasuresAll) numel(OutcomeMeasuresAll)];
+figure('Units','centimeters','OuterPosition',[0 0 20 20])
+for Idx1 = 1:numel(OutcomeMeasuresAll)
+    for Idx2 = 1:numel(OutcomeMeasuresAll)
+        chART.sub_plot([], Grid, [Idx2, Idx1], [], false, '', PlotProps);
+
+        if Idx1==Idx2
+            if Idx1==1
+                chART.set_axis_properties(PlotProps)
+                title(OutcomeMeasuresTitlesAll{Idx1})
+                ylabel(OutcomeMeasuresAll{Idx2})
+            end
+            axis off
+            continue
+        end
+
+        % MetadataAverage = unique_metadata(OvernightMetadata, 'Participant');
+        CorrectedMetadata = correct_for_age(OvernightMetadata);
+
+        plot_scattercloud(CorrectedMetadata, OutcomeMeasuresAll{Idx1}, OutcomeMeasuresAll{Idx2}, PlotProps, '', false)
+        set(gca, 'XTick' ,[], 'YTick', [])
+        axis square
+        if Idx2 == numel(OutcomeMeasuresAll)
+            xlabel(OutcomeMeasuresTitlesAll{Idx1})
+        elseif Idx2==1
+            title(OutcomeMeasuresTitlesAll{Idx1})
+        end
+        if Idx1==1
+            ylabel(OutcomeMeasuresTitlesAll{Idx2})
+        end
+    end
+end

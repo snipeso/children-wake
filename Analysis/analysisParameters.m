@@ -160,7 +160,7 @@ Parameters.PlotProps.Poster = chART.load_plot_properties({'Iota', 'Poster'});
 
 Parameters.PlotProps.Poster.Color.Background = 'none';
 
-Parameters.PlotProps.Manuscript = Parameters.PlotProps.Poster;
+Parameters.PlotProps.Manuscript = Parameters.PlotProps.Manuscript;
 TopoPlotProps = Parameters.PlotProps.Manuscript;
 TopoPlotProps.Text.LegendSize = 10;
 TopoPlotProps.Text.AxisSize = 10;

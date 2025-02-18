@@ -3,7 +3,7 @@ library(caret) #
 
 ## Read data
 
-data <- read.csv("C:/Users/mique/Desktop/WakeSleepAllData.csv")
+data <- read.csv("D:/Data/AllWake/Results/children-wake/poster/SleepWakeStatsStandaridzed/WakeSleepAllData.csv")
 
 ## Process data
 
@@ -11,10 +11,10 @@ data <- read.csv("C:/Users/mique/Desktop/WakeSleepAllData.csv")
 
 ## Wake 2 Sleep
 
-f1 <- summary(lm(SWSlope ~ Age + Amplitude, data))
-f2 <- summary(lm(SWSlope ~ Age + Duration, data))
-f3 <- summary(lm(SWSlope ~ Age + Exponent, data))
-f4 <- summary(lm(SWSlope ~ Age + Offset, data))
+f1 <- summary(lm(Sleep_Slope_Matched ~ Age + Amplitude, data))
+f2 <- summary(lm(Sleep_Slope_Matched ~ Age + Duration, data))
+f3 <- summary(lm(Sleep_Slope_Matched ~ Age + Exponent, data))
+f4 <- summary(lm(Sleep_Slope_Matched ~ Age + Offset, data))
 
 
 f1$adj.r.squared
@@ -23,7 +23,7 @@ f3$adj.r.squared
 f4$adj.r.squared
 
 
-data <- subset(data, !is.na(SWSlope))
+data <- subset(data, !is.na(Sleep_Slope_Matched))
 
 # Define training control with stratified resampling
 train_control <- trainControl(
@@ -32,33 +32,34 @@ train_control <- trainControl(
   classProbs = FALSE,      # Not needed for regression
   #sampling = "up",         # Optional: To balance classes (if needed)
   index = createFolds(data$Participant, k = 10, returnTrain = TRUE) # Stratified folds using pre-defined strata
+  # index = groupKFold(data$Participant, k = 10)
 )
 
 # Train a linear regression model
 set.seed(123)
 model1 <- train(
-  SWSlope ~ Age + Amplitude, # Formula
+  Sleep_Slope_Matched ~ Age + Amplitude, # Formula
   data = data,                      # Data
   method = "lm",                   # Linear regression
   trControl = train_control         # Training control
 )
 
 model2 <- train(
-  SWSlope ~ Age + Duration, # Formula
+  Sleep_Slope_Matched ~ Age + Duration, # Formula
   data = data,                      # Data
   method = "lm",                   # Linear regression
   trControl = train_control         # Training control
 )
 
 model3 <- train(
-  SWSlope ~ Age + Offset, # Formula
+  Sleep_Slope_Matched ~ Age + Offset, # Formula
   data = data,                      # Data
   method = "lm",                   # Linear regression
   trControl = train_control         # Training control
 )
 
 model4 <- train(
-  SWSlope ~ Age + Exponent, # Formula
+  Sleep_Slope_Matched ~ Age + Exponent, # Formula
   data = data,                      # Data
   method = "lm",                   # Linear regression
   trControl = train_control         # Training control
@@ -73,7 +74,7 @@ bwplot(model4$resample$Rsquared)
 resamps <- resamples(list(Model1 = model1, Model2 = model2,
                           Model3 = model3, Model4 = model4))
 bwplot(resamps, metric = "Rsquared")
-bwplot(resamps)
+# bwplot(resamps)
 ## Sleep 2 Wake
 
 
