@@ -79,7 +79,7 @@ Paths.Core = Core;
 
 Paths.AnalyzedData  = fullfile(Core, 'Final'); % where data gets saved once its been turned into something else
 Paths.Cache = fullfile(Core, 'Cache', 'children-wake');
-Paths.Results = fullfile(Core, 'Results', 'children-wake', 'poster');
+Paths.Results = fullfile(Core, 'Results', 'children-wake', 'paper');
 Paths.Metadata = fullfile(Core, 'Metadata');
 if ~exist(Paths.Results, 'dir')
     mkdir(Paths.Results)
