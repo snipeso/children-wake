@@ -123,7 +123,7 @@ for DatasetIdx = 1:numel(Datasets)
 end
 
 
-writetable(Metadata, fullfile(ResultsFolder, 'WakeSleepAllData.csv'))
+writetable(Metadata, fullfile(ResultsFolder, 'WakeSleepFullData.csv'))
 
 
 
