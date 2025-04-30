@@ -1,9 +1,15 @@
 library(tidyverse)
 library(caret) #
 
+
 ## Read data
 
 data <- read.csv("D:/Data/AllWake/Results/children-wake/poster/SleepWakeStatsStandaridzed/WakeSleepAllData.csv")
+
+## Initial data exploration # CLAUDE
+cat("Number of unique participants:", length(unique(data$Participant)), "\n")
+cat("Number of unique sessions:", length(unique(paste(data$Participant, data$Session))), "\n")
+
 
 ## Process data
 
@@ -25,14 +31,20 @@ f4$adj.r.squared
 
 data <- subset(data, !is.na(Sleep_Slope_Matched))
 
+
+# Create participant-session ID for proper stratification # CLAUDE
+data$ParticipantSession <- paste(data$Participant, data$Session, sep = "_")
+
 # Define training control with stratified resampling
 train_control <- trainControl(
   method = "cv",          # Cross-validation
   number = 10,              # Number of folds
   classProbs = FALSE,      # Not needed for regression
   #sampling = "up",         # Optional: To balance classes (if needed)
-  index = createFolds(data$Participant, k = 10, returnTrain = TRUE) # Stratified folds using pre-defined strata
+  # index = createFolds(data$Participant, k = 10, returnTrain = TRUE) # Stratified folds using pre-defined strata
   # index = groupKFold(data$Participant, k = 10)
+  index = createFolds(data$ParticipantSession, k = 10, returnTrain = TRUE) # Stratified folds
+  
 )
 
 # Train a linear regression model
