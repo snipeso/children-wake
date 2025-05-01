@@ -18,7 +18,7 @@ cross_validate_mixed_models <- function(data, outcome_var, k=10) {
   )
   
   # Create participant-based folds
-  set.seed(123)
+  set.seed(100)
   participants <- unique(data$Participant)
   participant_folds <- sample(1:k, length(participants), replace=TRUE)
   names(participant_folds) <- participants
@@ -75,22 +75,9 @@ cross_validate_mixed_models <- function(data, outcome_var, k=10) {
 }
 
 
-# Summary function
-summarize_cv_results <- function(cv_results) {
-  summary_table <- cv_results %>%
-    group_by(Model) %>%
-    summarize(
-      Mean_Marginal_R2 = mean(Marginal_R2),
-      Mean_Conditional_R2 = mean(Conditional_R2)
-    ) %>%
-    arrange(desc(Mean_Conditional_R2))
-  
-  return(summary_table)
-}
-
 
 # Simplified function for Wilcoxon tests comparing best model to others
-compare_best_model <- function(cv_results) {
+compare_to_best_model <- function(cv_results) {
   # Find best model based on mean R²
   best_model <- cv_results %>%
     group_by(Model) %>%
@@ -215,13 +202,10 @@ data_amp <- data %>% filter(!is.na(Sleep_Amplitude))
 cv_slope_results <- cross_validate_mixed_models(data_slope, "Sleep_Slope_Matched")
 cv_amp_results <- cross_validate_mixed_models(data_amp, "Sleep_Amplitude")
 
-# Create summary tables
-slope_summary <- summarize_cv_results(cv_slope_results)
-amp_summary <- summarize_cv_results(cv_amp_results)
 
 # Run Wilcoxon comparisons
-slope_comparisons <- compare_best_model(cv_slope_results)
-amp_comparisons <- compare_best_model(cv_amp_results)
+slope_comparisons <- compare_to_best_model(cv_slope_results)
+amp_comparisons <- compare_to_best_model(cv_amp_results)
 
 
 # Final model tables with R² standard deviations
