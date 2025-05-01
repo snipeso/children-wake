@@ -119,38 +119,9 @@ function cv_results = cross_validate_mixed_models_improved(data, outcome_var, k)
             ss_res = sum((y_true - y_pred).^2);
             pseudo_r2 = 1 - ss_res / ss_total;
             
-            % Get better approximation of marginal and conditional R²
-            % Instead of using covarianceParameters, use a simpler approach
-            
-            % For marginal R² (fixed effects only)
-            % Get fixed effects design matrix
-            X = [ones(height(train_data), 1), train_data.Age, train_data{:, pred}];
-            
-            % Get fixed effects coefficients
-            beta = lme.fixedEffects;
-            
-            % Calculate fitted values (fixed effects only)
-            fitted_fixed = X * beta;
-            
-            % Calculate variance of fitted values
-            var_fixed = var(fitted_fixed);
-            
-            % Calculate residual variance
-            residuals = train_data.(outcome_var) - fitted_fixed;
-            var_residual = var(residuals);
-            
-            % Calculate total variance
-            var_total = var(train_data.(outcome_var));
-            
-            % Approximate marginal R²
-            marginal_r2 = var_fixed / var_total;
-            
-            % Approximate conditional R² (fixed + random effects)
-            conditional_r2 = marginal_r2 + (var_total - var_fixed - var_residual) / var_total;
-            
-            % Ensure values are in valid range
-            marginal_r2 = min(max(marginal_r2, 0), 1);
-            conditional_r2 = min(max(conditional_r2, 0), 1);
+            % FIXED: Calculate marginal and conditional R² using the correct approach
+            fixed_predictors = {'Age', pred};
+            [marginal_r2, conditional_r2] = calculate_mixed_model_r2(lme, train_data, outcome_var, fixed_predictors);
             
             % Add results to table
             new_row = table(fold, string(pred), marginal_r2, conditional_r2, rmse, mae, pseudo_r2, ...
@@ -158,6 +129,66 @@ function cv_results = cross_validate_mixed_models_improved(data, outcome_var, k)
             cv_results = [cv_results; new_row];
         end
     end
+end
+
+function [marginal_r2, conditional_r2] = calculate_mixed_model_r2(lme, data, outcome_var, fixed_predictors)
+    % Calculate R² values for mixed models using the method from 
+    % Nakagawa & Schielzeth (2013) and Johnson (2014)
+    %
+    % Inputs:
+    % - lme: The fitted mixed model from fitlme
+    % - data: The dataset used for fitting
+    % - outcome_var: Name of the outcome variable
+    % - fixed_predictors: Cell array of names of fixed effect predictors
+    
+    % Extract the model components
+    beta = lme.fixedEffects;  % Fixed effects coefficients
+    
+    % Create design matrix for fixed effects
+    X = [ones(height(data), 1)];  % Intercept
+    for i = 1:length(fixed_predictors)
+        X = [X, data.(fixed_predictors{i})];
+    end
+    
+    % Calculate fitted values from fixed effects only
+    fitted_fixed = X * beta;
+    
+    % Get variance components
+    vc = lme.covarianceParameters;  % This gives the random effects and residual variances
+    
+    % Extract variance for random effects (assuming a simple random intercept model)
+    random_effect_var = 0;
+    for i = 1:length(vc)
+        if contains(vc{i}.Name, 'Participant')  % Adjust if your random effect has a different name
+            random_effect_var = random_effect_var + vc{i}.Estimate;
+        end
+    end
+    
+    % Find residual variance
+    residual_var = 0;
+    for i = 1:length(vc)
+        if strcmp(vc{i}.Name, 'Error')
+            residual_var = vc{i}.Estimate;
+            break;
+        end
+    end
+    
+    % Calculate variance of fixed effects
+    fixed_var = var(fitted_fixed);
+    
+    % Calculate total variance
+    total_var = fixed_var + random_effect_var + residual_var;
+    
+    % Calculate R² values
+    marginal_r2 = fixed_var / total_var;
+    conditional_r2 = (fixed_var + random_effect_var) / total_var;
+    
+    % Ensure conditional R² is at least equal to marginal R²
+    conditional_r2 = max(conditional_r2, marginal_r2);
+    
+    % Ensure values are between 0 and 1
+    marginal_r2 = min(max(marginal_r2, 0), 1);
+    conditional_r2 = min(max(conditional_r2, 0), 1);
 end
 
 function plot_cv_results_enhanced(cv_results, title_str)
@@ -274,23 +305,9 @@ function result = fit_and_compare_models(data, outcome_var, title_str)
         aic_value = lme.ModelCriterion.AIC;
         bic_value = lme.ModelCriterion.BIC;
         
-        % Calculate R² values using simpler approach
-        % For marginal R² (fixed effects only)
-        X = [ones(height(data), 1), data.Age, data{:, pred}];
-        beta = lme.fixedEffects;
-        fitted_fixed = X * beta;
-        var_fixed = var(fitted_fixed);
-        residuals = data.(outcome_var) - fitted_fixed;
-        var_residual = var(residuals);
-        var_total = var(data.(outcome_var));
-        
-        % Approximate marginal and conditional R²
-        marginal_r2 = var_fixed / var_total;
-        conditional_r2 = marginal_r2 + (var_total - var_fixed - var_residual) / var_total;
-        
-        % Ensure values are in valid range
-        marginal_r2 = min(max(marginal_r2, 0), 1);
-        conditional_r2 = min(max(conditional_r2, 0), 1);
+        % FIXED: Calculate R² values using the correct approach
+        fixed_predictors = {'Age', pred};
+        [marginal_r2, conditional_r2] = calculate_mixed_model_r2(lme, data, outcome_var, fixed_predictors);
         
         % Get fixed effect estimates
         coefs = lme.Coefficients;

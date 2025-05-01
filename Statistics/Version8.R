@@ -6,6 +6,8 @@ library(MuMIn)         # For R-squared calculation with mixed models
 library(caret)         # For cross-validation
 library(knitr)         # For table creation
 library(kableExtra)    # For enhanced tables
+library(lmtest)        # For likelihood ratio tests
+library(boot)          # For bootstrapping
 
 # Read data
 data <- read.csv("D:/Data/AllWake/Results/children-wake/poster/SleepWakeStatsStandaridzed/WakeSleepAllData.csv")
@@ -16,7 +18,6 @@ data_amp <- data %>% filter(!is.na(Sleep_Amplitude))
 
 # ------ CROSS-VALIDATION APPROACH WITH ESTABLISHED FUNCTIONS ------
 
-# Function to perform k-fold cross-validation for mixed-effects models using caret
 # Function to perform k-fold cross-validation for mixed-effects models with proper handling of clustered data
 cross_validate_mixed_models <- function(data, outcome_var, k=10) {
   # Create a results dataframe
@@ -30,7 +31,7 @@ cross_validate_mixed_models <- function(data, outcome_var, k=10) {
   )
   
   # Create grouped folds - keeping all observations from the same participant together
-  set.seed(10)
+  set.seed(123)
   if("Participant" %in% colnames(data)) {
     # Get unique participants
     participants <- unique(data$Participant)
@@ -86,7 +87,7 @@ cross_validate_mixed_models <- function(data, outcome_var, k=10) {
     for (pred in predictors) {
       # Create formula
       formula <- as.formula(paste(outcome_var, "~ Age + ", pred, "+ (1|Participant)"))
-
+      
       # Fit model on training data
       tryCatch({
         model <- lmer(formula, data = train)
@@ -121,9 +122,6 @@ cross_validate_mixed_models <- function(data, outcome_var, k=10) {
   
   return(results)
 }
-
-
-
 
 # Perform cross-validation
 cat("\nPerforming cross-validation for Sleep Slope...\n")
@@ -217,9 +215,61 @@ amp_summary <- summarize_cv_results(cv_amp_results, "SLEEP AMPLITUDE")
 
 # ------ FIT FINAL MODELS AND COMPARE ------
 
-# Function to fit and compare models
-fit_and_compare_models <- function(data, outcome_var, title) {
-  cat("\n===== FINAL MODEL COMPARISON FOR", title, "=====\n")
+# Function to check if marginal R² is significantly greater than 0
+# Using bootstrap approach to get confidence intervals
+bootstrap_r2 <- function(model, n_bootstrap = 1000) {
+  # Extract the data from the model
+  model_data <- model@frame
+  
+  # Function to compute marginal R² for bootstrapped data
+  r2_function <- function(data, indices) {
+    # Sample with replacement
+    d <- data[indices, ]
+    
+    # Refit the model on bootstrapped data
+    tryCatch({
+      # Extract formula from original model
+      formula_str <- as.character(formula(model))
+      formula_obj <- as.formula(paste(formula_str[2], formula_str[1], formula_str[3]))
+      
+      # Fit model
+      boot_model <- lmer(formula_obj, data = d)
+      
+      # Calculate marginal R²
+      r2_values <- r.squaredGLMM(boot_model)
+      return(r2_values[1])  # Marginal R²
+    }, error = function(e) {
+      # Return NA if model fails to converge
+      return(NA)
+    })
+  }
+  
+  # Perform bootstrap
+  r2_boot <- boot(data = model_data, statistic = r2_function, R = n_bootstrap)
+  
+  # Calculate 95% confidence intervals
+  r2_ci <- boot.ci(r2_boot, type = "perc", conf = 0.95)
+  
+  # Extract lower CI
+  lower_ci <- NA
+  if (!is.null(r2_ci) && !is.null(r2_ci$percent)) {
+    lower_ci <- r2_ci$percent[4]  # Lower bound of 95% CI
+  }
+  
+  # Calculate p-value (proportion of bootstrapped values <= 0)
+  r2_values <- r2_boot$t[!is.na(r2_boot$t)]
+  p_value <- sum(r2_values <= 0) / length(r2_values)
+  
+  return(list(
+    r2_marginal = r.squaredGLMM(model)[1],
+    lower_ci = lower_ci,
+    p_value = p_value
+  ))
+}
+
+# Function to fit and compare models with added features
+fit_and_compare_models <- function(data, outcome_var, outcome_name) {
+  cat("\n===== FINAL MODEL COMPARISON FOR", outcome_name, "=====\n")
   
   # Variables to model
   predictors <- c("Amplitude", "Duration", "Offset", "Exponent")
@@ -238,6 +288,7 @@ fit_and_compare_models <- function(data, outcome_var, title) {
   
   # Create comparison table
   comparison_table <- data.frame(
+    Outcome = character(),
     Model = character(),
     AIC = numeric(),
     BIC = numeric(),
@@ -245,8 +296,15 @@ fit_and_compare_models <- function(data, outcome_var, title) {
     Conditional_R2 = numeric(),
     Fixed_Effect_Estimate = numeric(),
     Fixed_Effect_SE = numeric(),
-    Fixed_Effect_p = numeric()
+    Fixed_Effect_p = numeric(),
+    LRT_p_value = numeric(),
+    R2_greater_than_zero_p = numeric()
   )
+  
+  # Identify best model by AIC
+  aic_values <- sapply(models, AIC)
+  best_model_name <- names(which.min(aic_values))
+  best_model <- models[[best_model_name]]
   
   # Populate comparison table
   for (pred in predictors) {
@@ -265,8 +323,22 @@ fit_and_compare_models <- function(data, outcome_var, title) {
     se <- coefs[pred, "Std. Error"]
     p_value <- coefs[pred, "Pr(>|t|)"]
     
+    # Perform likelihood ratio test against best model
+    # Only if this isn't the best model
+    lrt_p_value <- NA
+    if (pred != best_model_name) {
+      # Create a reduced model for comparison
+      # Since our models differ by just one term, we can compare them directly
+      lrt <- anova(model, best_model)
+      lrt_p_value <- lrt$`Pr(>Chisq)`[2]  # Second row has the p-value
+    }
+    
+    # Test if marginal R² is significantly greater than 0
+    r2_test <- bootstrap_r2(model)
+    
     # Add to table
     comparison_table <- comparison_table %>% add_row(
+      Outcome = outcome_name,
       Model = pred,
       AIC = model_aic,
       BIC = model_bic,
@@ -274,24 +346,14 @@ fit_and_compare_models <- function(data, outcome_var, title) {
       Conditional_R2 = r2_values[2],
       Fixed_Effect_Estimate = estimate,
       Fixed_Effect_SE = se,
-      Fixed_Effect_p = p_value
+      Fixed_Effect_p = p_value,
+      LRT_p_value = lrt_p_value,
+      R2_greater_than_zero_p = r2_test$p_value
     )
   }
   
   # Sort by AIC
   comparison_table <- comparison_table %>% arrange(AIC)
-  
-  # Print table
-  print(kable(comparison_table, digits = 3, caption = paste(title, "Model Comparison")) %>%
-          kable_styling(bootstrap_options = c("striped", "hover")))
-  
-  # Print best model
-  cat("\nBest model according to AIC:", comparison_table$Model[1], "\n")
-  cat("Best model according to BIC:", comparison_table %>% arrange(BIC) %>% pull(Model) %>% first(), "\n")
-  
-  # Print summary of best model
-  cat("\nSummary of best model:\n")
-  print(summary(models[[comparison_table$Model[1]]]))
   
   return(list(
     comparison_table = comparison_table,
@@ -299,9 +361,28 @@ fit_and_compare_models <- function(data, outcome_var, title) {
   ))
 }
 
-# Fit and compare models
-slope_models <- fit_and_compare_models(data_slope, "Sleep_Slope_Matched", "SLEEP SLOPE")
-amp_models <- fit_and_compare_models(data_amp, "Sleep_Amplitude", "SLEEP AMPLITUDE")
+# Fit and compare models for both outcomes
+slope_models <- fit_and_compare_models(data_slope, "Sleep_Slope_Matched", "Sleep Slope")
+amp_models <- fit_and_compare_models(data_amp, "Sleep_Amplitude", "Sleep Amplitude")
+
+# ------ COMBINED RESULTS TABLE ------
+
+# Combine comparison tables
+combined_table <- rbind(
+  slope_models$comparison_table,
+  amp_models$comparison_table
+)
+
+# Format the table with kable for better presentation
+kable(combined_table, digits = 3, 
+      caption = "Combined Model Comparison for Sleep Slope and Sleep Amplitude",
+      col.names = c("Outcome", "Model", "AIC", "BIC", "Marginal R²", "Conditional R²", 
+                    "Fixed Effect Est.", "Fixed Effect SE", "Fixed Effect p", 
+                    "LRT p-value", "R² > 0 p-value")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE) %>%
+  row_spec(which(is.na(combined_table$LRT_p_value)), background = "#e6f7ff") %>%  # Highlight best models
+  collapse_rows(columns = 1, valign = "middle") %>%  # Merge cells in Outcome column
+  print()
 
 # ------ PRINT CONCLUSION ------
 
@@ -326,6 +407,7 @@ results <- list(
   amp_summary = amp_summary,
   slope_models = slope_models,
   amp_models = amp_models,
+  combined_table = combined_table,
   plot_slope = plot_slope,
   plot_amp = plot_amp
 )
@@ -339,4 +421,8 @@ ggsave("sleep_slope_conditional_r2.png", plot_slope$conditional, width = 8, heig
 ggsave("sleep_amplitude_marginal_r2.png", plot_amp$marginal, width = 8, height = 6)
 ggsave("sleep_amplitude_conditional_r2.png", plot_amp$conditional, width = 8, height = 6)
 
+# Save combined table
+write.csv(combined_table, "combined_model_comparison.csv", row.names = FALSE)
+
 cat("\nAnalysis complete. Results saved to wake_sleep_analysis_results.RData\n")
+cat("Combined table saved to combined_model_comparison.csv\n")
