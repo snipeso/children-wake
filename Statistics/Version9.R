@@ -338,7 +338,7 @@ amp_r2_comparisons <- compare_r2_distributions(cv_amp_results, "Sleep Amplitude"
 # significantly improves the model, which is equivalent to testing if R² > 0
 
 # Function to fit and compare models with model fit statistics
-fit_and_compare_models <- function(data, outcome_var, outcome_name) {
+fit_and_compare_models <- function(data, outcome_var, outcome_name, cv_results) {
   cat("\n===== FINAL MODEL COMPARISON FOR", outcome_name, "=====\n")
   
   # Variables to model
@@ -367,12 +367,24 @@ fit_and_compare_models <- function(data, outcome_var, outcome_name) {
     Fixed_Effect_Estimate = numeric(),
     Fixed_Effect_SE = numeric(),
     Fixed_Effect_p = numeric(),
+    Wilcox_p_value = numeric(),
     R2_greater_than_zero_p = numeric()
   )
   
   # Create null model (without any wake predictor) for testing if R² > 0
   null_formula <- as.formula(paste(outcome_var, "~ Age + (1|Participant)"))
   null_model <- lmer(null_formula, data = data)
+  
+  # Find best model based on mean marginal R² from CV results
+  best_model_name <- cv_results %>%
+    group_by(Model) %>%
+    summarize(Mean_R2 = mean(Marginal_R2)) %>%
+    arrange(desc(Mean_R2)) %>%
+    pull(Model) %>%
+    first()
+  
+  # Get R² values for best model from CV results
+  best_r2_values <- cv_results %>% filter(Model == best_model_name) %>% pull(Marginal_R2)
   
   # Populate comparison table
   for (pred in predictors) {
@@ -390,6 +402,17 @@ fit_and_compare_models <- function(data, outcome_var, outcome_name) {
     estimate <- coefs[pred, "Estimate"]
     se <- coefs[pred, "Std. Error"]
     p_value <- coefs[pred, "Pr(>|t|)"]
+    
+    # Calculate Wilcoxon p-value for marginal R² comparison with best model
+    wilcox_p_value <- NA
+    if (pred != best_model_name) {
+      # Get R² values for this model from CV results
+      model_r2_values <- cv_results %>% filter(Model == pred) %>% pull(Marginal_R2)
+      
+      # Perform Wilcoxon test (is best model better?)
+      wilcox_test <- wilcox.test(best_r2_values, model_r2_values, paired = TRUE, alternative = "greater")
+      wilcox_p_value <- wilcox_test$p.value
+    }
     
     # Test if wake predictor significantly improves model compared to null model (test if R² > 0)
     r2_p_value <- NA
@@ -412,6 +435,7 @@ fit_and_compare_models <- function(data, outcome_var, outcome_name) {
       Fixed_Effect_Estimate = estimate,
       Fixed_Effect_SE = se,
       Fixed_Effect_p = p_value,
+      Wilcox_p_value = wilcox_p_value,
       R2_greater_than_zero_p = r2_p_value
     )
   }
@@ -432,8 +456,8 @@ fit_and_compare_models <- function(data, outcome_var, outcome_name) {
 }
 
 # Fit and compare models for both outcomes
-slope_models <- fit_and_compare_models(data_slope, "Sleep_Slope_Matched", "Sleep Slope")
-amp_models <- fit_and_compare_models(data_amp, "Sleep_Amplitude", "Sleep Amplitude")
+slope_models <- fit_and_compare_models(data_slope, "Sleep_Slope_Matched", "Sleep Slope", cv_slope_results)
+amp_models <- fit_and_compare_models(data_amp, "Sleep_Amplitude", "Sleep Amplitude", cv_amp_results)
 
 # ------ COMBINED RESULTS TABLE ------
 
@@ -448,7 +472,7 @@ kable(combined_table, digits = 3,
       caption = "Combined Model Comparison for Sleep Slope and Sleep Amplitude",
       col.names = c("Outcome", "Model", "AIC", "BIC", "Marginal R²", "Conditional R²", 
                     "Fixed Effect Est.", "Fixed Effect SE", "Fixed Effect p", 
-                    "R² > 0 p-value")) %>%
+                    "Wilcox p-value", "R² > 0 p-value")) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE) %>%
   row_spec(which(combined_table$Model == slope_summary$Model[1] & combined_table$Outcome == "Sleep Slope"), background = "#e6f7ff") %>%  # Highlight best models
   row_spec(which(combined_table$Model == amp_summary$Model[1] & combined_table$Outcome == "Sleep Amplitude"), background = "#e6f7ff") %>%  # Highlight best models
