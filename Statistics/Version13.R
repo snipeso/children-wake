@@ -1,10 +1,12 @@
-# Code written by Claude Sonnet 7.3 and Sophia Snipes, children-wake, 2025
+# Code updated by Claude and Sophia Snipes, children-wake, 2025
 
 library(tidyverse)     # For data manipulation and visualization
 library(lme4)          # For mixed effects models
 library(lmerTest)      # For p-values in mixed models
 library(MuMIn)         # For R-squared calculation with mixed models
 library(effsize)       # For Cohen's d calculation
+library(performance)   # For additional R² calculations
+library(patchwork)     # For combining plots
 
 
 ################################################################################
@@ -28,10 +30,9 @@ random_model <- "+ (1|Participant)"
 ### Create participant-based folds with balanced distribution 
 # folds are a list of 10 lists, each one missing file indices of 10% of participants
 
-
 create_balanced_participant_folds <- function(data, k = 10) {
   
-  set.seed(100)
+  set.seed(120)
   
   # randomize participants
   participants <- unique(data$Participant)
@@ -63,12 +64,51 @@ create_balanced_participant_folds <- function(data, k = 10) {
 }
 
 
-### Cross-validation function
+### Calculate marginal and conditional R² for test data
+calculate_prediction_metrics <- function(model, test_data, outcome_var) {
+  # Get predictions from the mixed effects model on test data
+  test_predictions <- predict(model, newdata = test_data, allow.new.levels = TRUE)
+  
+  # Get fixed effects part of the model formula
+  fixed_formula <- reformulate(
+    termlabels = attr(terms(model), "term.labels")[!grepl("\\|", attr(terms(model), "term.labels"))],
+    response = outcome_var
+  )
+  
+  # Fit fixed effects model on test data for marginal R²
+  fixed_model_test <- lm(fixed_formula, data = test_data)
+  fixed_predictions <- predict(fixed_model_test)
+  
+  # Calculate total sum of squares
+  total_SS <- sum((test_data[[outcome_var]] - mean(test_data[[outcome_var]], na.rm = TRUE))^2, na.rm = TRUE)
+  
+  # Calculate residual sum of squares after mixed model predictions
+  residual_SS <- sum((test_data[[outcome_var]] - test_predictions)^2, na.rm = TRUE)
+  
+  # Calculate residual sum of squares after fixed effects only
+  fixed_residual_SS <- sum((test_data[[outcome_var]] - fixed_predictions)^2, na.rm = TRUE)
+  
+  # Calculate pseudo-R² values
+  conditional_r2 <- max(0, min(1, 1 - (residual_SS / total_SS)))
+  marginal_r2 <- max(0, min(1, 1 - (fixed_residual_SS / total_SS)))
+  
+  # Calculate RMSE on test set
+  rmse <- sqrt(mean((test_data[[outcome_var]] - test_predictions)^2, na.rm = TRUE))
+  
+  # Return results as a list
+  return(list(
+    marginal_r2 = marginal_r2,
+    conditional_r2 = conditional_r2,
+    rmse = rmse
+  ))
+}
+
+### Cross-validation function with R² calculated on test data
 
 cross_validate_mixed_models <- function(data, fixed_model, random_model, outcome_var, predictors, n_folds=10) {
   
   # parameters
-  folds <- create_balanced_participant_folds(data, k)
+  folds <- create_balanced_participant_folds(data, k = n_folds)
   
   # run
   results <- data.frame(  # blank output table
@@ -78,37 +118,49 @@ cross_validate_mixed_models <- function(data, fixed_model, random_model, outcome
     Conditional_R2 = numeric(),
     RMSE = numeric()
   )
+  
   for (i in 1:n_folds) {
     train <- data[folds[[i]], ]
     test <- data[-folds[[i]], ]
     
     for (pred in predictors) {
       
-      # run mixed effects model for given predictor and given fold on training data
+      # Train model on training data
       formula <- as.formula(paste(outcome_var, fixed_model, pred, random_model))
       model <- lmer(formula, data = train)
       
-      r2_values <- r.squaredGLMM(model)
       
-      # Calculate RMSE on test set
-      predictions <- predict(model, newdata = test, allow.new.levels = TRUE)
-      rmse <- sqrt(mean((test[[outcome_var]] - predictions)^2, na.rm = TRUE))
+      # Calculate R² metrics using our new function
+      r2_metrics <- calculate_prediction_metrics(model, test, outcome_var)
       
       # Add to results table
-      
       results <- results %>% add_row(
         Fold = i,
         Model = pred,
-        Marginal_R2 = r2_values[1],
-        Conditional_R2 = r2_values[2],
-        RMSE = rmse
+        Marginal_R2 = r2_metrics$marginal_r2,
+        Conditional_R2 = r2_metrics$conditional_r2,
+        RMSE = r2_metrics$rmse
       )
     }
   }
   
-  return(results)
+  # Summarize results by model
+  summary_results <- results %>%
+    group_by(Model) %>%
+    summarize(
+      Mean_Marginal_R2 = mean(Marginal_R2),
+      SD_Marginal_R2 = sd(Marginal_R2),
+      Mean_Conditional_R2 = mean(Conditional_R2),
+      SD_Conditional_R2 = sd(Conditional_R2),
+      Mean_RMSE = mean(RMSE),
+      SD_RMSE = sd(RMSE)
+    )
+  
+  return(list(
+    fold_results = results,
+    summary = summary_results
+  ))
 }
-
 
 
 ### Calculate effect size compared to best AIC model
@@ -144,22 +196,48 @@ calculate_effect_sizes <- function(data, outcome_var, cv_results) {
     RMSE_Effect_Size = numeric()
   )
   
-  best_r2 <- cv_results %>% filter(Model == best_model) %>% pull(Marginal_R2)
-  best_rmse <- cv_results %>% filter(Model == best_model) %>% pull(RMSE)
+  best_r2 <- cv_results$summary %>% 
+    filter(Model == best_model) %>% 
+    pull(Mean_Marginal_R2)
+    
+  best_rmse <- cv_results$summary %>% 
+    filter(Model == best_model) %>% 
+    pull(Mean_RMSE)
   
   for(pred in predictors) {
     model_aic <- aic_values %>% filter(Model == pred) %>% pull(AIC)
     model_bic <- aic_values %>% filter(Model == pred) %>% pull(BIC)
     
     if(pred != best_model) {
-      model_r2 <- cv_results %>% filter(Model == pred) %>% pull(Marginal_R2)
-      model_rmse <- cv_results %>% filter(Model == pred) %>% pull(RMSE)
+      model_r2 <- cv_results$summary %>% 
+        filter(Model == pred) %>% 
+        pull(Mean_Marginal_R2)
+        
+      model_rmse <- cv_results$summary %>% 
+        filter(Model == pred) %>% 
+        pull(Mean_RMSE)
       
       # Calculate Cohen's d for R2 (higher is better)
-      r2_d <- cohen.d(best_r2, model_r2)$estimate
+      r2_values_best <- cv_results$fold_results %>% 
+        filter(Model == best_model) %>% 
+        pull(Marginal_R2)
+        
+      r2_values_model <- cv_results$fold_results %>% 
+        filter(Model == pred) %>% 
+        pull(Marginal_R2)
+        
+      r2_d <- cohen.d(r2_values_best, r2_values_model)$estimate
       
       # Calculate Cohen's d for RMSE (lower is better, so flip sign)
-      rmse_d <- cohen.d(model_rmse, best_rmse)$estimate * -1
+      rmse_values_best <- cv_results$fold_results %>% 
+        filter(Model == best_model) %>% 
+        pull(RMSE)
+        
+      rmse_values_model <- cv_results$fold_results %>% 
+        filter(Model == pred) %>% 
+        pull(RMSE)
+        
+      rmse_d <- cohen.d(rmse_values_model, rmse_values_best)$estimate * -1
       
       effect_sizes <- effect_sizes %>% add_row(
         Model = pred,
@@ -186,24 +264,17 @@ calculate_effect_sizes <- function(data, outcome_var, cv_results) {
 }
 
 
-
 ### Simplified function for Wilcoxon tests comparing best model to others
-
 
 compare_to_best_model <- function(cv_results) {
   # Find best model based on mean R²
-  best_model <- cv_results %>%
-    group_by(Model) %>%
-    summarize(Mean_R2 = mean(Marginal_R2)) %>%
-    arrange(desc(Mean_R2)) %>%
+  best_model <- cv_results$summary %>%
+    arrange(desc(Mean_Marginal_R2)) %>%
     pull(Model) %>%
     first()
   
-  # Get R² values for best model
-  best_r2 <- cv_results %>% filter(Model == best_model) %>% pull(Marginal_R2)
-  
   # Get all model names
-  models <- unique(cv_results$Model)
+  models <- unique(cv_results$fold_results$Model)
   
   # Create results dataframe
   comparison_results <- data.frame(
@@ -215,8 +286,14 @@ compare_to_best_model <- function(cv_results) {
   # Compare with each other model
   for (model in models) {
     if (model != best_model) {
-      # Get R² values for this model
-      model_r2 <- cv_results %>% filter(Model == model) %>% pull(Marginal_R2)
+      # Get R² values for both models
+      best_r2 <- cv_results$fold_results %>% 
+        filter(Model == best_model) %>% 
+        pull(Marginal_R2)
+      
+      model_r2 <- cv_results$fold_results %>% 
+        filter(Model == model) %>% 
+        pull(Marginal_R2)
       
       # Perform Wilcoxon test (is best model better?)
       test_result <- wilcox.test(best_r2, model_r2, paired = TRUE, alternative = "greater")
@@ -237,9 +314,7 @@ compare_to_best_model <- function(cv_results) {
 }
 
 
-
 ### Modified fit_final_models function to include R² standard deviations
-
 
 fit_final_models <- function(data, outcome_var, outcome_name, wilcox_comparisons, cv_results, effect_sizes_info) {
   predictors <- c("Amplitude", "Duration", "Offset", "Exponent")
@@ -264,16 +339,8 @@ fit_final_models <- function(data, outcome_var, outcome_name, wilcox_comparisons
   
   for (pred in predictors) {
     # Get R² statistics from cross-validation
-    r2_stats <- cv_results %>%
-      filter(Model == pred) %>%
-      summarize(
-        Marginal_R2_Mean = mean(Marginal_R2),
-        Marginal_R2_SD = sd(Marginal_R2),
-        Conditional_R2_Mean = mean(Conditional_R2),
-        Conditional_R2_SD = sd(Conditional_R2),
-        RMSE_Mean = mean(RMSE),
-        RMSE_SD = sd(RMSE)
-      )
+    r2_stats <- cv_results$summary %>%
+      filter(Model == pred)
     
     formula <- as.formula(paste(outcome_var, "~ Age +", pred, "+ (1|Participant)"))
     model <- lmer(formula, data = data)
@@ -309,12 +376,12 @@ fit_final_models <- function(data, outcome_var, outcome_name, wilcox_comparisons
       Model = pred,
       AIC = model_aic,
       BIC = model_bic,
-      Marginal_R2_Mean = r2_stats$Marginal_R2_Mean,
-      Marginal_R2_SD = r2_stats$Marginal_R2_SD,
-      Conditional_R2_Mean = r2_stats$Conditional_R2_Mean,
-      Conditional_R2_SD = r2_stats$Conditional_R2_SD,
-      RMSE_Mean = r2_stats$RMSE_Mean,
-      RMSE_SD = r2_stats$RMSE_SD,
+      Marginal_R2_Mean = r2_stats$Mean_Marginal_R2,
+      Marginal_R2_SD = r2_stats$SD_Marginal_R2,
+      Conditional_R2_Mean = r2_stats$Mean_Conditional_R2,
+      Conditional_R2_SD = r2_stats$SD_Conditional_R2,
+      RMSE_Mean = r2_stats$Mean_RMSE,
+      RMSE_SD = r2_stats$SD_RMSE,
       Fixed_Effect_Estimate = estimate,
       Fixed_Effect_p = p_value,
       Effect_Size_vs_Best_AIC = effect_size,
@@ -327,6 +394,61 @@ fit_final_models <- function(data, outcome_var, outcome_name, wilcox_comparisons
 
 
 ################################################################################
+### Plot function to visualize R² values
+
+plot_r2_boxplots <- function(cv_results, outcome_name) {
+  # Prepare data for plotting
+  plot_data <- cv_results$fold_results %>%
+    pivot_longer(
+      cols = c(Marginal_R2, Conditional_R2),
+      names_to = "R2_Type",
+      values_to = "R2_Value"
+    )
+  
+  # Create plot with two subplots
+  # 1. Marginal R² boxplot
+  p_marginal <- ggplot(
+    plot_data %>% filter(R2_Type == "Marginal_R2"),
+    aes(x = Model, y = R2_Value, fill = Model)
+  ) +
+  geom_boxplot() +
+  labs(
+    title = paste("Marginal R² for", outcome_name),
+    x = "Predictor",
+    y = "Marginal R²"
+  ) +
+  theme_light() +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(size = 10, face = "bold"),
+    axis.title = element_text(size = 9)
+  )
+  
+  # 2. Conditional R² boxplot
+  p_conditional <- ggplot(
+    plot_data %>% filter(R2_Type == "Conditional_R2"),
+    aes(x = Model, y = R2_Value, fill = Model)
+  ) +
+  geom_boxplot() +
+  labs(
+    title = paste("Conditional R² for", outcome_name),
+    x = "Predictor",
+    y = "Conditional R²"
+  ) +
+  theme_light() +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(size = 10, face = "bold"),
+    axis.title = element_text(size = 9)
+  )
+  
+  # Combine plots horizontally
+  combined_plot <- p_marginal + p_conditional
+  
+  return(combined_plot)
+}
+
+################################################################################
 ### run
 
 # Read data
@@ -336,9 +458,17 @@ data <- read.csv(dataFilepath)
 data_slope <- data %>% filter(!is.na(Sleep_Slope_Matched))
 data_amp <- data %>% filter(!is.na(Sleep_Amplitude))
 
-# Perform cross-validation
+# Perform cross-validation with R² calculated on test sets
 cv_slope_results <- cross_validate_mixed_models(data_slope, fixed_model, random_model, slope_outcome, predictors)
 cv_amp_results <- cross_validate_mixed_models(data_amp, fixed_model, random_model, amplitude_outcome, predictors)
+
+# Create and display R² boxplots
+slope_r2_plot <- plot_r2_boxplots(cv_slope_results, "Sleep Slope")
+amplitude_r2_plot <- plot_r2_boxplots(cv_amp_results, "Sleep Amplitude")
+
+# Display plots
+print(slope_r2_plot)
+print(amplitude_r2_plot)
 
 # Run Wilcoxon comparisons
 slope_comparisons <- compare_to_best_model(cv_slope_results)
