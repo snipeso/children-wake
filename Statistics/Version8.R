@@ -86,7 +86,8 @@ cross_validate_mixed_models <- function(data, outcome_var, k=10) {
     # Loop through predictors to create and evaluate models
     for (pred in predictors) {
       # Create formula
-      formula <- as.formula(paste(outcome_var, "~ Age + ", pred, "+ (1|Participant)"))
+     #  formula <- as.formula(paste(outcome_var, "~ Age + ", pred, "+ (1|Participant)"))
+      formula <- as.formula(paste(outcome_var, "~ Age + Hour + ", pred, "+ (1|Participant)"))
       
       # Fit model on training data
       tryCatch({
