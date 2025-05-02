@@ -6,56 +6,81 @@ library(effsize)       # For Cohen's d calculation
 
 
 ################################################################################
+### Parameters
+
+dataFilepath <- "WakeSleepAllData.csv"
+
+slope_outcome <- "Sleep_Slope_Matched"
+amplitude_outcome <- "Sleep_Amplitude"
+
+fixed_model <- "~ Age + "
+predictors <- c("Amplitude", "Duration", "Offset", "Exponent")  # Variables to model
+random_model <- "+ (1|Participant)"
+
+
+################################################################################
 ### functions
 
-# Cross-validation function
-cross_validate_mixed_models <- function(data, outcome_var, k=10) {
-  # Create a results dataframe
-  results <- data.frame(
+### Create participant-based folds with balanced distribution 
+# folds are a list of 10 lists, each one missing file indices of 10% of participants
+
+
+create_balanced_participant_folds <- function(data, k = 10) {
+  
+  set.seed(100)
+  
+  # randomize participants
+  participants <- unique(data$Participant)
+  shuffled_participants <- sample(participants)
+  
+  # Calculate how many participants per fold (roughly equal)
+  n_participants <- length(participants)
+  n_per_fold <- ceiling(n_participants / k)
+  
+  # Assign participants to folds
+  participant_fold_map <- data.frame(
+    Participant = shuffled_participants,
+    Fold = rep(1:k, each = n_per_fold)[1:n_participants]
+  )
+  
+  # Create a list of training indices for each fold
+  folds <- list()
+  for (i in 1:k) {
+    
+    # Get participants in this fold
+    fold_participants <- participant_fold_map$Participant[participant_fold_map$Fold == i]
+    
+    # Get indices for all data points NOT from these participants (for training)
+    train_indices <- which(!(data$Participant %in% fold_participants))
+    folds[[i]] <- train_indices
+  }
+  
+  return(folds)
+}
+
+
+### Cross-validation function
+
+cross_validate_mixed_models <- function(data, fixed_model, random_model, outcome_var, predictors, k=10) {
+  
+  # parameters
+  folds <- create_balanced_participant_folds(data, k)
+  
+  # run
+  results <- data.frame(  # blank output table
     Fold = integer(),
     Model = character(),
     Marginal_R2 = numeric(),
     Conditional_R2 = numeric(),
     RMSE = numeric()
   )
-  
-  # Create participant-based folds
-  set.seed(100)
-  participants <- unique(data$Participant)
-  participant_folds <- sample(1:k, length(participants), replace=TRUE)
-  names(participant_folds) <- participants
-  
-  folds <- list()
-  for(i in 1:k) {
-    fold_participants <- names(participant_folds[participant_folds == i])
-    train_indices <- which(!(data$Participant %in% fold_participants))
-    folds[[i]] <- train_indices
-  }
-  # TODO: randomize list of pariticpants, use bins to assign them to a fold, and then continue (to make sure balanced folds)
-  
-  # Variables to model
-  predictors <- c("Amplitude", "Duration", "Offset", "Exponent")
-  
-  # Loop through folds
   for (i in 1:k) {
     train <- data[folds[[i]], ]
     test <- data[-folds[[i]], ]
     
-    # Skip if either set is empty
-    if(nrow(train) == 0 || nrow(test) == 0) {
-      next
-    }
-    
-    # Check for sufficient participants
-    train_participants <- length(unique(train$Participant))
-    test_participants <- length(unique(test$Participant))
-    if(train_participants < 2 || test_participants < 2) {
-      next
-    }
-    
     # Loop through predictors
     for (pred in predictors) {
-      formula <- as.formula(paste(outcome_var, "~ Age + ", pred, "+ (1|Participant)"))
+      formula <- as.formula(paste(outcome_var, fixed_model, pred, random_model))
       
       tryCatch({
         model <- lmer(formula, data = train)
@@ -82,7 +107,10 @@ cross_validate_mixed_models <- function(data, outcome_var, k=10) {
   return(results)
 }
 
-# NEW FUNCTION: Calculate effect size compared to best AIC model
+
+
+### Calculate effect size compared to best AIC model
+
 calculate_effect_sizes <- function(data, outcome_var, cv_results) {
   # Find best AIC model
   predictors <- c("Amplitude", "Duration", "Offset", "Exponent")
@@ -155,7 +183,11 @@ calculate_effect_sizes <- function(data, outcome_var, cv_results) {
   ))
 }
 
-# Simplified function for Wilcoxon tests comparing best model to others
+
+
+### Simplified function for Wilcoxon tests comparing best model to others
+
+
 compare_to_best_model <- function(cv_results) {
   # Find best model based on mean R²
   best_model <- cv_results %>%
@@ -204,7 +236,9 @@ compare_to_best_model <- function(cv_results) {
 
 
 
-# Modified fit_final_models function to include R² standard deviations
+### Modified fit_final_models function to include R² standard deviations
+
+
 fit_final_models <- function(data, outcome_var, outcome_name, wilcox_comparisons, cv_results, effect_sizes_info) {
   predictors <- c("Amplitude", "Duration", "Offset", "Exponent")
   best_model <- wilcox_comparisons$best_model
@@ -294,15 +328,15 @@ fit_final_models <- function(data, outcome_var, outcome_name, wilcox_comparisons
 ### run
 
 # Read data
-data <- read.csv("WakeSleepAllData.csv")
+data <- read.csv(dataFilepath)
 
 # remove NA values
 data_slope <- data %>% filter(!is.na(Sleep_Slope_Matched))
 data_amp <- data %>% filter(!is.na(Sleep_Amplitude))
 
 # Perform cross-validation
-cv_slope_results <- cross_validate_mixed_models(data_slope, "Sleep_Slope_Matched")
-cv_amp_results <- cross_validate_mixed_models(data_amp, "Sleep_Amplitude")
+cv_slope_results <- cross_validate_mixed_models(data_slope, fixed_model, random_model, slope_outcome, predictors)
+cv_amp_results <- cross_validate_mixed_models(data_amp, fixed_model, random_model, amplitude_outcome, predictors)
 
 # Run Wilcoxon comparisons
 slope_comparisons <- compare_to_best_model(cv_slope_results)
