@@ -66,6 +66,7 @@ create_balanced_participant_folds <- function(data, k = 10) {
 
 ### Calculate marginal and conditional R² for test data
 calculate_prediction_metrics <- function(model, test_data, outcome_var) {
+  
   # Get predictions from the mixed effects model on test data
   test_predictions <- predict(model, newdata = test_data, allow.new.levels = TRUE)
   
@@ -89,8 +90,8 @@ calculate_prediction_metrics <- function(model, test_data, outcome_var) {
   fixed_residual_SS <- sum((test_data[[outcome_var]] - fixed_predictions)^2, na.rm = TRUE)
   
   # Calculate pseudo-R² values
-  conditional_r2 <- max(0, min(1, 1 - (residual_SS / total_SS)))
-  marginal_r2 <- max(0, min(1, 1 - (fixed_residual_SS / total_SS)))
+  conditional_r2 <- 1 - (residual_SS / total_SS)
+  marginal_r2 <- 1 - (fixed_residual_SS / total_SS)
   
   # Calculate RMSE on test set
   rmse <- sqrt(mean((test_data[[outcome_var]] - test_predictions)^2, na.rm = TRUE))
