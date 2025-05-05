@@ -1,12 +1,11 @@
-# Code adapted by Claude, May 2025
-# Removed p-values from bootstrap comparison
+# Simplified script for model comparison
+# Focuses on cross-validation and bootstrap comparison
 
 library(tidyverse)     # For data manipulation and visualization
 library(lme4)          # For mixed effects models
 library(lmerTest)      # For p-values in mixed models
 library(MuMIn)         # For R-squared calculation with mixed models
 library(effsize)       # For Cohen's d calculation
-library(performance)   # For additional R² calculations
 library(patchwork)     # For combining plots
 
 ################################################################################
@@ -25,7 +24,7 @@ random_model <- "+ (1|Participant)"
 
 # for cross-validation
 n_folds <- 10       
-n_repetitions <- 4 # set to 10 when running definitevely
+n_repetitions <- 10 # set to 10 when running definitively 
 
 # for bootstrap
 n_bootstrap <- 1000 # repetitions
@@ -38,39 +37,29 @@ conf_level <- 0.95  # 95% confidence interval
 # folds are a list of 10 lists, each one missing file indices of 10% of participants
 
 create_balanced_participant_folds <- function(data, k = 10, seed = NULL) {
+  if (!is.null(seed)) set.seed(seed)
   
-  if (!is.null(seed)) {
-    set.seed(seed)
-  }
-  
-  # randomize participants
   participants <- unique(data$Participant)
   shuffled_participants <- sample(participants)
-  
-  # Calculate how many participants per fold (roughly equal)
   n_participants <- length(participants)
   n_per_fold <- ceiling(n_participants / k)
   
-  # Assign participants to folds
   participant_fold_map <- data.frame(
     Participant = shuffled_participants,
     Fold = rep(1:k, each = n_per_fold)[1:n_participants]
   )
   
-  # Create a list of training indices for each fold
   folds <- list()
   for (i in 1:k) {
-    
-    # Get participants in this fold
     fold_participants <- participant_fold_map$Participant[participant_fold_map$Fold == i]
+    test_indices <- which(data$Participant %in% fold_participants)
+    train_indices <- which(!data$Participant %in% fold_participants)
     
-    # Get indices for all data points NOT from these participants (for training)
-    train_indices <- which(!(data$Participant %in% fold_participants))
-    folds[[i]] <- train_indices
+    folds[[i]] <- list(train = train_indices, test = test_indices)
   }
-  
   return(folds)
 }
+
 
 
 ### Calculate predictive R² for test data
@@ -126,8 +115,8 @@ repeated_cross_validate_mixed_models <- function(data, fixed_model, random_model
     folds <- create_balanced_participant_folds(data, k = n_folds, seed = rep)
     
     for (i in 1:n_folds) {
-      train <- data[folds[[i]], ]
-      test <- data[-folds[[i]], ]
+      train <- data[folds[[i]]$train, ]
+      test  <- data[folds[[i]]$test, ]
       
       for (pred in predictors) {
         
@@ -267,7 +256,8 @@ calculate_effect_sizes <- function(data, outcome_var, cv_results, predictors) {
 }
 
 
-### Modified bootstrap-based function for comparing models (no p-values)
+### Bootstrap-based function for comparing models
+### Based directly on the paper's approach, lines 241-298 in your original script
 
 compare_to_best_model <- function(cv_results, n_repetitions, n_bootstrap = 1000, conf_level = 0.95) {
   
@@ -286,7 +276,8 @@ compare_to_best_model <- function(cv_results, n_repetitions, n_bootstrap = 1000,
     Compared_Model = character(),
     Mean_R2_Diff = numeric(),
     CI_Lower = numeric(),
-    CI_Upper = numeric()
+    CI_Upper = numeric(),
+    Significant = logical()
   )
   
   # Set seed for reproducibility
@@ -311,16 +302,18 @@ compare_to_best_model <- function(cv_results, n_repetitions, n_bootstrap = 1000,
       # Step 2: Bootstrap at the repetition level
       boot_diffs <- numeric(n_bootstrap)
       
-      # Corrected bootstrapping
+      # Corrected bootstrapping - sample at repetition level, not individual observation level
       n_rows <- nrow(rep_data)  # Use actual number of rows
       for (i in 1:n_bootstrap) {
         boot_sample <- sample(rep_data$diff, n_rows, replace = TRUE)
         boot_diffs[i] <- mean(boot_sample, na.rm = TRUE)
       }
       
-      
       # Step 3: Calculate confidence interval
       ci <- quantile(boot_diffs, c((1-conf_level)/2, 1-(1-conf_level)/2), na.rm = TRUE)
+      
+      # Check if the confidence interval includes zero
+      significant <- (ci[1] > 0) || (ci[2] < 0)
       
       # Add to results
       comparison_results <- comparison_results %>% add_row(
@@ -328,7 +321,8 @@ compare_to_best_model <- function(cv_results, n_repetitions, n_bootstrap = 1000,
         Compared_Model = model,
         Mean_R2_Diff = obs_diff,
         CI_Lower = ci[1],
-        CI_Upper = ci[2]
+        CI_Upper = ci[2],
+        Significant = significant
       )
     }
   }
@@ -340,7 +334,7 @@ compare_to_best_model <- function(cv_results, n_repetitions, n_bootstrap = 1000,
 }
 
 
-### Modified fit_final_models function (removed p-values)
+### Modified fit_final_models function with bootstrapping results
 
 fit_final_models <- function(data, outcome_var, outcome_name, bootstrap_comparisons, cv_results, effect_sizes_info, predictors) {
   best_model <- bootstrap_comparisons$best_model
@@ -358,7 +352,8 @@ fit_final_models <- function(data, outcome_var, outcome_name, bootstrap_comparis
     Fixed_Effect_p = numeric(),
     Effect_Size_vs_Best_AIC = numeric(),
     R2_Diff_CI_Lower = numeric(),
-    R2_Diff_CI_Upper = numeric()
+    R2_Diff_CI_Upper = numeric(),
+    Bootstrap_Significant = logical()
   )
   
   for (pred in predictors) {
@@ -378,6 +373,7 @@ fit_final_models <- function(data, outcome_var, outcome_name, bootstrap_comparis
     # Get bootstrap confidence intervals
     ci_lower <- NA
     ci_upper <- NA
+    bootstrap_significant <- NA
     
     if (pred != best_model) {
       bootstrap_row <- bootstrap_comparisons$comparisons %>% 
@@ -385,6 +381,7 @@ fit_final_models <- function(data, outcome_var, outcome_name, bootstrap_comparis
       if (nrow(bootstrap_row) > 0) {
         ci_lower <- bootstrap_row$CI_Lower
         ci_upper <- bootstrap_row$CI_Upper
+        bootstrap_significant <- bootstrap_row$Significant
       }
     }
     
@@ -411,7 +408,8 @@ fit_final_models <- function(data, outcome_var, outcome_name, bootstrap_comparis
       Fixed_Effect_p = p_value,
       Effect_Size_vs_Best_AIC = effect_size,
       R2_Diff_CI_Lower = ci_lower,
-      R2_Diff_CI_Upper = ci_upper
+      R2_Diff_CI_Upper = ci_upper,
+      Bootstrap_Significant = bootstrap_significant
     )
   }
   
@@ -419,8 +417,9 @@ fit_final_models <- function(data, outcome_var, outcome_name, bootstrap_comparis
 }
 
 
-### Modified plot function to visualize confidence intervals without p-values
+### Plot functions
 
+# Basic boxplots for R²
 plot_r2_boxplots <- function(cv_results, outcome_name, predictors) {
   plot_data <- cv_results$fold_results
   plot_data$Model <- factor(plot_data$Model, levels = predictors)
@@ -470,7 +469,7 @@ plot_r2_boxplots_with_counts <- function(cv_results, outcome_name, predictors) {
   print(p1 + p2)
 }
 
-# Modified bootstrap visualization function (no p-values)
+# Modified bootstrap visualization function with significance indicators
 plot_bootstrap_diffs <- function(comparisons, outcome_name) {
   if (nrow(comparisons$comparisons) == 0) return(NULL)
   
@@ -480,6 +479,10 @@ plot_bootstrap_diffs <- function(comparisons, outcome_name) {
     geom_point(size = 3) +
     geom_errorbar(aes(ymin = CI_Lower, ymax = CI_Upper), width = 0.2) +
     geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+    # Add highlight for significant comparisons
+    geom_point(data = plot_data %>% filter(Significant), 
+               aes(x = Compared_Model, y = Mean_R2_Diff),
+               size = 4, shape = 8, color = "red") +
     labs(
       title = paste("Bootstrap confidence intervals for difference in R² -", outcome_name),
       subtitle = paste("Best model:", comparisons$best_model, "minus other models"),
@@ -489,49 +492,11 @@ plot_bootstrap_diffs <- function(comparisons, outcome_name) {
     theme_light() +
     # Add annotation for interpretation
     annotate("text", x = Inf, y = -Inf, 
-             label = "CIs crossing zero suggest no significant difference", 
+             label = "CIs crossing zero suggest no significant difference\nRed stars indicate significant differences", 
              hjust = 1.1, vjust = -1, size = 3, fontface = "italic")
   
   print(p)
 }
-
-
-# Function to generate random data for testing
-generate_random_sleep_data <- function(n_participants = 20, n_per_participant = 5, seed = 42) {
-  set.seed(seed)
-  
-  # Generate participant IDs
-  participants <- rep(1:n_participants, each = n_per_participant)
-  
-  # Generate random predictors with no correlation to outcomes
-  amplitude <- rnorm(length(participants), mean = 0.5, sd = 0.2)
-  duration <- rnorm(length(participants), mean = 8, sd = 1)
-  offset <- rnorm(length(participants), mean = 0, sd = 1)
-  exponent <- rnorm(length(participants), mean = 1, sd = 0.3)
-  
-  # Generate random outcomes that are NOT related to predictors
-  sleep_slope <- rnorm(length(participants), mean = -0.1, sd = 0.05)
-  sleep_amplitude <- rnorm(length(participants), mean = 0.8, sd = 0.3)
-  
-  # Generate age (control variable)
-  age <- sample(18:80, n_participants, replace = TRUE)
-  age_expanded <- rep(age, each = n_per_participant)
-  
-  # Create dataframe
-  random_data <- data.frame(
-    Participant = participants,
-    Age = age_expanded,
-    Amplitude = amplitude,
-    Duration = duration,
-    Offset = offset,
-    Exponent = exponent,
-    Sleep_Slope_Matched = sleep_slope,
-    Sleep_Amplitude = sleep_amplitude
-  )
-  
-  return(random_data)
-}
-
 
 ################################################################################
 ### run
@@ -539,16 +504,30 @@ generate_random_sleep_data <- function(n_participants = 20, n_per_participant = 
 # Read data
 data <- read.csv(dataFilepath)
 
-# remove NA values
+# # Set seed for reproducibility in the randomization
+ set.seed(58)
+data <- data %>% mutate(
+ Amplitude = sample(Amplitude),
+ Duration = sample(Duration),
+ Offset = sample(Offset),
+ Exponent = sample(Exponent)
+)
+# 
+# # Important: reset the seed after randomization
+ set.seed(NULL)
+
+# Remove NA values
 data_slope <- data %>% filter(!is.na(Sleep_Slope_Matched))
 data_amp <- data %>% filter(!is.na(Sleep_Amplitude))
 
 # Perform repeated cross-validation with predictive R² calculated on test sets
+message("Running cross-validation for Sleep Slope...")
 cv_slope_results <- repeated_cross_validate_mixed_models(
   data_slope, fixed_model, random_model, slope_outcome, 
   predictors, n_folds, n_repetitions
 )
 
+message("Running cross-validation for Sleep Amplitude...")
 cv_amp_results <- repeated_cross_validate_mixed_models(
   data_amp, fixed_model, random_model, amplitude_outcome, 
   predictors, n_folds, n_repetitions
@@ -557,7 +536,7 @@ cv_amp_results <- repeated_cross_validate_mixed_models(
 # Run bootstrap comparisons
 message("Performing bootstrap comparisons for Sleep Slope...")
 slope_comparisons <- compare_to_best_model(
-  cv_slope_results,  n_repetitions, n_bootstrap, conf_level
+  cv_slope_results, n_repetitions, n_bootstrap, conf_level
 )
 
 message("Performing bootstrap comparisons for Sleep Amplitude...")
@@ -569,16 +548,35 @@ amp_comparisons <- compare_to_best_model(
 slope_effect_sizes <- calculate_effect_sizes(data_slope, slope_outcome, cv_slope_results, predictors)
 amp_effect_sizes <- calculate_effect_sizes(data_amp, amplitude_outcome, cv_amp_results, predictors)
 
-# Final model tables with bootstrap results and BIC
-slope_models <- fit_final_models(data_slope, slope_outcome, "Sleep Slope", slope_comparisons, cv_slope_results, slope_effect_sizes, predictors)
-amp_models <- fit_final_models(data_amp, amplitude_outcome, "Sleep Amplitude", amp_comparisons, cv_amp_results, amp_effect_sizes, predictors)
+# Final model tables with bootstrap results
+slope_models <- fit_final_models(
+  data_slope, slope_outcome, "Sleep Slope", 
+  slope_comparisons, cv_slope_results, slope_effect_sizes, predictors
+)
+
+amp_models <- fit_final_models(
+  data_amp, amplitude_outcome, "Sleep Amplitude", 
+  amp_comparisons, cv_amp_results, amp_effect_sizes, predictors
+)
 
 # Combined final table
 combined_table <- rbind(slope_models, amp_models)
 print(combined_table)
 write.csv(combined_table, "combined_model_comparison.csv", row.names = FALSE)
 
+# Create a simplified summary table with significance indicators
+summary_table <- combined_table %>%
+  select(Outcome, Model, Predictive_R2_Mean, Fixed_Effect_p, Bootstrap_Significant) %>%
+  mutate(
+    Significance = ifelse(Bootstrap_Significant == TRUE, "Significant", "")
+  ) %>%
+  arrange(Outcome, desc(Predictive_R2_Mean))
+
+print(summary_table)
+write.csv(summary_table, "model_significance_summary.csv", row.names = FALSE)
+
 # Create and display R² boxplots with repetition information
+message("Creating R² boxplots...")
 slope_r2_plot <- plot_r2_boxplots_with_counts(cv_slope_results, "Sleep Slope", predictors)
 amplitude_r2_plot <- plot_r2_boxplots_with_counts(cv_amp_results, "Sleep Amplitude", predictors)
 
@@ -587,7 +585,26 @@ message("Creating bootstrap visualization plots...")
 slope_bootstrap_plot <- plot_bootstrap_diffs(slope_comparisons, "Sleep Slope")
 amp_bootstrap_plot <- plot_bootstrap_diffs(amp_comparisons, "Sleep Amplitude")
 
+# Print summary of key findings
+message("\n==== Summary of Statistical Comparison Results ====\n")
+
+message("Best predictor for Sleep Slope: ", slope_comparisons$best_model)
+message("Significant difference from other predictors? ", 
+        ifelse(any(slope_comparisons$comparisons$Significant), "Yes", "No"))
+
+message("\nBest predictor for Sleep Amplitude: ", amp_comparisons$best_model)
+message("Significant difference from other predictors? ", 
+        ifelse(any(amp_comparisons$comparisons$Significant), "Yes", "No"))
+
+message("\nBootstrap comparison details for Sleep Slope:")
+print(slope_comparisons$comparisons %>% select(Compared_Model, Mean_R2_Diff, CI_Lower, CI_Upper, Significant))
+
+message("\nBootstrap comparison details for Sleep Amplitude:")
+print(amp_comparisons$comparisons %>% select(Compared_Model, Mean_R2_Diff, CI_Lower, CI_Upper, Significant))
+
 # Save results for further analysis if needed
-save(cv_slope_results, cv_amp_results, slope_comparisons, amp_comparisons,
-     slope_effect_sizes, amp_effect_sizes, slope_models, amp_models,
-     file = "repeated_cv_results.RData")
+save(cv_slope_results, cv_amp_results, 
+     slope_comparisons, amp_comparisons,
+     slope_effect_sizes, amp_effect_sizes, 
+     slope_models, amp_models,
+     file = "simplified_model_comparison_results.RData")

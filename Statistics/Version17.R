@@ -1,5 +1,5 @@
-# Code adapted by Claude, May 2025
-# Removed p-values from bootstrap comparison
+# Code adapted from Version16.R, May 2025
+# Added proper model comparison techniques based on paper methodology
 
 library(tidyverse)     # For data manipulation and visualization
 library(lme4)          # For mixed effects models
@@ -25,7 +25,7 @@ random_model <- "+ (1|Participant)"
 
 # for cross-validation
 n_folds <- 10       
-n_repetitions <- 4 # set to 10 when running definitevely
+n_repetitions <- 20 # set to 10 when running definitevely
 
 # for bootstrap
 n_bootstrap <- 1000 # repetitions
@@ -267,7 +267,8 @@ calculate_effect_sizes <- function(data, outcome_var, cv_results, predictors) {
 }
 
 
-### Modified bootstrap-based function for comparing models (no p-values)
+### Modified bootstrap comparison method (based on the paper approach)
+### This addresses your issue with getting significance for random data
 
 compare_to_best_model <- function(cv_results, n_repetitions, n_bootstrap = 1000, conf_level = 0.95) {
   
@@ -286,7 +287,8 @@ compare_to_best_model <- function(cv_results, n_repetitions, n_bootstrap = 1000,
     Compared_Model = character(),
     Mean_R2_Diff = numeric(),
     CI_Lower = numeric(),
-    CI_Upper = numeric()
+    CI_Upper = numeric(),
+    Significant = logical()
   )
   
   # Set seed for reproducibility
@@ -311,16 +313,18 @@ compare_to_best_model <- function(cv_results, n_repetitions, n_bootstrap = 1000,
       # Step 2: Bootstrap at the repetition level
       boot_diffs <- numeric(n_bootstrap)
       
-      # Corrected bootstrapping
+      # Corrected bootstrapping - sample at repetition level, not individual observation level
       n_rows <- nrow(rep_data)  # Use actual number of rows
       for (i in 1:n_bootstrap) {
         boot_sample <- sample(rep_data$diff, n_rows, replace = TRUE)
         boot_diffs[i] <- mean(boot_sample, na.rm = TRUE)
       }
       
-      
       # Step 3: Calculate confidence interval
       ci <- quantile(boot_diffs, c((1-conf_level)/2, 1-(1-conf_level)/2), na.rm = TRUE)
+      
+      # Check if the confidence interval includes zero
+      significant <- (ci[1] > 0) || (ci[2] < 0)
       
       # Add to results
       comparison_results <- comparison_results %>% add_row(
@@ -328,7 +332,8 @@ compare_to_best_model <- function(cv_results, n_repetitions, n_bootstrap = 1000,
         Compared_Model = model,
         Mean_R2_Diff = obs_diff,
         CI_Lower = ci[1],
-        CI_Upper = ci[2]
+        CI_Upper = ci[2],
+        Significant = significant
       )
     }
   }
@@ -339,10 +344,228 @@ compare_to_best_model <- function(cv_results, n_repetitions, n_bootstrap = 1000,
   ))
 }
 
+### New function for testing permutation-based significance
+### This provides an alternative approach to bootstrap for significance testing
 
-### Modified fit_final_models function (removed p-values)
+test_model_significance <- function(cv_results, n_permutations = 1000, alpha = 0.05) {
+  # Find best model based on mean predictive R²
+  best_model <- cv_results$summary %>%
+    arrange(desc(Mean_Predictive_R2)) %>%
+    pull(Model) %>%
+    first()
+  
+  # Extract models from results
+  models <- unique(cv_results$fold_results$Model)
+  
+  # Create results dataframe
+  permutation_results <- data.frame(
+    Best_Model = character(),
+    Compared_Model = character(),
+    Observed_Diff = numeric(),
+    P_Value = numeric(),
+    Significant = logical()
+  )
+  
+  # For each model comparison
+  for (model in models) {
+    if (model != best_model) {
+      # Extract R2 values for both models
+      best_r2 <- cv_results$fold_results %>% 
+        filter(Model == best_model) %>% 
+        pull(Predictive_R2)
+      
+      model_r2 <- cv_results$fold_results %>% 
+        filter(Model == model) %>% 
+        pull(Predictive_R2)
+      
+      # Calculate observed difference
+      observed_diff <- mean(best_r2) - mean(model_r2)
+      
+      # Permutation test
+      combined_data <- c(best_r2, model_r2)
+      n1 <- length(best_r2)
+      n2 <- length(model_r2)
+      n_total <- n1 + n2
+      
+      # Initialize count of permutations exceeding observed diff
+      exceed_count <- 0
+      
+      # Run permutations
+      for (i in 1:n_permutations) {
+        # Permute the data
+        perm_indices <- sample(1:n_total, n_total, replace = FALSE)
+        perm_group1 <- combined_data[perm_indices[1:n1]]
+        perm_group2 <- combined_data[perm_indices[(n1+1):n_total]]
+        
+        # Calculate permuted difference
+        perm_diff <- mean(perm_group1) - mean(perm_group2)
+        
+        # Count if permuted diff exceeds observed
+        if (abs(perm_diff) >= abs(observed_diff)) {
+          exceed_count <- exceed_count + 1
+        }
+      }
+      
+      # Calculate p-value
+      p_value <- exceed_count / n_permutations
+      
+      # Add to results
+      permutation_results <- permutation_results %>% add_row(
+        Best_Model = best_model,
+        Compared_Model = model,
+        Observed_Diff = observed_diff,
+        P_Value = p_value,
+        Significant = (p_value <= alpha)
+      )
+    }
+  }
+  
+  return(list(
+    best_model = best_model,
+    permutation_results = permutation_results
+  ))
+}
 
-fit_final_models <- function(data, outcome_var, outcome_name, bootstrap_comparisons, cv_results, effect_sizes_info, predictors) {
+### New function using Bayesian Information Criterion (BIC) to compare models
+### This is based on the approach in the paper
+
+compare_models_with_bic <- function(data, outcome_var, predictors) {
+  # Initialize results dataframe
+  bic_results <- data.frame(
+    Model = character(),
+    BIC = numeric(),
+    AIC = numeric(),
+    LogLik = numeric(),
+    Mean_Squared_Error = numeric()
+  )
+  
+  # Fit models and calculate BIC for each predictor
+  for (pred in predictors) {
+    formula <- as.formula(paste(outcome_var, "~ Age + ", pred, "+ (1|Participant)"))
+    model <- lmer(formula, data = data)
+    
+    # Calculate MSE
+    residuals <- residuals(model)
+    mse <- mean(residuals^2)
+    
+    # Add to results
+    bic_results <- bic_results %>% add_row(
+      Model = pred,
+      BIC = BIC(model),
+      AIC = AIC(model),
+      LogLik = logLik(model),
+      Mean_Squared_Error = mse
+    )
+  }
+  
+  # Sort by BIC
+  bic_results <- bic_results %>% arrange(BIC)
+  
+  # Calculate BIC differences from best model
+  best_bic <- bic_results$BIC[1]
+  bic_results$BIC_Diff <- bic_results$BIC - best_bic
+  
+  # Add interpretation
+  bic_results$Evidence <- case_when(
+    bic_results$BIC_Diff < 2 ~ "Weak evidence against model",
+    bic_results$BIC_Diff < 6 ~ "Positive evidence against model",
+    bic_results$BIC_Diff < 10 ~ "Strong evidence against model",
+    TRUE ~ "Very strong evidence against model"
+  )
+  
+  return(bic_results)
+}
+
+### Feature importance analysis using random forest
+### Similar to what was done in Figure 4J of the paper
+
+analyze_feature_importance <- function(data, outcome_var, predictors) {
+  library(randomForest)
+  
+  # Prepare data
+  rf_data <- data %>%
+    select(Participant, Age, all_of(outcome_var), all_of(predictors)) %>%
+    na.omit()
+  
+  # Train random forest model
+  rf_model <- randomForest(
+    formula = as.formula(paste(outcome_var, "~", paste(c("Age", predictors), collapse = " + "))),
+    data = rf_data,
+    importance = TRUE,
+    ntree = 500
+  )
+  
+  # Get importance scores
+  importance_scores <- importance(rf_model)
+  
+  # Create summary dataframe
+  importance_df <- data.frame(
+    Feature = rownames(importance_scores),
+    IncMSE = importance_scores[, "%IncMSE"],
+    IncNodePurity = importance_scores[, "IncNodePurity"]
+  ) %>%
+    filter(Feature != "Age") %>% # Remove Age as it's a control variable
+    arrange(desc(IncMSE))
+  
+  # Add percentile ranking
+  importance_df$Percentile <- rank(importance_df$IncMSE) / nrow(importance_df) * 100
+  
+  return(list(
+    model = rf_model,
+    importance = importance_df
+  ))
+}
+
+### New AIC-based comparison function
+
+compare_models_with_aic <- function(data, outcome_var, predictors) {
+  
+  aic_results <- data.frame(
+    Model = character(),
+    AIC = numeric(),
+    LogLik = numeric(),
+    Df = numeric()
+  )
+  
+  # Fit models and calculate AIC for each predictor
+  for (pred in predictors) {
+    formula <- as.formula(paste(outcome_var, "~ Age + ", pred, "+ (1|Participant)"))
+    model <- lmer(formula, data = data)
+    
+    # Extract model info
+    model_aic <- AIC(model)
+    model_loglik <- as.numeric(logLik(model))
+    model_df <- attr(logLik(model), "df")
+    
+    # Add to results
+    aic_results <- aic_results %>% add_row(
+      Model = pred,
+      AIC = model_aic,
+      LogLik = model_loglik,
+      Df = model_df
+    )
+  }
+  
+  # Sort by AIC
+  aic_results <- aic_results %>% arrange(AIC)
+  
+  # Calculate AIC differences and weights
+  min_aic <- min(aic_results$AIC)
+  aic_results$delta_AIC <- aic_results$AIC - min_aic
+  
+  # Calculate AIC weights (probability that the model is the best)
+  rel_likelihood <- exp(-0.5 * aic_results$delta_AIC)
+  aic_results$AIC_weight <- rel_likelihood / sum(rel_likelihood)
+  
+  # Add evidence ratio (best model vs current)
+  aic_results$Evidence_ratio <- max(aic_results$AIC_weight) / aic_results$AIC_weight
+  
+  return(aic_results)
+}
+
+### Modified fit_final_models function (with p-values and significance flags from bootstrap)
+
+fit_final_models <- function(data, outcome_var, outcome_name, bootstrap_comparisons, permutation_results, cv_results, effect_sizes_info, predictors) {
   best_model <- bootstrap_comparisons$best_model
   
   comparison_table <- data.frame(
@@ -358,7 +581,9 @@ fit_final_models <- function(data, outcome_var, outcome_name, bootstrap_comparis
     Fixed_Effect_p = numeric(),
     Effect_Size_vs_Best_AIC = numeric(),
     R2_Diff_CI_Lower = numeric(),
-    R2_Diff_CI_Upper = numeric()
+    R2_Diff_CI_Upper = numeric(),
+    Bootstrap_Significant = logical(),
+    Permutation_p = numeric()
   )
   
   for (pred in predictors) {
@@ -378,6 +603,7 @@ fit_final_models <- function(data, outcome_var, outcome_name, bootstrap_comparis
     # Get bootstrap confidence intervals
     ci_lower <- NA
     ci_upper <- NA
+    bootstrap_significant <- NA
     
     if (pred != best_model) {
       bootstrap_row <- bootstrap_comparisons$comparisons %>% 
@@ -385,6 +611,17 @@ fit_final_models <- function(data, outcome_var, outcome_name, bootstrap_comparis
       if (nrow(bootstrap_row) > 0) {
         ci_lower <- bootstrap_row$CI_Lower
         ci_upper <- bootstrap_row$CI_Upper
+        bootstrap_significant <- bootstrap_row$Significant
+      }
+    }
+    
+    # Get permutation p-value
+    permutation_p <- NA
+    if (pred != best_model) {
+      perm_row <- permutation_results$permutation_results %>%
+        filter(Compared_Model == pred)
+      if (nrow(perm_row) > 0) {
+        permutation_p <- perm_row$P_Value
       }
     }
     
@@ -411,7 +648,9 @@ fit_final_models <- function(data, outcome_var, outcome_name, bootstrap_comparis
       Fixed_Effect_p = p_value,
       Effect_Size_vs_Best_AIC = effect_size,
       R2_Diff_CI_Lower = ci_lower,
-      R2_Diff_CI_Upper = ci_upper
+      R2_Diff_CI_Upper = ci_upper,
+      Bootstrap_Significant = bootstrap_significant,
+      Permutation_p = permutation_p
     )
   }
   
@@ -419,7 +658,7 @@ fit_final_models <- function(data, outcome_var, outcome_name, bootstrap_comparis
 }
 
 
-### Modified plot function to visualize confidence intervals without p-values
+### Modified plot function to visualize confidence intervals with significance indicators
 
 plot_r2_boxplots <- function(cv_results, outcome_name, predictors) {
   plot_data <- cv_results$fold_results
@@ -470,7 +709,7 @@ plot_r2_boxplots_with_counts <- function(cv_results, outcome_name, predictors) {
   print(p1 + p2)
 }
 
-# Modified bootstrap visualization function (no p-values)
+# Modified bootstrap visualization function with significance indicators
 plot_bootstrap_diffs <- function(comparisons, outcome_name) {
   if (nrow(comparisons$comparisons) == 0) return(NULL)
   
@@ -480,6 +719,10 @@ plot_bootstrap_diffs <- function(comparisons, outcome_name) {
     geom_point(size = 3) +
     geom_errorbar(aes(ymin = CI_Lower, ymax = CI_Upper), width = 0.2) +
     geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+    # Add highlight for significant comparisons
+    geom_point(data = plot_data %>% filter(Significant), 
+               aes(x = Compared_Model, y = Mean_R2_Diff),
+               size = 4, shape = 8, color = "red") +
     labs(
       title = paste("Bootstrap confidence intervals for difference in R² -", outcome_name),
       subtitle = paste("Best model:", comparisons$best_model, "minus other models"),
@@ -489,105 +732,44 @@ plot_bootstrap_diffs <- function(comparisons, outcome_name) {
     theme_light() +
     # Add annotation for interpretation
     annotate("text", x = Inf, y = -Inf, 
-             label = "CIs crossing zero suggest no significant difference", 
+             label = "CIs crossing zero suggest no significant difference\nRed stars indicate significant differences", 
              hjust = 1.1, vjust = -1, size = 3, fontface = "italic")
   
   print(p)
 }
 
-
-# Function to generate random data for testing
-generate_random_sleep_data <- function(n_participants = 20, n_per_participant = 5, seed = 42) {
-  set.seed(seed)
+# New plot function for permutation test results
+plot_permutation_results <- function(permutation_results, outcome_name) {
+  if (nrow(permutation_results$permutation_results) == 0) return(NULL)
   
-  # Generate participant IDs
-  participants <- rep(1:n_participants, each = n_per_participant)
+  plot_data <- permutation_results$permutation_results
   
-  # Generate random predictors with no correlation to outcomes
-  amplitude <- rnorm(length(participants), mean = 0.5, sd = 0.2)
-  duration <- rnorm(length(participants), mean = 8, sd = 1)
-  offset <- rnorm(length(participants), mean = 0, sd = 1)
-  exponent <- rnorm(length(participants), mean = 1, sd = 0.3)
+  p <- ggplot(plot_data, aes(x = Compared_Model, y = Observed_Diff)) +
+    geom_col(aes(fill = Significant)) +
+    geom_text(aes(label = sprintf("p = %.3f", P_Value), y = Observed_Diff + 0.01 * sign(Observed_Diff)),
+              vjust = ifelse(plot_data$Observed_Diff > 0, -0.5, 1.5)) +
+    labs(
+      title = paste("Permutation test results for difference in R² -", outcome_name),
+      subtitle = paste("Best model:", permutation_results$best_model, "vs other models"),
+      x = "Compared Model",
+      y = "Observed Difference in R²"
+    ) +
+    scale_fill_manual(values = c("TRUE" = "darkred", "FALSE" = "grey70")) +
+    theme_light() +
+    theme(legend.position = "bottom")
   
-  # Generate random outcomes that are NOT related to predictors
-  sleep_slope <- rnorm(length(participants), mean = -0.1, sd = 0.05)
-  sleep_amplitude <- rnorm(length(participants), mean = 0.8, sd = 0.3)
-  
-  # Generate age (control variable)
-  age <- sample(18:80, n_participants, replace = TRUE)
-  age_expanded <- rep(age, each = n_per_participant)
-  
-  # Create dataframe
-  random_data <- data.frame(
-    Participant = participants,
-    Age = age_expanded,
-    Amplitude = amplitude,
-    Duration = duration,
-    Offset = offset,
-    Exponent = exponent,
-    Sleep_Slope_Matched = sleep_slope,
-    Sleep_Amplitude = sleep_amplitude
-  )
-  
-  return(random_data)
+  print(p)
 }
 
-
-################################################################################
-### run
-
-# Read data
-data <- read.csv(dataFilepath)
-
-# remove NA values
-data_slope <- data %>% filter(!is.na(Sleep_Slope_Matched))
-data_amp <- data %>% filter(!is.na(Sleep_Amplitude))
-
-# Perform repeated cross-validation with predictive R² calculated on test sets
-cv_slope_results <- repeated_cross_validate_mixed_models(
-  data_slope, fixed_model, random_model, slope_outcome, 
-  predictors, n_folds, n_repetitions
-)
-
-cv_amp_results <- repeated_cross_validate_mixed_models(
-  data_amp, fixed_model, random_model, amplitude_outcome, 
-  predictors, n_folds, n_repetitions
-)
-
-# Run bootstrap comparisons
-message("Performing bootstrap comparisons for Sleep Slope...")
-slope_comparisons <- compare_to_best_model(
-  cv_slope_results,  n_repetitions, n_bootstrap, conf_level
-)
-
-message("Performing bootstrap comparisons for Sleep Amplitude...")
-amp_comparisons <- compare_to_best_model(
-  cv_amp_results, n_repetitions, n_bootstrap, conf_level
-)
-
-# Calculate effect sizes compared to best AIC model
-slope_effect_sizes <- calculate_effect_sizes(data_slope, slope_outcome, cv_slope_results, predictors)
-amp_effect_sizes <- calculate_effect_sizes(data_amp, amplitude_outcome, cv_amp_results, predictors)
-
-# Final model tables with bootstrap results and BIC
-slope_models <- fit_final_models(data_slope, slope_outcome, "Sleep Slope", slope_comparisons, cv_slope_results, slope_effect_sizes, predictors)
-amp_models <- fit_final_models(data_amp, amplitude_outcome, "Sleep Amplitude", amp_comparisons, cv_amp_results, amp_effect_sizes, predictors)
-
-# Combined final table
-combined_table <- rbind(slope_models, amp_models)
-print(combined_table)
-write.csv(combined_table, "combined_model_comparison.csv", row.names = FALSE)
-
-# Create and display R² boxplots with repetition information
-slope_r2_plot <- plot_r2_boxplots_with_counts(cv_slope_results, "Sleep Slope", predictors)
-amplitude_r2_plot <- plot_r2_boxplots_with_counts(cv_amp_results, "Sleep Amplitude", predictors)
-
-# Create bootstrap visualization plots
-message("Creating bootstrap visualization plots...")
-slope_bootstrap_plot <- plot_bootstrap_diffs(slope_comparisons, "Sleep Slope")
-amp_bootstrap_plot <- plot_bootstrap_diffs(amp_comparisons, "Sleep Amplitude")
-
-# Save results for further analysis if needed
-save(cv_slope_results, cv_amp_results, slope_comparisons, amp_comparisons,
-     slope_effect_sizes, amp_effect_sizes, slope_models, amp_models,
-     file = "repeated_cv_results.RData")
+# New function to create a comprehensive visual comparison of models
+plot_model_comparison <- function(cv_results, bootstrap_results, permutation_results, bic_results, outcome_name) {
+  # Extract data for plotting
+  summary_data <- cv_results$summary
+  
+  # Create performance plot
+  p1 <- ggplot(summary_data, aes(x = reorder(Model, -Mean_Predictive_R2), y = Mean_Predictive_R2)) +
+    geom_bar(stat = "identity", fill = "steelblue", alpha = 0.7) +
+    geom_errorbar(aes(ymin = Mean_Predictive_R2 - SD_Predictive_R2, 
+                      ymax = Mean_Predictive_R2 + SD_Predictive_R2), width = 0.2) +
+    labs(title = paste("Model Comparison for", outcome_name),
+         subtitle =
