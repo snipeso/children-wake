@@ -19,7 +19,9 @@ outcome_amp <- "Sleep_Amplitude"
 fixed_model <- "~ Age + "
 predictors <- c("Amplitude", "Duration", "Offset", "Exponent") # these get looped into the fixed model
 reference_predictor <- "Amplitude" # this is for paired tests, since I know I just care whether amplitude did better than the others
+
 random_model <- "+ (1|Participant)"
+# random_model <- "" # can try also without random model, then just uses linear model
 
 # for cross-validation
 n_folds <- 10
@@ -118,7 +120,13 @@ cross_validate_mixed_models <- function(data, fixed_model, random_model, outcome
       
       # Train model on training data
       formula <- as.formula(paste(outcome_var, fixed_model, pred, random_model)) # this assembles SleepMeasure ~ Age + WakeMeasure + (1|Participant)
-      model <- lmer(formula, data = train_data)
+      formula_string <- as.character(formula)
+      
+      if(grepl("\\|", formula_string[length(formula_string)])) {
+        model <- lmer(formula, data = train_data)
+      } else {
+        model <-lm(formula, data=train_data)
+      }
       
       # Calculate predictive R² metrics on testing data
       r2_metrics <- calculate_prediction_metrics(model, test_data, outcome_var)
@@ -163,7 +171,13 @@ calculate_model_metrics <- function(data, fixed_model, random_model, outcome_var
   for (pred in predictors) {
     # Create formula and fit model
     formula <- as.formula(paste(outcome_var, fixed_model, pred, random_model))
-    model <- lmer(formula, data = data)
+    formula_string <- as.character(formula)
+    
+    if(grepl("\\|", formula_string[length(formula_string)])) {
+      model <- lmer(formula, data = data)
+    } else {
+      model <-lm(formula, data=data)
+    }
     
     # Calculate metrics
     model_aic <- AIC(model)
