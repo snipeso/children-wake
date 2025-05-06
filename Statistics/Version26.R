@@ -1,9 +1,8 @@
-# Code written by Claude Sonnet 3.7 and Sophia Snipes, 2025
+# Code modified from Version25.R - Repetitions removed
 
 library(tidyverse)     # For data manipulation and visualization
 library(lme4)          # For mixed effects models
 library(lmerTest)      # For p-values in mixed models
-library(caret)
 
 ################################################################################
 ### Parameters
@@ -20,7 +19,7 @@ random_model <- "+ (1|Participant)"
 
 # for cross-validation
 n_folds <- 10       
-n_repetitions <- 5 # set to 10 when running definitively
+# n_repetitions <- 10 # removed as we no longer do repetitions
 
 
 ################################################################################
@@ -72,20 +71,20 @@ calculate_prediction_metrics <- function(model, test_data, outcome_var) {
   
   # Calculate residuals
   residuals <- actual_values - predicted_values
-
+  
   # Calculate total sum of squares (TSS)
   mean_actual <- mean(actual_values)
   tss <- sum((actual_values - mean_actual)^2)
-
+  
   # Calculate residual sum of squares (RSS)
   rss <- sum(residuals^2)
-
+  
   # Calculate predictive R²
   predictive_r2 <- 1 - (rss / tss)
-
+  
   # Calculate RMSE
   rmse <- sqrt(mean(residuals^2))
-
+  
   # Return results
   return(list(
     predictive_r2 = predictive_r2,
@@ -94,54 +93,48 @@ calculate_prediction_metrics <- function(model, test_data, outcome_var) {
 }
 
 
-### Repeated Cross-validation
+### Cross-validation without repetitions
 
-repeated_cross_validate_mixed_models <- function(data, fixed_model, random_model, outcome_var, 
-                                                 predictors, n_folds=10, n_repetitions=10) {
+cross_validate_mixed_models <- function(data, fixed_model, random_model, outcome_var, 
+                                        predictors, n_folds=10) {
   
   # Initialize results dataframe
   results <- data.frame(
-    Repetition = integer(),
     Fold = integer(),
-    Model = character(),
+    Predictor = character(),
     Predictive_R2 = numeric(),
     RMSE = numeric()
   )
   
-  # Run repeated cross-validation
-  for (rep in 1:n_repetitions) {
+  # Create folds
+  folds <- create_balanced_participant_folds(data, k = n_folds, seed = 42)
+  
+  for (i in 1:n_folds) {
+    train_data <- data[folds[[i]]$train, ]
+    test_data  <- data[folds[[i]]$test, ]
     
-    # Create new folds for each repetition with different seed (little hack of indexes as "random" seeds)
-    folds <- create_balanced_participant_folds(data, k = n_folds, seed = rep)
-    
-    for (i in 1:n_folds) {
-      train_data <- data[folds[[i]]$train, ]
-      test_data  <- data[folds[[i]]$test, ]
+    for (pred in predictors) {
       
-      for (pred in predictors) {
-        
-        # Train model on training data
-        formula <- as.formula(paste(outcome_var, fixed_model, pred, random_model)) # this assembles SleepMeasure ~ Age + WakeMeasure + (1|Participant)
-        model <- lmer(formula, data = train_data)
-        
-        # Calculate predictive R² metrics on testing data
-        r2_metrics <- calculate_prediction_metrics(model, test_data, outcome_var)
-        
-        # Add to results table
-        results <- results %>% add_row(
-          Repetition = rep,
-          Fold = i,
-          Model = pred,
-          Predictive_R2 = r2_metrics$predictive_r2,
-          RMSE = r2_metrics$rmse
-        )
-      }
+      # Train model on training data
+      formula <- as.formula(paste(outcome_var, fixed_model, pred, random_model)) # this assembles SleepMeasure ~ Age + WakeMeasure + (1|Participant)
+      model <- lmer(formula, data = train_data)
+      
+      # Calculate predictive R² metrics on testing data
+      r2_metrics <- calculate_prediction_metrics(model, test_data, outcome_var)
+      
+      # Add to results table
+      results <- results %>% add_row(
+        Fold = i,
+        Predictor = pred,
+        Predictive_R2 = r2_metrics$predictive_r2,
+        RMSE = r2_metrics$rmse
+      )
     }
   }
   
   # Summarize results by model
   summary_results <- results %>%
-    group_by(Model) %>%
+    group_by(Predictor) %>%
     summarize(
       Mean_Predictive_R2 = mean(Predictive_R2),
       SD_Predictive_R2 = sd(Predictive_R2),
@@ -156,51 +149,53 @@ repeated_cross_validate_mixed_models <- function(data, fixed_model, random_model
 }
 
 
-### assemble information on model comparison in table
-assemble_final_models <- function(outcome_name, data, fixed_model, random_model, outcome_var, predictors, cv_results) {
+### Calculate AIC and BIC for models
+calculate_model_metrics <- function(data, fixed_model, random_model, outcome_var, predictors) {
   
-  comparison_table <- data.frame(
-    Outcome = character(),
-    Model = character(),
+  # Initialize results dataframe
+  metrics_results <- data.frame(
+    Predictor = character(),
     AIC = numeric(),
-    BIC = numeric(),
-    Predictive_R2_Mean = numeric(),
-    Predictive_R2_SD = numeric(),
-    RMSE_Mean = numeric(),
-    RMSE_SD = numeric()  # Removed trailing comma here
+    BIC = numeric()
   )
   
   for (pred in predictors) {
-    # Get R² statistics from cross-validation
-    r2_stats <- cv_results$summary %>%
-      filter(Model == pred)
-    
+    # Create formula and fit model
     formula <- as.formula(paste(outcome_var, fixed_model, pred, random_model))
     model <- lmer(formula, data = data)
     
+    # Calculate metrics
     model_aic <- AIC(model)
     model_bic <- BIC(model)
     
-    comparison_table <- comparison_table %>% add_row(
-      Outcome = outcome_name,
-      Model = pred,
+    # Add to results table
+    metrics_results <- metrics_results %>% add_row(
+      Predictor = pred,
       AIC = model_aic,
-      BIC = model_bic,
-      Predictive_R2_Mean = r2_stats$Mean_Predictive_R2,
-      Predictive_R2_SD = r2_stats$SD_Predictive_R2,
-      RMSE_Mean = r2_stats$Mean_RMSE,
-      RMSE_SD = r2_stats$SD_RMSE  # Removed trailing comma here
+      BIC = model_bic
     )
   }
   
-  return(comparison_table %>% arrange(AIC))
+  return(metrics_results)
 }
 
+### assemble information on model comparison in table - modified version
+assemble_final_models <- function(outcome_name, metrics_results, cv_results) {
+  
+  # Merge the AIC/BIC results with the cross-validation results
+  comparison_table <- metrics_results %>%
+    left_join(cv_results$summary, by = "Predictor") %>%
+    mutate(Outcome = outcome_name) %>%
+    select(Outcome, Predictor, AIC, BIC, Mean_Predictive_R2, SD_Predictive_R2, Mean_RMSE, SD_RMSE)
+  
+  # Return sorted by AIC
+  return(comparison_table %>% arrange(AIC))
+}
 
 # plot boxoplots
 plot_r2_boxplots <- function(cv_results, outcome_name, predictors) {
   plot_data <- cv_results$fold_results
-  boxplot(Predictive_R2 ~ Model, data = plot_data,
+  boxplot(Predictive_R2 ~ Predictor, data = plot_data,
           main = paste("R² for", outcome_name),
           ylab = "Predictive R²")
 }
@@ -229,20 +224,25 @@ data <- read.csv(dataFilepath)
 data_slope <- data %>% filter(!is.na(Sleep_Slope_Matched))
 data_amp <- data %>% filter(!is.na(Sleep_Amplitude))
 
-# Perform repeated cross-validation with predictive R² calculated on test sets
-cv_slope_results <- repeated_cross_validate_mixed_models(
+# Perform cross-validation with predictive R² calculated on test sets
+cv_slope_results <- cross_validate_mixed_models(
   data_slope, fixed_model, random_model, outcome_slope, 
-  predictors, n_folds, n_repetitions
+  predictors, n_folds
 )
 
-cv_amp_results <- repeated_cross_validate_mixed_models(
+cv_amp_results <- cross_validate_mixed_models(
   data_amp, fixed_model, random_model, outcome_amp, 
-  predictors, n_folds, n_repetitions
+  predictors, n_folds
 )
+
+# Calculate AIC and BIC
+slope_metrics <- calculate_model_metrics(data_slope, fixed_model, random_model, outcome_slope, predictors)
+amp_metrics <- calculate_model_metrics(data_amp, fixed_model, random_model, outcome_amp, predictors)
 
 # Final model tables
-slope_models <- assemble_final_models("Sleep Slope", data_slope, fixed_model, random_model, outcome_slope, predictors, cv_slope_results)
-amp_models <- assemble_final_models("Sleep Amplitude", data_amp, fixed_model, random_model, outcome_amp, predictors, cv_amp_results)
+slope_models <- assemble_final_models("Sleep Slope", slope_metrics, cv_slope_results)
+amp_models <- assemble_final_models("Sleep Amplitude", amp_metrics, cv_amp_results)
+
 
 # Combined final table
 combined_table <- rbind(slope_models, amp_models)
