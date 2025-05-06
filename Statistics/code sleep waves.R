@@ -4,7 +4,7 @@ library(caret) #
 
 ## Read data
 
-data <- read.csv("D:/Data/AllWake/Results/children-wake/poster/SleepWakeStatsStandaridzed/WakeSleepAllData.csv")
+data <- read.csv("WakeSleepAllData.csv")
 
 ## Initial data exploration # CLAUDE
 cat("Number of unique participants:", length(unique(data$Participant)), "\n")
