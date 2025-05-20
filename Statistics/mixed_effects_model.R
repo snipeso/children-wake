@@ -96,7 +96,7 @@ calculate_prediction_metrics <- function(model, test_data, outcome_var) {
 }
 
 
-### Cross-validation without repetitions
+### Cross-validation
 
 cross_validate_mixed_models <- function(data, fixed_model, random_model, outcome_var, 
                                         predictors, n_folds=10) {
@@ -340,3 +340,39 @@ cat("Number of unique sessions:", length(unique(paste(data$Participant, data$Ses
 print(combined_table)
 
 
+# Extract the fold-level results
+slope_data <- cv_slope_results$fold_results
+
+# Perform Friedman test
+friedman_result <- friedman.test(Predictive_R2 ~ Predictor | Fold, data = slope_data)
+
+# Print result
+print(friedman_result)
+
+
+# Perform Friedman test
+friedman_result <- friedman.test(Predictive_R2 ~ Predictor | Fold, data = cv_slope_results$fold_results)
+print(friedman_result)
+
+friedman_result <- friedman.test(Predictive_R2 ~ Predictor | Fold, data = cv_amp_results$fold_results)
+print(friedman_result)
+
+
+library(ggplot2)
+library(dplyr)
+
+# Get fold-level results
+slope_data <- cv_slope_results$fold_results
+
+# Line plot: one line per fold
+ggplot(slope_data, aes(x = Predictor, y = Predictive_R2, group = Fold, color = factor(Fold))) +
+  geom_line(alpha = 0.5) +
+  geom_point(alpha = 0.7) +
+  theme_minimal() +
+  labs(
+    title = "Predictive R² by Predictor Across Folds",
+    x = "Predictor",
+    y = "Predictive R²",
+    color = "Fold"
+  ) +
+  theme(legend.position = "none")  # Hide legend if too many folds
