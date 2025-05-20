@@ -135,6 +135,12 @@ Bands.Alpha = [8 11];
 Bands.Beta = [12 16];
 Parameters.Bands = Bands;
 
+PowerBands.Delta = [0.5 4];
+PowerBands.Theta = [4 8];
+PowerBands.Alpha = [8 12];
+PowerBands.Beta = [12 25];
+Parameters.PowerBands = PowerBands;
+
 
 Triggers.SyncEyes = 'S192';
 Triggers.Start = 'S  1';
