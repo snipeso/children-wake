@@ -190,7 +190,8 @@ Channels.PreROI.Front = Frontspot;
 Channels.PreROI.Center = Centerspot;
 Channels.PreROI.Back = Backspot;
 Channels.NotEdge = 1:128;
-Channels.NotEdge([1 8 14 17 21 25 32 128 38 44 43 48 63 68 73 81 88 94 99 107 113 120 119 114 121 125 49 56 126 127]) = [];
+Channels.Edge = [1 8 14 17 21 25 32 128 38 44 43 48 63 68 73 81 88 94 99 107 113 120 119 114 121 125 49 56 126 127];
+Channels.NotEdge(Channels.Edge) = [];
 
 Parameters.Channels = Channels;
 

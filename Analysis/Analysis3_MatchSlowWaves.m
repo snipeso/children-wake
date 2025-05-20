@@ -103,7 +103,7 @@ for RecordingIdx = 1:nRecordings
 
         FH_Indexes = SW.waves(ChIndx).ndx_trough<FH_SampleRate;
 
-        LH_ScoreIndex =  find(nnz(Scoring<=-2)-cumsum(Scoring<=-2) >=  TimeToKeep/EpochLength, 1, 'last');
+        LH_ScoreIndex =  find(nnz(Scoring<=-2)-cumsum(Scoring<=-2) >= TimeToKeep/EpochLength, 1, 'last');
         LH_SampleRate = LH_ScoreIndex*EpochLength*SampleRate;
         LH_Indexes = SW.waves(ChIndx).ndx_trough>LH_SampleRate;
 
