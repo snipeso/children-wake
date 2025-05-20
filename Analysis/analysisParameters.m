@@ -110,9 +110,9 @@ SleepPaths = struct();
 SleepCore = 'I:\Sleep'; % KISPI
 SleepCore = 'E:\Sleep'; % Home
 SleepPaths.CleanEEG = fullfile(SleepCore, 'Preprocessed', 'Specparam', 'MAT');
-SleepPaths.DeltaFilter = fullfile(SleepCore, 'Preprocessed', 'DeltaFilter');
+SleepPaths.DeltaFilter = fullfile(SleepCore, 'Preprocessed', 'DeltaFilter'); % TODO: check if used
 SleepPaths.SlowWaves = fullfile(SleepCore, 'Final', 'EEG', 'SlowWaves_All');
-
+SleepPaths.Power = fullfile(SleepCore, 'Final', 'EEG', 'Power', '20sEpochs_childrenwake');
 Parameters.SleepPaths = SleepPaths;
 Parameters.Paths = Paths;
 

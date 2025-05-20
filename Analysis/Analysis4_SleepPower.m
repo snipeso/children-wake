@@ -1,4 +1,3 @@
-% slow part that filters sleep data for slow wave detection
 
 clear
 clc
@@ -11,6 +10,9 @@ Datasets = Parameters.Datasets;
 TaskList = Parameters.Tasks;
 RerunAnalysis = true; % false to skip files already analyzed
 EpochLength = 20;
+WelchWindowLength = 4;
+WelchOverlap = .5;
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Analysis
@@ -21,7 +23,7 @@ for DatasetCell = Datasets
 
     % set paths and files
     EEGSource = fullfile(Paths.CleanEEG, Dataset);
-    Destination = fullfile(Paths.SlowWaves, Dataset);
+    Destination = fullfile(Paths.Power, Dataset);
     if ~exist(Destination, 'dir')
         mkdir(Destination)
     end
@@ -47,25 +49,20 @@ for DatasetCell = Datasets
 
         load(fullfile(EEGSource, Filename), 'EEG', 'Artefacts', 'Scoring')
 
-        % filter in delta range
-        EEG = kispi_delta_filter(EEG);
 
         % interpolate bad channels
-        Artefacts(isnan(Artefacts))= 0; % I set REM and wake to nan; but the scripts assume they are 0s
+        Artefacts(isnan(Artefacts)) = 0; % I set REM and wake to nan; but the scripts assume they are 0s
         EEG = kispi_interpolate_bad_channels(EEG, Artefacts);
 
-        %%% SW detection
-        % rereference to linked mastoids
-        EEG = pop_reref(EEG, [100 57]); % use net mastoids, since different studies used different location for gold electrodes
+        % reref to average
+        EEG = pop_reref(EEG, []);
 
-        % detect slow waves
-        CleanEpochs = find(ismember(Scoring, [-2, -3]) & sum(Artefacts)> 100);
+        % detect power
+        [EpochPower, Frequencies] = oscip.compute_power_on_epochs(EEG.data, EEG.srate, EpochLength, WelchWindowLength, WelchOverlap);
 
-        [SW] = kispi_slowwave_detection(EEG.data, EEG.srate, 'NegZeroCrossings', CleanEpochs, EpochLength, 'No');
 
-        save(fullfile(Destination, Filename), 'SW', 'Scoring', 'Artefacts', 'EpochLength')
-        disp(['Finished ', Filename, ' in ', num2str(toc(StartTime)), ' s'])
+        save(fullfile(Destination, Filename), 'Scoring', 'Artefacts', 'EpochLength', 'EpochPower', 'Frequencies')
+        disp(['Finished ', char(Filename), ' in ', num2str(toc(StartTime)), ' s'])
     end
 end
-
 
