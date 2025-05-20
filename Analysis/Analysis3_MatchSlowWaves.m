@@ -49,22 +49,6 @@ MetadataSleep.LH_Slope_Matched = Blank;
 
 MetadataSleep.ProportionMatched = Blank;
 
-% measure the main  outcome measures but every other wave, to do stats test
-% to see what is the maximum predictability of that measure
-
-MetadataSleep.FH_Amplitude_Even = Blank;
-MetadataSleep.LH_Amplitude_Even = Blank;
-
-MetadataSleep.FH_Amplitude_Odd = Blank;
-MetadataSleep.LH_Amplitude_Odd = Blank;
-
-MetadataSleep.FH_Slope_Matched_Even = Blank;
-MetadataSleep.LH_Slope_Matched_Even = Blank;
-
-MetadataSleep.FH_Slope_Matched_Odd = Blank;
-MetadataSleep.LH_Slope_Matched_Odd = Blank;
-
-
 for RecordingIdx = 1:nRecordings
 
     %%% load in data
@@ -173,18 +157,6 @@ for RecordingIdx = 1:nRecordings
     MetadataSleep.LH_Slope_Matched(RecordingIdx) = mean(LH_Slopes_Matched);
 
     MetadataSleep.ProportionMatched(RecordingIdx) = numel(FH_Slopes_Matched)/numel(LH_Slopes);
-
-    MetadataSleep.FH_Amplitude_Even(RecordingIdx) = mean(FH_Amplitudes(2:2:numel(FH_Amplitudes)));
-    MetadataSleep.LH_Amplitude_Even(RecordingIdx) = mean(LH_Amplitudes(2:2:numel(LH_Amplitudes)));
-
-    MetadataSleep.FH_Amplitude_Odd(RecordingIdx) = mean(FH_Amplitudes(1:2:numel(FH_Amplitudes)));
-    MetadataSleep.LH_Amplitude_Odd(RecordingIdx) = mean(LH_Amplitudes(1:2:numel(LH_Amplitudes)));
-
-    MetadataSleep.FH_Slope_Matched_Even(RecordingIdx) = mean(FH_Slopes_Matched(2:2:numel(FH_Slopes_Matched)));
-    MetadataSleep.LH_Slope_Matched_Even(RecordingIdx) = mean(LH_Slopes_Matched(2:2:numel(LH_Slopes_Matched)));
-
-    MetadataSleep.FH_Slope_Matched_Odd(RecordingIdx) = mean(FH_Slopes_Matched(1:2:numel(FH_Slopes_Matched)));
-    MetadataSleep.LH_Slope_Matched_Odd(RecordingIdx) = mean(LH_Slopes_Matched(1:2:numel(LH_Slopes_Matched)));
 
     disp(['Finished ',num2str(RecordingIdx) '/', num2str(nRecordings) ])
 end
