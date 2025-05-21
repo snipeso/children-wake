@@ -45,6 +45,7 @@ Metadata.Error = nan(nRecordings, 1);
 Metadata.RSquared = nan(nRecordings, 1);
 
 PowerBands = Parameters.PowerBands;
+
 PowerBandLabels = fieldnames(PowerBands);
 for Indx_B = 1:numel(PowerBandLabels)
     Metadata.(BandLabels{Indx_B}) = nan(nRecordings, 1);
