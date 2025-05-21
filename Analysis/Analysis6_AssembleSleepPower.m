@@ -26,6 +26,10 @@ MetadataSleep.FH_SWA = nan(size(MetadataSleep, 1), 1);
 MetadataSleep.LH_SWA = nan(size(MetadataSleep, 1), 1);
 
 
+MetadataSleep.FH_SWA_raw = nan(size(MetadataSleep, 1), 1);
+MetadataSleep.LH_SWA_raw = nan(size(MetadataSleep, 1), 1);
+
+
 for FileIdx = 1:size(MetadataSleep, 1)
     Dataset = MetadataSleep.Dataset{RecordingIdx};
     Participant = MetadataSleep.Participant{RecordingIdx};
@@ -59,6 +63,9 @@ for FileIdx = 1:size(MetadataSleep, 1)
 
     MetadataSleep.FH_SWA(FileIdx) =  mean(mean(log10(Power(:, 1:FH_ScoreIndex, FreqRange(1):FreqRange(2))), 2), 1);
     MetadataSleep.LH_SWA(FileIdx) =  mean(mean(log10(Power(:, LH_ScoreIndex:end, FreqRange(1):FreqRange(2))), 2), 1);
+
+    MetadataSleep.FH_SWA_raw(FileIdx) =  mean(mean(Power(:, 1:FH_ScoreIndex, FreqRange(1):FreqRange(2)), 2), 1);
+    MetadataSleep.LH_SWA_raw(FileIdx) =  mean(mean(Power(:, LH_ScoreIndex:end, FreqRange(1):FreqRange(2)), 2), 1);
 
 end
 
