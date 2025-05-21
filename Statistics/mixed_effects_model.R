@@ -341,38 +341,22 @@ print(combined_table)
 
 
 # Extract the fold-level results
-slope_data <- cv_slope_results$fold_results
-
-# Perform Friedman test
-friedman_result <- friedman.test(Predictive_R2 ~ Predictor | Fold, data = slope_data)
-
-# Print result
+data <- cv_slope_results$fold_results
+friedman_result <- friedman.test(Predictive_R2 ~ Predictor | Fold, data = data)
+print('Slope')
 print(friedman_result)
 
+pairwise.wilcox.test(data$Predictive_R2, data$Predictor,
+                     paired = TRUE, p.adjust.method = "holm")
 
-# Perform Friedman test
-friedman_result <- friedman.test(Predictive_R2 ~ Predictor | Fold, data = cv_slope_results$fold_results)
+data <- cv_amp_results$fold_results
+friedman_result <- friedman.test(Predictive_R2 ~ Predictor | Fold, data = data)
+print('Amplitude')
 print(friedman_result)
 
-friedman_result <- friedman.test(Predictive_R2 ~ Predictor | Fold, data = cv_amp_results$fold_results)
-print(friedman_result)
+pairwise.wilcox.test(data$Predictive_R2, data$Predictor,
+                     paired = TRUE, p.adjust.method = "holm")
 
 
-library(ggplot2)
-library(dplyr)
 
-# Get fold-level results
-slope_data <- cv_slope_results$fold_results
 
-# Line plot: one line per fold
-ggplot(slope_data, aes(x = Predictor, y = Predictive_R2, group = Fold, color = factor(Fold))) +
-  geom_line(alpha = 0.5) +
-  geom_point(alpha = 0.7) +
-  theme_minimal() +
-  labs(
-    title = "Predictive R² by Predictor Across Folds",
-    x = "Predictor",
-    y = "Predictive R²",
-    color = "Fold"
-  ) +
-  theme(legend.position = "none")  # Hide legend if too many folds

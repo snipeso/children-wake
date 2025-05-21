@@ -1,6 +1,4 @@
 function [SW] = kispi_slowwave_detection(EegData, SampRate, WaveStart, CleanEpochs, EpochLength, QualityCheck)
-
-%%%%%%%%%%
 arguments
     EegData {mustBeNumeric}
     SampRate {mustBeNumeric}

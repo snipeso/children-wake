@@ -1,5 +1,6 @@
 % creates a massive matrix D x ch x f x v, so that data can then easily be
 % indexed as needed.
+% TODO: better documenation; rename to Assemble WakeData
 
 clear
 clc
@@ -42,6 +43,12 @@ Metadata.Intercept =  nan(nRecordings, 1);
 Metadata.Quantity =  nan(nRecordings, 1);
 Metadata.Error = nan(nRecordings, 1);
 Metadata.RSquared = nan(nRecordings, 1);
+
+PowerBands = Parameters.PowerBands;
+PowerBandLabels = fieldnames(PowerBands);
+for Indx_B = 1:numel(PowerBandLabels)
+    Metadata.(BandLabels{Indx_B}) = nan(nRecordings, 1);
+end
 
 % average information across channels, split by frequencies
 BurstInformationClusters = struct();
@@ -125,6 +132,12 @@ for RecordingIdx = 1:nRecordings
 
         FreqRange = dsearchn(AllFrequencies', [Frequencies(1); Frequencies(end)]);
         TaskMetadata.Power(NewIdx) = mean(mean(log10(Power(NotEdgeChanIndex, FreqRange(1):FreqRange(2))), 2), 1);
+
+        for Indx_B = 1:numel(PowerBandLabels)
+            Band = PowerBands.(PowerBandLabels{Indx_B});
+            FreqRange = dsearchn(AllFrequencies', [Band(1); Band(end)]);
+            TaskMetadata.(BandLabels{Indx_B})(NewIdx) =  mean(mean(log10(Power(NotEdgeChanIndex, FreqRange(1):FreqRange(2))), 2), 1);
+        end
 
 
         %%% load in data for topographies
