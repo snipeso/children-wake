@@ -107,8 +107,8 @@ addExternalFunctions
 
 % sleep paths (different hard disk)
 SleepPaths = struct();
-SleepCore = 'I:\Sleep'; % KISPI
-% SleepCore = 'E:\Sleep'; % Home
+% SleepCore = 'I:\Sleep'; % KISPI
+SleepCore = 'E:\Sleep'; % Home
 SleepPaths.CleanEEG = fullfile(SleepCore, 'Preprocessed', 'Specparam', 'MAT');
 SleepPaths.DeltaFilter = fullfile(SleepCore, 'Preprocessed', 'DeltaFilter'); % TODO: check if used
 SleepPaths.SlowWaves = fullfile(SleepCore, 'Final', 'EEG', 'SlowWaves_All');
