@@ -11,7 +11,7 @@ SleepPaths = Parameters.SleepPaths;
 Datasets = Parameters.Datasets;
 EpochLength = 20; % move to parameters
 TimeToKeep = 60*60/EpochLength; % 1 h in epochs
-Range = Parameters.PowerBands.Delta;
+Band = Parameters.PowerBands.Delta;
 
 Source = fullfile(SleepPaths.Power);
 
@@ -30,13 +30,13 @@ MetadataSleep.FH_SWA_raw = nan(size(MetadataSleep, 1), 1);
 MetadataSleep.LH_SWA_raw = nan(size(MetadataSleep, 1), 1);
 
 
-for FileIdx = 1:size(MetadataSleep, 1)
+for RecordingIdx = 1:size(MetadataSleep, 1)
     Dataset = MetadataSleep.Dataset{RecordingIdx};
     Participant = MetadataSleep.Participant{RecordingIdx};
     Session = replace(MetadataSleep.Session{RecordingIdx}, '_', '');
 
-    Path = fullfile(Source, Dataset, Task);
-    DataOut = load_datafile(Path, Participant, Session, Hour, ...
+    Path = fullfile(Source, Dataset);
+    DataOut = load_datafile(Path, Participant, Session, '', ...
         {'EpochPower', 'Frequencies', 'Artefacts', 'Scoring'}, '.mat');
     if isempty(DataOut); continue; end
 
@@ -46,9 +46,9 @@ for FileIdx = 1:size(MetadataSleep, 1)
     Scoring = DataOut{4};
 
     % remove artefact epochs
-    Power(Parameters.Channels.NotEdge, :, :) = nan;
+    Power(Parameters.Channels.Edge, :, :) = nan;
 
-    for ChannelIdx = 1:size(Power, 1)
+    for ChannelIdx = 1:size(Artefacts, 1)
         Power(ChannelIdx, Artefacts(ChannelIdx, :)==0 | isnan(Artefacts(ChannelIdx, :)), :) = nan;
     end
 
@@ -61,13 +61,14 @@ for FileIdx = 1:size(MetadataSleep, 1)
     FH_ScoreIndex = find(cumsum(Scoring<=-2) >= TimeToKeep, 1, 'first');
     LH_ScoreIndex =  find(nnz(Scoring<=-2)-cumsum(Scoring<=-2) >=  TimeToKeep, 1, 'last');
 
-    MetadataSleep.FH_SWA(FileIdx) =  mean(mean(log10(Power(:, 1:FH_ScoreIndex, FreqRange(1):FreqRange(2))), 2), 1);
-    MetadataSleep.LH_SWA(FileIdx) =  mean(mean(log10(Power(:, LH_ScoreIndex:end, FreqRange(1):FreqRange(2))), 2), 1);
+    MetadataSleep.FH_SWA(RecordingIdx) =  mean(mean(mean(log10(Power(:, 1:FH_ScoreIndex, FreqRange(1):FreqRange(2))), 2, 'omitnan'), 1, 'omitnan'), 3, 'omitnan');
+    MetadataSleep.LH_SWA(RecordingIdx) =  mean(mean(mean(log10(Power(:, LH_ScoreIndex:end, FreqRange(1):FreqRange(2))),  2, 'omitnan'), 1, 'omitnan'), 3, 'omitnan');
 
-    MetadataSleep.FH_SWA_raw(FileIdx) =  mean(mean(Power(:, 1:FH_ScoreIndex, FreqRange(1):FreqRange(2)), 2), 1);
-    MetadataSleep.LH_SWA_raw(FileIdx) =  mean(mean(Power(:, LH_ScoreIndex:end, FreqRange(1):FreqRange(2)), 2), 1);
-
+    MetadataSleep.FH_SWA_raw(RecordingIdx) =  mean(mean(mean(Power(:, 1:FH_ScoreIndex, FreqRange(1):FreqRange(2)), 2, 'omitnan'), 1, 'omitnan'), 3, 'omitnan');
+    MetadataSleep.LH_SWA_raw(RecordingIdx) =  mean(mean(mean(Power(:, LH_ScoreIndex:end, FreqRange(1):FreqRange(2)), 2, 'omitnan'), 1, 'omitnan'), 3, 'omitnan');
+    disp(['Finished ', num2str(RecordingIdx)])
 end
 
+CacheName = 'MetadataSleep';
 save(fullfile(CacheDir, CacheName), 'MetadataSleep')
 
