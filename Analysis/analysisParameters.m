@@ -54,7 +54,12 @@ Parameters.OutcomeMeasures.Units = {'\muV', '% Recording', 'A.U.', 'Log power', 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Locations
 
-if exist( 'D:\LSM\Preprocessed', 'dir') % KISPI desktop
+if exist(fullfile('/Volumes/Animalia/AllWake'), 'dir') % run from mac
+    Core = '/Volumes/Animalia/AllWake/';
+
+
+    check_packages({'chART', 'Matcycle', 'eeglab'})
+elseif exist( 'D:\LSM\Preprocessed', 'dir') % KISPI desktop
     Core = 'D:\AllWake\';
 
     % external toolboxes
@@ -62,12 +67,11 @@ if exist( 'D:\LSM\Preprocessed', 'dir') % KISPI desktop
     addpath('H:\Code\Matcycle') % https://github.com/HuberSleepLab/Matcycle
     addpath('H:\Code\fooof_mat\fooof_mat') % https://github.com/fooof-tools/fooof_mat
     addpath('\\nausers01\user\sniso\Dokumente\MATLAB\eeglab2022.0') % https://sccn.ucsd.edu/eeglab/download.php
-    elseif exist( 'X:\Data\Raw', 'dir')
+elseif exist( 'X:\Data\Raw', 'dir')
     Core = 'X:\Data\';
 
 elseif exist( 'D:\Data\AllWake', 'dir')
     Core = 'D:\Data\AllWake';
-   elseif exist( 'D:\Data\AllWake', 'dir')
 else
     error('no data disk!')
     % Core = 'E:\'
@@ -85,11 +89,6 @@ if ~exist(Paths.Results, 'dir')
     mkdir(Paths.Results)
 end
 
-% if eeglab has not run, run it so all the subdirectories get added
-if ~exist('topoplot', 'file')
-    eeglab
-    close all
-end
 
 % get path where these scripts were saved
 CD = mfilename('fullpath');
