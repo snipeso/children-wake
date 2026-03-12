@@ -130,35 +130,48 @@ for RecordingIdx = 1:nRecordings
 
         %%% load in data for topographies
         BurstChannels = [Bursts.ChannelIndex];
-        for ChannelIdx = 1:nChans
+        TopoBandsPower = nan(nChans, nBands);
+        TopoBandsPeriodicPower = nan(nChans, nBands);
+        TopoBandsQuantity = nan(nChans, nBands);
+        TopoBandsAmplitude = nan(nChans, nBands);
+        TopoQuantity = nan(1, nChans);
+        TopoAmplitude = nan(1, nChans);
+        TopoPower = nan(1, nChans);
+        TopoSlope = nan(1, nChans);
+        TopoIntercept = nan(1, nChans);
+        TopoPeriodicPower = nan(1, nChans);
+
+        FullFreqRange = dsearchn(AllFrequencies', [Frequencies(1); Frequencies(end)]);
+        parfor ChannelIdx = 1:nChans
+            LocalBandPower = nan(1, nBands);
+            LocalBandPeriodicPower = nan(1, nBands);
+            LocalBandQuantity = nan(1, nBands);
+            LocalBandAmplitude = nan(1, nBands);
+
+            [Slope, Intercept, WhitenedPower, FooofFrequencies] = fooof_spectrum(Power(ChannelIdx, :), AllFrequencies, [2 35]);
             for BandIdx = 1:nBands
 
                 Band = Bands.(BandLabels{BandIdx});
 
                 % power stuff
                 FreqRange = dsearchn(AllFrequencies', [Band(1); Band(2)]);
-                BurstInformationTopographyBands.Power(NewIdx, ChannelIdx, BandIdx) = ...
-                    mean(log10(Power(ChannelIdx, FreqRange(1):FreqRange(2))), 2);
+                LocalBandPower(BandIdx) = mean(log10(Power(ChannelIdx, FreqRange(1):FreqRange(2))), 2);
 
                 % whitened power
-                [~, ~, WhitenedPower, FooofFrequencies] = fooof_spectrum(Power(ChannelIdx, :), AllFrequencies, [2 35]);
                 FreqRangeFooof = dsearchn(FooofFrequencies', [Band(1); Band(2)]);
-                BurstInformationTopographyBands.PeriodicPower(NewIdx, ChannelIdx, BandIdx) = ...
-                    mean(WhitenedPower(FreqRangeFooof(1):FreqRangeFooof(2)), 2);
+                LocalBandPeriodicPower(BandIdx) = mean(WhitenedPower(FreqRangeFooof(1):FreqRangeFooof(2)), 2);
 
                 % average quantity of bursts in that channel (as % duration recording)
                 BurstsTemp = Bursts(BurstChannels==ChannelIdx & ...
                     [Bursts.BurstFrequency]>=Band(1) & [Bursts.BurstFrequency]<=Band(2));
 
-                BurstInformationTopographyBands.Quantity(NewIdx, ChannelIdx, BandIdx) = ...
-                    100*sum([BurstsTemp.DurationPoints])/EEGMetadata.pnts; % NOT CYCLES PER MINUTE!!
+                LocalBandQuantity(BandIdx) = 100*sum([BurstsTemp.DurationPoints])/EEGMetadata.pnts; % NOT CYCLES PER MINUTE!!
 
                 if numel(BurstsTemp)<MinBursts
-                    BurstInformationTopographyBands.Amplitude(NewIdx, ChannelIdx, BandIdx) = nan;
+                    LocalBandAmplitude(BandIdx) = nan;
                 else
                     % average amplitude in that channel
-                    BurstInformationTopographyBands.Amplitude(NewIdx, ChannelIdx, BandIdx) = ...
-                        mean([BurstsTemp.Amplitude]);
+                    LocalBandAmplitude(BandIdx) = mean([BurstsTemp.Amplitude]);
                 end
 
             end
@@ -169,29 +182,40 @@ for RecordingIdx = 1:nRecordings
             BurstsTemp = Bursts(BurstChannels==ChannelIdx);
 
             % average quantity of bursts in that channel (as % duration recording)
-            BurstInformationTopography.Quantity(NewIdx, ChannelIdx) = ...
-                100*sum([BurstsTemp.DurationPoints])/EEGMetadata.pnts; % NOT CYCLES PER MINUTE!!
+            TopoQuantity(ChannelIdx) = 100*sum([BurstsTemp.DurationPoints])/EEGMetadata.pnts; % NOT CYCLES PER MINUTE!!
 
             % average amplitude in that channel
             if numel(BurstsTemp)< MinBursts
-                BurstInformationTopography.Amplitude(NewIdx, ChannelIdx) = nan;
+                TopoAmplitude(ChannelIdx) = nan;
             else
-                BurstInformationTopography.Amplitude(NewIdx, ChannelIdx) = ...
-                    mean([BurstsTemp.Amplitude]);
+                TopoAmplitude(ChannelIdx) = mean([BurstsTemp.Amplitude]);
             end
 
             % power
-            FreqRange = dsearchn(AllFrequencies', [Frequencies(1); Frequencies(end)]);
-            BurstInformationTopography.Power(NewIdx, ChannelIdx) = mean(log10(Power(ChannelIdx, FreqRange(1):FreqRange(2))), 2);
+            TopoPower(ChannelIdx) = mean(log10(Power(ChannelIdx, FullFreqRange(1):FullFreqRange(2))), 2);
 
             % slopes and stuff
-            [Slope, Intercept, WhitenedPower, FooofFrequencies] = fooof_spectrum(Power(ChannelIdx, :), AllFrequencies, [2 35]);
-            BurstInformationTopography.Slope(NewIdx, ChannelIdx) = Slope;
-            BurstInformationTopography.Intercept(NewIdx, ChannelIdx) = Intercept;
+            TopoSlope(ChannelIdx) = Slope;
+            TopoIntercept(ChannelIdx) = Intercept;
 
             FreqRangeFooof = dsearchn(FooofFrequencies', [Frequencies(1); Frequencies(end)]);
-            BurstInformationTopography.PeriodicPower(NewIdx, ChannelIdx) = mean(WhitenedPower(FreqRangeFooof(1):FreqRangeFooof(2)), 2);
+            TopoPeriodicPower(ChannelIdx) = mean(WhitenedPower(FreqRangeFooof(1):FreqRangeFooof(2)), 2);
+
+            TopoBandsPower(ChannelIdx, :) = LocalBandPower;
+            TopoBandsPeriodicPower(ChannelIdx, :) = LocalBandPeriodicPower;
+            TopoBandsQuantity(ChannelIdx, :) = LocalBandQuantity;
+            TopoBandsAmplitude(ChannelIdx, :) = LocalBandAmplitude;
         end
+        BurstInformationTopographyBands.Power(NewIdx, :, :) = TopoBandsPower;
+        BurstInformationTopographyBands.PeriodicPower(NewIdx, :, :) = TopoBandsPeriodicPower;
+        BurstInformationTopographyBands.Quantity(NewIdx, :, :) = TopoBandsQuantity;
+        BurstInformationTopographyBands.Amplitude(NewIdx, :, :) = TopoBandsAmplitude;
+        BurstInformationTopography.Quantity(NewIdx, :) = TopoQuantity;
+        BurstInformationTopography.Amplitude(NewIdx, :) = TopoAmplitude;
+        BurstInformationTopography.Power(NewIdx, :) = TopoPower;
+        BurstInformationTopography.Slope(NewIdx, :) = TopoSlope;
+        BurstInformationTopography.Intercept(NewIdx, :) = TopoIntercept;
+        BurstInformationTopography.PeriodicPower(NewIdx, :) = TopoPeriodicPower;
 
         % get power for all non-edge channels
         AveragePower = mean(Power(NotEdgeChanIndex, :), 1);
@@ -211,35 +235,47 @@ for RecordingIdx = 1:nRecordings
         BurstFrequencies = discretize([BurstClusters.BurstFrequency], Frequencies);
         FooofPowerFrequencies = discretize(FooofFrequencies, Frequencies);
         PowerFrequencies = discretize(AllFrequencies, Frequencies);
-        for FrequencyIdx = 1:nFrequencies
+        ClusterQuantity = nan(1, nFrequencies);
+        ClusterAmplitude = nan(1, nFrequencies);
+        ClusterGlobality = nan(1, nFrequencies);
+        ClusterDuration = nan(1, nFrequencies);
+        ClusterPeriodicPower = nan(1, nFrequencies);
+        ClusterPower = nan(1, nFrequencies);
+        parfor FrequencyIdx = 1:nFrequencies
             BurstIdx = BurstFrequencies==FrequencyIdx;
             BurstsTemp = BurstClusters(BurstIdx);
 
-            BurstInformationClusters.Quantity(NewIdx, FrequencyIdx) = ...
+            ClusterQuantity(FrequencyIdx) = ...
                 100*sum([BurstsTemp.ClusterEnd]-[BurstsTemp.ClusterStart])/EEGMetadata.pnts;
 
             if numel(BurstsTemp)<MinBursts
-                BurstInformationClusters.Amplitude(NewIdx, FrequencyIdx) = nan;
-                BurstInformationClusters.Globality(NewIdx, FrequencyIdx) = nan;
-                BurstInformationClusters.Duration(NewIdx, FrequencyIdx) = nan;
+                ClusterAmplitude(FrequencyIdx) = nan;
+                ClusterGlobality(FrequencyIdx) = nan;
+                ClusterDuration(FrequencyIdx) = nan;
             else
-                BurstInformationClusters.Amplitude(NewIdx, FrequencyIdx) = ...
+                ClusterAmplitude(FrequencyIdx) = ...
                     mean([BurstsTemp.Amplitude]);
 
-                BurstInformationClusters.Globality(NewIdx, FrequencyIdx) = ...
+                ClusterGlobality(FrequencyIdx) = ...
                     100*mean([BurstsTemp.ClusterGlobality]);
 
-                BurstInformationClusters.Duration(NewIdx, FrequencyIdx) = ...
+                ClusterDuration(FrequencyIdx) = ...
                     mean([BurstsTemp.ClusterEnd]-[BurstsTemp.ClusterStart])/SampleRate;
             end
 
             % power for that frequency
-            BurstInformationClusters.PeriodicPower(NewIdx, FrequencyIdx) = ...
+            ClusterPeriodicPower(FrequencyIdx) = ...
                 mean(WhitenedPower(FooofPowerFrequencies==FrequencyIdx));
 
-            BurstInformationClusters.Power(NewIdx, FrequencyIdx) = ...
+            ClusterPower(FrequencyIdx) = ...
                 mean(mean(log10(Power(NotEdgeChanIndex, PowerFrequencies==FrequencyIdx))));
         end
+        BurstInformationClusters.Quantity(NewIdx, :) = ClusterQuantity;
+        BurstInformationClusters.Amplitude(NewIdx, :) = ClusterAmplitude;
+        BurstInformationClusters.Globality(NewIdx, :) = ClusterGlobality;
+        BurstInformationClusters.Duration(NewIdx, :) = ClusterDuration;
+        BurstInformationClusters.PeriodicPower(NewIdx, :) = ClusterPeriodicPower;
+        BurstInformationClusters.Power(NewIdx, :) = ClusterPower;
     end
     disp(num2str(RecordingIdx))
 end
