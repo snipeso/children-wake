@@ -96,7 +96,13 @@ CD = mfilename('fullpath');
 Paths.Analysis = fullfile(extractBefore(CD, 'children-wake'), 'children-wake');
 
 % get all folders in functions
-Subfolders = deblank(string(ls(fullfile(Paths.Analysis, 'functions')))); % all content
+
+if ispc
+    Subfolders = deblank(string(ls(fullfile(Paths.Analysis, 'functions')))); % all content
+elseif ismac
+    Subfolders = deblank(split(string(ls(fullfile(Paths.Analysis, 'functions'))))); % all content
+end
+
 Subfolders(contains(Subfolders, '.')) = []; % remove all files
 
 for Indx_F = 1:numel(Subfolders)
@@ -157,16 +163,15 @@ Triggers.Tones = 'S 12';
 Parameters.Triggers = Triggers;
 
 Parameters.PlotProps.Manuscript = chART.load_plot_properties({'Iota', 'Manuscript'});
-Parameters.PlotProps.Manuscript.Figure.Width = 22;
-Parameters.PlotProps.Manuscript.Text.FontName = 'Helvetica';
-Parameters.PlotProps.Manuscript.Color.Background = 'none';
+% Parameters.PlotProps.Manuscript.Figure.Width = 22;
+% Parameters.PlotProps.Manuscript.Text.FontName = 'Helvetica';
+% Parameters.PlotProps.Manuscript.Color.Background = 'none';
 
 Parameters.PlotProps.Powerpoint = chART.load_plot_properties({'Iota', 'Powerpoint'});
 Parameters.PlotProps.Poster = chART.load_plot_properties({'Iota', 'Poster'});
 
 Parameters.PlotProps.Poster.Color.Background = 'none';
 
-Parameters.PlotProps.Manuscript = Parameters.PlotProps.Manuscript;
 TopoPlotProps = Parameters.PlotProps.Manuscript;
 TopoPlotProps.Text.LegendSize = 10;
 TopoPlotProps.Text.AxisSize = 10;

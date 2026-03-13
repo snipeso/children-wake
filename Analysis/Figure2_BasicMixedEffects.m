@@ -128,7 +128,7 @@ PlotProps.Axes.yPadding = 0;
 
 Grid = [3 numel(OutcomeMeasures)];
 
-PlotProps.Line.Width = 6;
+PlotProps.Color.Background = 'white';
 
 % fix y lims, so same for mor and eve
 YLimits = [5, 42; % amplitudes
