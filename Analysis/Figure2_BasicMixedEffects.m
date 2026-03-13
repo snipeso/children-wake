@@ -151,10 +151,13 @@ OvernightMetadata = pair_recordings(MetadataScatter, 'Hour', {'eve', 'mor'});
 
 clc
 
-HourIdx = 1;
+figure('Units','centimeters','OuterPosition',[0 0 25 18])
+
 for VariableIdx = 1:numel(OutcomeMeasures)
 
-figure('Units','centimeters','OuterPosition',[0 0 12 18])
+    %%% plot age x v split by evening and morning, averaged across sessions
+    for HourIdx = 1:numel(Hours)
+
         % select data of either evening or morning
         MetadataHour = MetadataScatter(strcmp(MetadataScatter.Hour, Hours(HourIdx)), :);
 
@@ -162,28 +165,44 @@ figure('Units','centimeters','OuterPosition',[0 0 12 18])
         MetadataAverage = unique_metadata(MetadataHour, 'Participant');
 
         % plot
+        chART.sub_plot([], Grid, [HourIdx, VariableIdx], [], true, '', PlotProps);
         plot_scattercloud(MetadataAverage, 'Age', OutcomeMeasures{VariableIdx}, ...
             PlotProps, '', false, XLim, YLimits(VariableIdx, :))
         ylabel(MeasureUnits{VariableIdx})
-            xlabel('Age')
         legend off
 
-        title('Evening')
-        chART.save_figure(['BlueEvening_',  OutcomeMeasures{VariableIdx}], ResultsFolder, PlotProps)
+        if HourIdx==1
+            title(OutcomeMeasuresTitles{VariableIdx})
+        end
+        if VariableIdx==1
+            chART.plot.vertical_text(HourLabels{HourIdx}, .55, .5, PlotProps)
+        end
+        disp([ Hours{HourIdx}, OutcomeMeasures{VariableIdx}, ...
+            'N=', num2str(numel(unique(MetadataAverage.Participant)))])
+
+    end
 
     %%% plot overnight change
-    figure('Units','centimeters','OuterPosition',[0 0 12 18])
+    chART.sub_plot([], Grid, [3, VariableIdx], [], true, '', PlotProps);
     MetadataAverage = unique_metadata(OvernightMetadata, 'Participant');
 
     plot_scattercloud(MetadataAverage, 'Age', OutcomeMeasures{VariableIdx}, ...
         PlotProps, '', true, XLim)
     ylabel(MeasureUnits{VariableIdx})
     xlabel('Age')
-    title('Overnight Δ')
-        chART.save_figure(['BlueChange_',  OutcomeMeasures{VariableIdx}], ResultsFolder, PlotProps)
+    if VariableIdx ~=numel(OutcomeMeasures)
+        legend off
+    end
 
+    if VariableIdx==1
+        chART.plot.vertical_text('Overnight change', .55, .5, PlotProps)
+        xlabel('Age (years)')
+    end
+
+    disp(['Overnight', OutcomeMeasures{VariableIdx}, ...
+        'N=', num2str(numel(unique(MetadataAverage.Participant)))])
 end
-
+chART.save_figure('BasicScatterAge', ResultsFolder, PlotProps)
 
 
 
