@@ -89,6 +89,7 @@ end
 
 %% Plot bands change (Figure 7)
 
+PlotProps.Color.Background = 'white';
 CLims = [-1 1;
     -12 12;
     -2.5 2.5];
@@ -117,9 +118,49 @@ for BandIdx = 1:nBands
 
     % plot colorbar
     Axes= chART.sub_plot([], Grid, [BandIdx, nAges+1], [], false, '', PlotProps);
+    axis off
     Axes.Position(1) = Axes.Position(1)+.02;
     chART.plot.pretty_colorbar('Divergent', CLims(BandIdx, :), MeaureLabels{strcmp(Measures, Measure)}, PlotProps)
 end
 
 
 chART.save_figure(['TopographyBandChange_',Measure], ResultsFolder, PlotProps)
+
+
+
+%% check relationship with N3
+
+PlotProps.Colorbar.Location = 'eastoutside';
+load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopographyBands', ...
+    'BurstInformationTopography', 'Chanlocs')
+Metadata = basic_metadata_cleanup(Metadata);
+
+%%% 
+Measure = 'Quantity';
+
+load(fullfile(Paths.Metadata, 'SleepScoring.mat'), 'ScoringMetadata')
+
+MetadataSimple = Metadata;
+MetadataSimple(contains(MetadataSimple.Task, {'3Oddball', 'GoNoGo', 'Fixation'}), :) = [];
+
+MetadataSimple(strcmp(MetadataSimple.Hour, 'mor'), :) = [];
+
+MetadataSimple = combine_metadata_tables(MetadataSimple, ScoringMetadata, {'Participant', 'Session'});
+
+BandIdx = 2;
+
+MetadataTemp = MetadataSimple;
+Rs = nan(nChannels, 1);
+Ps = Rs;
+
+for ChannelIdx = 1:nChannels
+MetadataTemp.Data = BurstInformationTopographyBands.(Measure)(MetadataTemp.Index, ChannelIdx, BandIdx);
+
+[Rs(ChannelIdx), Ps(ChannelIdx)] = corr(MetadataTemp.timeN3, MetadataTemp.Data, 'Rows','complete');
+end
+
+[~, PMask] = fdr(Ps, Parameters.Stats.Alpha);
+
+figure
+chART.plot.eeglab_topoplot(Rs, Chanlocs, PMask, [-.4 .4], 'R', 'Divergent', PlotProps)
+title(strjoin([Measure,  MetadataSimple.Hour(1), BandLabels{BandIdx}], ' '))

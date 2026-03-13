@@ -212,9 +212,10 @@ chART.save_figure('BasicScatterAge', ResultsFolder, PlotProps)
 load(fullfile(Paths.Metadata, 'SleepScoring.mat'), 'ScoringMetadata')
 
 MetadataScatter = Metadata;
-MetadataScatter = MetadataScatter(contains(MetadataScatter.Task, {'Oddball'}), :);
 
 OvernightMetadata = pair_recordings(MetadataScatter, 'Hour', {'eve', 'mor'});
+OvernightMetadata(contains(OvernightMetadata.Task, {'3Oddball', 'GoNoGo', 'Fixation'}), :) = [];
+% OvernightMetadata = unique_metadata(OvernightMetadata, 'Participant');
 
 CombinedTable = combine_metadata_tables(OvernightMetadata, ScoringMetadata, {'Participant', 'Session'});
 CombinedTable(isnan(CombinedTable.TST), :) = [];
@@ -241,8 +242,28 @@ for VariableIdx = 1:numel(OutcomeMeasures)
 
 end
 
+%%
+clc
 
 % run mixed model
+StageLabels = {'timeN2', 'timeN3','timeREM'};
+
+    for StageIdx = 1:numel(StageLabels)
+for VariableIdx = 1:numel(OutcomeMeasures)
+        formula = [OutcomeMeasures{VariableIdx}, ' ~ ', StageLabels{StageIdx}, ' * Age_Table1 + (1|Participant)'];
+
+        Model = fitlme(CombinedTable, formula);
+
+    % Display the model summary
+    disp('   ')
+    disp('   ')
+    disp(['____________________ ', OutcomeMeasures{VariableIdx}, ' ____________________'])
+    disp(Model);
+    disp_mixed_stat(Model, 'Age_Table1')
+    disp_mixed_stat(Model, StageLabels{StageIdx})
+disp_mixed_stat(Model, ['Age_Table1:', StageLabels{StageIdx}])
+    end
+end
 
 
 
@@ -291,6 +312,8 @@ disp(Stats)
 writetable(Stats, fullfile(ResultsFolder, 'CorrelationsOutcomeVariables.xlsx'))
 writetable(TValues, fullfile(ResultsFolder, 'CorrelationsOutcomeVariables_TValues.csv'))
 
+
+%% 
 
 
 %% plot errors (Suppl. Figure 2-1)
