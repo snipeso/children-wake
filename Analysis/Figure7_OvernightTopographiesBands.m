@@ -136,7 +136,7 @@ load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopographyBands
 Metadata = basic_metadata_cleanup(Metadata);
 
 %%% 
-Measure = 'Quantity';
+Measure = 'PeriodicPower';
 
 load(fullfile(Paths.Metadata, 'SleepScoring.mat'), 'ScoringMetadata')
 
@@ -144,10 +144,11 @@ MetadataSimple = Metadata;
 MetadataSimple(contains(MetadataSimple.Task, {'3Oddball', 'GoNoGo', 'Fixation'}), :) = [];
 
 MetadataSimple(strcmp(MetadataSimple.Hour, 'mor'), :) = [];
+MetadataSimple(MetadataSimple.Age < 15, :) = [];
 
 MetadataSimple = combine_metadata_tables(MetadataSimple, ScoringMetadata, {'Participant', 'Session'});
 
-BandIdx = 2;
+BandIdx = 1;
 
 MetadataTemp = MetadataSimple;
 Rs = nan(nChannels, 1);
@@ -156,7 +157,7 @@ Ps = Rs;
 for ChannelIdx = 1:nChannels
 MetadataTemp.Data = BurstInformationTopographyBands.(Measure)(MetadataTemp.Index, ChannelIdx, BandIdx);
 
-[Rs(ChannelIdx), Ps(ChannelIdx)] = corr(MetadataTemp.timeN3, MetadataTemp.Data, 'Rows','complete');
+[Rs(ChannelIdx), Ps(ChannelIdx)] = corr(MetadataTemp.timeREM, MetadataTemp.Data, 'Rows','complete');
 end
 
 [~, PMask] = fdr(Ps, Parameters.Stats.Alpha);
@@ -164,3 +165,56 @@ end
 figure
 chART.plot.eeglab_topoplot(Rs, Chanlocs, PMask, [-.4 .4], 'R', 'Divergent', PlotProps)
 title(strjoin([Measure,  MetadataSimple.Hour(1), BandLabels{BandIdx}], ' '))
+
+
+%% for codex
+
+Measure = 'Quantity';
+PlotProps = Parameters.PlotProps.TopoPlots;
+PlotProps.Color.Background = 'white';
+CLims = [-.4 .4];
+Grid = [nBands, nAges+1];
+
+MetadataSimple = basic_metadata_cleanup(Metadata, {'Ages', Ages});
+MetadataSimple(contains(MetadataSimple.Task, {'3Oddball', 'GoNoGo', 'Fixation'}), :) = [];
+MetadataSimple(strcmp(MetadataSimple.Hour, 'mor'), :) = [];
+MetadataSimple = combine_metadata_tables(MetadataSimple, ScoringMetadata, {'Participant', 'Session'});
+
+figure('Units','centimeters','Position',[0 0 22 15])
+
+for BandIdx = 1:nBands
+    for AgeIdx = 1:nAges
+        MetadataTemp = MetadataSimple(MetadataSimple.AgeGroups == AgeIdx, :);
+        Rs = nan(nChannels, 1);
+        Ps = nan(nChannels, 1);
+
+        for ChannelIdx = 1:nChannels
+            MetadataTemp.Data = BurstInformationTopographyBands.(Measure)(MetadataTemp.Index, ChannelIdx, BandIdx);
+            [Rs(ChannelIdx), Ps(ChannelIdx)] = corr(MetadataTemp.timeN3, MetadataTemp.Data, 'Rows', 'complete');
+        end
+
+        [~, PMask] = fdr(Ps, Parameters.Stats.Alpha);
+
+        chART.sub_plot([], Grid, [BandIdx, AgeIdx], [], false, '', PlotProps);
+        chART.plot.eeglab_topoplot(Rs, Chanlocs, PMask, CLims, 'R', 'Divergent', PlotProps)
+        colorbar off
+
+        if BandIdx == 1
+            title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2)), ' y.o.'], 'FontSize', PlotProps.Text.TitleSize)
+        end
+
+        if AgeIdx == 1
+            chART.plot.vertical_text(BandLabels{BandIdx}, .12, .5, PlotProps)
+        end
+
+        topo_corner_text(['N=', num2str(numel(unique(MetadataTemp.Participant(~isnan(MetadataTemp.timeN3)))))], PlotProps)
+    end
+
+    Axes = chART.sub_plot([], Grid, [BandIdx, nAges+1], [], false, '', PlotProps);
+    axis off
+    Axes.Position(1) = Axes.Position(1)+.02;
+    chART.plot.pretty_colorbar('Divergent', CLims, 'R', PlotProps)
+end
+
+chART.save_figure(['TopographyBandN3_', Measure], ResultsFolder, PlotProps)
+
