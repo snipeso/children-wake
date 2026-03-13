@@ -8,7 +8,7 @@ close all
 %%% load in and set parameters for analysis
 
 % set parameters for how you want to run the script this time
-RunParallelBurstDetection = false; % true for faster processing
+RunParallelBurstDetection = true; % true for faster processing
 RerunAnalysis = false; % false to skip files already analyzed
 
 %%% criteria to find bursts in single channels

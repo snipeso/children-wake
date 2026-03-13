@@ -90,22 +90,22 @@ OutcomeMeasures_ExtendedLabels = [OutcomeMeasuresTitles, ErrorMeasuresTitles];
 for MeasureIdx = 1:numel(OutcomeMeasures_Extended)
     Measure = OutcomeMeasures_Extended{MeasureIdx};
     MetadataStat.(Measure) = zscore(MetadataStat.(Measure));
-%     formula = [OutcomeMeasures_Extended{MeasureIdx}, FormulaString];
-%     Model = fitlme(MetadataStat, formula);
-% 
-%     % Display the model summary
-%     disp('   ')
-% disp('   ')
-%     disp(['____________________ ', OutcomeMeasures_ExtendedLabels{MeasureIdx}, ' ____________________'])
-%     disp(Model);
-%     disp_mixed_stat(Model, 'Age')
-%     disp_mixed_stat(Model, 'Group_2')
-%     disp_mixed_stat(Model, 'Hour_2')
-%     disp_mixed_stat(Model, 'Sex_2')
-%     disp_mixed_stat(Model, 'Age:Hour_2')
-% 
-% 
-%     save_model(Model, fullfile(ResultsFolder, ['BasicModel_', OutcomeMeasures_ExtendedLabels{MeasureIdx}, '.txt']))
+    formula = [OutcomeMeasures_Extended{MeasureIdx}, FormulaString];
+    Model = fitlme(MetadataStat, formula);
+
+    % Display the model summary
+    disp('   ')
+disp('   ')
+    disp(['____________________ ', OutcomeMeasures_ExtendedLabels{MeasureIdx}, ' ____________________'])
+    disp(Model);
+    disp_mixed_stat(Model, 'Age')
+    disp_mixed_stat(Model, 'Group_2')
+    disp_mixed_stat(Model, 'Hour_2')
+    disp_mixed_stat(Model, 'Sex_2')
+    disp_mixed_stat(Model, 'Age:Hour_2')
+
+
+    save_model(Model, fullfile(ResultsFolder, ['BasicModel_', OutcomeMeasures_ExtendedLabels{MeasureIdx}, '.txt']))
 end
 % diary off
 

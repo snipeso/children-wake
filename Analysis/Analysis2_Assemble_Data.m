@@ -76,7 +76,7 @@ AverageSpectrograms = nan(nRecordings, 513);
 TaskMetadata = table(); % set up new metadata table that also takes into account task
 
 for RecordingIdx = 1:nRecordings
-
+    A = tic;
     Dataset = Metadata.Dataset{RecordingIdx};
     Participant = Metadata.Participant{RecordingIdx};
     Session = replace(Metadata.Session{RecordingIdx}, '_', '');
@@ -227,7 +227,7 @@ for RecordingIdx = 1:nRecordings
                     mean([BurstsTemp.Amplitude]);
 
                 BurstInformationClusters.Globality(NewIdx, FrequencyIdx) = ...
-                    100*mean([BurstsTemp.ClusterGlobality]);
+                    100*mean([BurstsTemp.ClusterGlobality]); 
 
                 BurstInformationClusters.Duration(NewIdx, FrequencyIdx) = ...
                     mean([BurstsTemp.ClusterEnd]-[BurstsTemp.ClusterStart])/SampleRate;
@@ -242,6 +242,7 @@ for RecordingIdx = 1:nRecordings
         end
     end
     disp(num2str(RecordingIdx))
+    disp(['Duation: ', num2str(toc(A))])
 end
 
 Metadata = TaskMetadata;
