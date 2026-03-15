@@ -67,8 +67,8 @@ elseif exist( 'D:\LSM\Preprocessed', 'dir') % KISPI desktop
     addpath('\\nausers01\user\sniso\Dokumente\MATLAB\eeglab2022.0') % https://sccn.ucsd.edu/eeglab/download.php
 elseif exist( 'X:\Data\Raw', 'dir')
     Core = 'X:\Data\';
-elseif exist('E:\AllWake', 'dir')
-    Core = 'E:\AllWake';
+% elseif exist('E:\AllWake', 'dir')
+%     Core = 'E:\AllWake';
 elseif exist( 'D:\Data\AllWake\', 'dir')
     Core = 'D:\Data\AllWake';
 else

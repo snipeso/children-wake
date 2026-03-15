@@ -311,15 +311,15 @@ writetable(Stats, fullfile(ResultsFolder, 'CorrelationsOutcomeVariables.xlsx'))
 writetable(TValues, fullfile(ResultsFolder, 'CorrelationsOutcomeVariables_TValues.csv'))
 
 
-%% 
 
 
 %% plot errors (Suppl. Figure 2-1)
 
 
 PlotProps = Parameters.PlotProps.Manuscript;
-PlotProps.Figure.Padding = 20;
-PlotProps.Axes.xPadding = 20;
+PlotProps.Axes.xPadding = 5;
+PlotProps.Axes.yPadding = 0;
+
 Grid = [3 numel(ErrorMeasures)];
 
 % fix y lims, so same for mor and eve
@@ -432,6 +432,11 @@ for Idx1 = 1:numel(OutcomeMeasures)
     end
 end
 chART.save_figure('CorrelateVariables', ResultsFolder, PlotProps)
+
+
+%% For codex:
+
+
 
 
 

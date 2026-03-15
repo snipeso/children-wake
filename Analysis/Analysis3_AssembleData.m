@@ -172,7 +172,6 @@ for RecordingIdx = 1:nRecordings
                     BurstInformationTopographyBands.Amplitude(NewIdx, ChannelIdx, BandIdx) = ...
                         mean([BurstsTemp.Amplitude]);
                 end
-
             end
 
             %%% all frequencies amplitude and quantity
@@ -254,7 +253,7 @@ for RecordingIdx = 1:nRecordings
         end
     end
     disp(num2str(RecordingIdx))
-    disp(['Duation: ', num2str(toc(A))])
+    disp(['Duration: ', num2str(toc(A))])
 end
 
 Metadata = TaskMetadata;
