@@ -34,7 +34,7 @@ CacheName = 'ProcessedData.mat';
 %% make model basic values
 %%% load data
 load(fullfile(CacheDir, CacheName), 'Metadata', ...
-    'BurstInformationTopography', 'Chanlocs')
+    'Topographies', 'Chanlocs')
 Metadata = basic_metadata_cleanup(Metadata, {'Tasks', Tasks});
 
 %%% run model
@@ -51,7 +51,7 @@ Models = cell([nMeasures, nChannels]);
 for MeasureIdx = 1:nMeasures
     for ChannelIdx = 1:nChannels
         MetadataTemp = MetadataStat;
-        MetadataTemp.Data = BurstInformationTopography.(Measures{MeasureIdx})(MetadataTemp.Index, ChannelIdx);
+        MetadataTemp.Data = Topographies.(Measures{MeasureIdx})(MetadataTemp.Index, ChannelIdx);
         formula = ['Data', ModelFormula];
         Models{MeasureIdx, ChannelIdx} = fitlme(MetadataTemp, formula);
     end

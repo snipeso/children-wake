@@ -32,8 +32,8 @@ CacheDir = Paths.Cache;
 CacheName = 'ProcessedData.mat';
 
 %%% load data
-load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopographyBands', ...
-    'BurstInformationTopography', 'Chanlocs')
+load(fullfile(CacheDir, CacheName), 'Metadata', 'TopographiesBands', ...
+    'Topographies', 'Chanlocs')
 Metadata = basic_metadata_cleanup(Metadata, {'Ages', Ages, 'Tasks', Tasks});
 
 table_demographics(unique_metadata(Metadata), 'AgeGroups', ResultsFolder, 'AgeGroups')
@@ -60,7 +60,7 @@ for MeasureIdx = 1:nMeasures
     for AgeIdx = 1:nAges
         for ChannelIdx = 1:nChannels
             MetadataTemp = MetadataStat(MetadataStat.AgeGroups==AgeIdx, :);
-            MetadataTemp.Data = BurstInformationTopography.(Measures{MeasureIdx})(MetadataTemp.Index, ChannelIdx);
+            MetadataTemp.Data = Topographies.(Measures{MeasureIdx})(MetadataTemp.Index, ChannelIdx);
 
             if numel(unique(MetadataTemp.Task)) > 1
                 Fixed = TaskFixed;
@@ -192,7 +192,7 @@ for BandIdx = 1:nBands
     for AgeIdx = 1:nAges
         for ChannelIdx = 1:nChannels
             MetadataTemp = MetadataStat(MetadataStat.AgeGroups==AgeIdx, :);
-            MetadataTemp.Data = BurstInformationTopographyBands.(Measure)(MetadataTemp.Index, ChannelIdx, BandIdx);
+            MetadataTemp.Data = TopographiesBands.(Measure)(MetadataTemp.Index, ChannelIdx, BandIdx);
 
             if numel(unique(MetadataTemp.Task)) > 1
                 Fixed = TaskFixed;

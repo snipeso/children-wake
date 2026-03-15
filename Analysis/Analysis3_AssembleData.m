@@ -63,18 +63,18 @@ SpectraRedux.PeriodicPower = nan(nRecordings, nFrequencies);
 Bands = Parameters.Bands;
 BandLabels = fieldnames(Bands);
 nBands = numel(BandLabels);
-BurstInformationTopographyBands = struct();
-BurstInformationTopographyBands.Quantity = nan(nRecordings, nChans, nBands);
-BurstInformationTopographyBands.Amplitude = nan(nRecordings, nChans, nBands);
-BurstInformationTopographyBands.Power = nan(nRecordings, nChans, nBands);
-BurstInformationTopographyBands.PeriodicPower = nan(nRecordings, nChans, nBands);
+TopographiesBands = struct();
+TopographiesBands.Quantity = nan(nRecordings, nChans, nBands);
+TopographiesBands.Amplitude = nan(nRecordings, nChans, nBands);
+TopographiesBands.Power = nan(nRecordings, nChans, nBands);
+TopographiesBands.PeriodicPower = nan(nRecordings, nChans, nBands);
 
-BurstInformationTopography.Slope = nan(nRecordings, nChans);
-BurstInformationTopography.Intercept = nan(nRecordings, nChans);
-BurstInformationTopography.Quantity = nan(nRecordings, nChans);
-BurstInformationTopography.Amplitude = nan(nRecordings, nChans);
-BurstInformationTopography.Power = nan(nRecordings, nChans);
-BurstInformationTopography.PeriodicPower = nan(nRecordings, nChans);
+Topographies.Slope = nan(nRecordings, nChans);
+Topographies.Intercept = nan(nRecordings, nChans);
+Topographies.Quantity = nan(nRecordings, nChans);
+Topographies.Amplitude = nan(nRecordings, nChans);
+Topographies.Power = nan(nRecordings, nChans);
+Topographies.PeriodicPower = nan(nRecordings, nChans);
 
 AverageSpectrograms = nan(nRecordings, 513);
 
@@ -149,27 +149,27 @@ for RecordingIdx = 1:nRecordings
 
                 % power stuff
                 FreqRange = dsearchn(Frequencies', [Band(1); Band(2)]);
-                BurstInformationTopographyBands.Power(NewIdx, ChannelIdx, BandIdx) = ...
+                TopographiesBands.Power(NewIdx, ChannelIdx, BandIdx) = ...
                     mean(log10(Power(ChannelIdx, FreqRange(1):FreqRange(2))), 2);
 
                 % whitened power
                 [~, ~, WhitenedPower, FooofFrequencies] = fooof_spectrum(Power(ChannelIdx, :), Frequencies, [2 35]);
                 FreqRangeFooof = dsearchn(FooofFrequencies', [Band(1); Band(2)]);
-                BurstInformationTopographyBands.PeriodicPower(NewIdx, ChannelIdx, BandIdx) = ...
+                TopographiesBands.PeriodicPower(NewIdx, ChannelIdx, BandIdx) = ...
                     mean(WhitenedPower(FreqRangeFooof(1):FreqRangeFooof(2)), 2);
 
                 % average quantity of bursts in that channel (as % duration recording)
                 BurstsTemp = Bursts(BurstChannels==ChannelIdx & ...
                     [Bursts.BurstFrequency]>=Band(1) & [Bursts.BurstFrequency]<=Band(2));
 
-                BurstInformationTopographyBands.Quantity(NewIdx, ChannelIdx, BandIdx) = ...
+                TopographiesBands.Quantity(NewIdx, ChannelIdx, BandIdx) = ...
                     100*sum([BurstsTemp.DurationPoints])/EEGMetadata.pnts; % NOT CYCLES PER MINUTE!!
 
                 if numel(BurstsTemp)<MinBursts
-                    BurstInformationTopographyBands.Amplitude(NewIdx, ChannelIdx, BandIdx) = nan;
+                    TopographiesBands.Amplitude(NewIdx, ChannelIdx, BandIdx) = nan;
                 else
                     % average amplitude in that channel
-                    BurstInformationTopographyBands.Amplitude(NewIdx, ChannelIdx, BandIdx) = ...
+                    TopographiesBands.Amplitude(NewIdx, ChannelIdx, BandIdx) = ...
                         mean([BurstsTemp.Amplitude]);
                 end
             end
@@ -180,28 +180,28 @@ for RecordingIdx = 1:nRecordings
             BurstsTemp = Bursts(BurstChannels==ChannelIdx);
 
             % average quantity of bursts in that channel (as % duration recording)
-            BurstInformationTopography.Quantity(NewIdx, ChannelIdx) = ...
+            Topographies.Quantity(NewIdx, ChannelIdx) = ...
                 100*sum([BurstsTemp.DurationPoints])/EEGMetadata.pnts; % NOT CYCLES PER MINUTE!!
 
             % average amplitude in that channel
             if numel(BurstsTemp)< MinBursts
-                BurstInformationTopography.Amplitude(NewIdx, ChannelIdx) = nan;
+                Topographies.Amplitude(NewIdx, ChannelIdx) = nan;
             else
-                BurstInformationTopography.Amplitude(NewIdx, ChannelIdx) = ...
+                Topographies.Amplitude(NewIdx, ChannelIdx) = ...
                     mean([BurstsTemp.Amplitude]);
             end
 
             % power
             FreqRange = dsearchn(Frequencies', [FrequenciesRedux(1); FrequenciesRedux(end)]);
-            BurstInformationTopography.Power(NewIdx, ChannelIdx) = mean(log10(Power(ChannelIdx, FreqRange(1):FreqRange(2))), 2);
+            Topographies.Power(NewIdx, ChannelIdx) = mean(log10(Power(ChannelIdx, FreqRange(1):FreqRange(2))), 2);
 
             % slopes and stuff
             [Slope, Intercept, WhitenedPower, FooofFrequencies] = fooof_spectrum(Power(ChannelIdx, :), Frequencies, [2 35]);
-            BurstInformationTopography.Slope(NewIdx, ChannelIdx) = Slope;
-            BurstInformationTopography.Intercept(NewIdx, ChannelIdx) = Intercept;
+            Topographies.Slope(NewIdx, ChannelIdx) = Slope;
+            Topographies.Intercept(NewIdx, ChannelIdx) = Intercept;
 
             FreqRangeFooof = dsearchn(FooofFrequencies', [FrequenciesRedux(1); FrequenciesRedux(end)]);
-            BurstInformationTopography.PeriodicPower(NewIdx, ChannelIdx) = mean(WhitenedPower(FreqRangeFooof(1):FreqRangeFooof(2)), 2);
+            Topographies.PeriodicPower(NewIdx, ChannelIdx) = mean(WhitenedPower(FreqRangeFooof(1):FreqRangeFooof(2)), 2);
         end
 
         % get power for all non-edge channels
@@ -260,5 +260,5 @@ Metadata = TaskMetadata;
 FrequenciesRedux(end) = []; % remove last edge;
 
 % save
-save(fullfile(CacheDir, CacheName), 'Metadata',  'BurstInformationTopography', 'BurstInformationTopographyBands', ...
+save(fullfile(CacheDir, CacheName), 'Metadata',  'Topographies', 'TopographiesBands', ...
     "SpectraRedux", 'FrequenciesRedux', 'Chanlocs', 'Frequencies', 'AverageSpectrograms')

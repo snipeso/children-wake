@@ -45,8 +45,8 @@ end
 CacheDir = Paths.Cache;
 CacheName = 'ProcessedData.mat';
 
-load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopographyBands', ...
-    'BurstInformationTopography', "SpectraRedux", 'Frequencies', 'Chanlocs')
+load(fullfile(CacheDir, CacheName), 'Metadata', 'TopographiesBands', ...
+    'Topographies', "SpectraRedux", 'Frequencies', 'Chanlocs')
 
 % select data for the paper
 Metadata.Index = [1:size(Metadata, 1)]'; %#ok<NBRAK1> % add index so can chop up table as needed
@@ -92,7 +92,7 @@ for ConditionIdx = 1:numel(Conditions)
 
     figure('Units','centimeters','OuterPosition',[0 0 15 30])
     for MeasureIdx = 1:nMeasures
-        Topographies = BurstInformationTopography.(Measures{MeasureIdx});
+        Topographies = Topographies.(Measures{MeasureIdx});
         for AgeIdx = 1:nAges
             Indexes = ismember(Metadata1.AgeGroups, string(AgeIdx));
 
@@ -148,7 +148,7 @@ nMeasures = numel(Measures);
 
     figure('Units','centimeters','OuterPosition',[0 0 15 30])
     for MeasureIdx = 1:nMeasures
-        Topographies = BurstInformationTopography.(Measures{MeasureIdx});
+        Topographies = Topographies.(Measures{MeasureIdx});
                     Base = Topographies(Oddball3BaseIndex, :)-Topographies(Oddball1BaseIndex, :);
             Rotation = Topographies(Oddball3RotIndex, :)-Topographies(Oddball1RotIndex, :);
 
@@ -202,7 +202,7 @@ nMeasures = numel(Measures);
 % 
 % figure('Units','centimeters','OuterPosition',[0 0 25 30])
 % for MeasureIdx = 1:nMeasures
-%     Topographies = BurstInformationTopography.(Measures{MeasureIdx});
+%     Topographies = Topographies.(Measures{MeasureIdx});
 %     for AgeIdx = 1:nAges
 %         Indexes = ismember(Metadata1.AgeGroups, string(AgeIdx));
 % 

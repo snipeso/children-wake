@@ -29,8 +29,8 @@ CacheName = 'ProcessedData.mat';
 
 
 %%% load data
-load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopographyBands', ...
-    'BurstInformationTopography', 'Chanlocs')
+load(fullfile(CacheDir, CacheName), 'Metadata', 'TopographiesBands', ...
+    'Topographies', 'Chanlocs')
 
 % fixes to metadata
 Metadata = basic_metadata_cleanup(Metadata, {'Ages', Ages, 'Tasks', Tasks});
@@ -61,7 +61,7 @@ nMeasures = numel(Measures);
 
 figure('Units','centimeters','OuterPosition',[0 0 25 30])
 for MeasureIdx = 1:nMeasures
-    Topographies = BurstInformationTopography.(Measures{MeasureIdx});
+    Topographies = Topographies.(Measures{MeasureIdx});
     for AgeIdx = 1:nAges
 
         % assemble and average data
@@ -111,7 +111,7 @@ MeasureUnits = {'\muV', '% recording', 'log power', 'log power'};
 nMeasures = numel(Measures);
 
 for MeasureIdx = 2 %1:nMeasures
-    Topographies = BurstInformationTopographyBands.(Measures{MeasureIdx});
+    Topographies = TopographiesBands.(Measures{MeasureIdx});
     nBands = size(Topographies, 3);
 
     figure('Units','centimeters','OuterPosition',[0 0 25 16])

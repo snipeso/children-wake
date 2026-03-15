@@ -2,18 +2,18 @@
 
 This file is the publication-ready version of the wake EEG cache. It is written in [`Analysis/Analysis8_PolishDataForPublication.m`](./Analysis/Analysis8_PolishDataForPublication.m), which loads the main cache from `AllBursts.mat`, cleans `Metadata`, recodes dataset names, renames several metadata outcome columns for publication, and then saves the variables listed below.
 
-The underlying data assembly happens in [`Analysis/Analysis2_Assemble_Data.m`](./Analysis/Analysis2_Assemble_Data.m). In that script, each row corresponds to one recording-task combination (`NewIdx`), and that same first dimension is shared across `Metadata`, `BurstInformationTopography`, `BurstInformationTopographyBands`, `SpectraRedux`, and `AverageSpectrograms`. In practice, row `i` in `Metadata` matches row `i` in every exported data matrix.
+The underlying data assembly happens in [`Analysis/Analysis2_Assemble_Data.m`](./Analysis/Analysis2_Assemble_Data.m). In that script, each row corresponds to one recording-task combination (`NewIdx`), and that same first dimension is shared across `Metadata`, `Topographies`, `TopographiesBands`, `SpectraRedux`, and `AverageSpectrograms`. In practice, row `i` in `Metadata` matches row `i` in every exported data matrix.
 
 ## Figure usage summary
 
 - Figure 1: does not use `ProcessedData.mat`; it loads a single example participant directly in [`Analysis/Figure1_AnalysisGeneology.m`](./Analysis/Figure1_AnalysisGeneology.m).
 - Figure 2: uses `Metadata`.
-- Figure 3: uses `Metadata`, `BurstInformationTopography`, `Chanlocs`.
-- Figure 4: uses `Metadata`, `BurstInformationTopography`, `Chanlocs`.
+- Figure 3: uses `Metadata`, `Topographies`, `Chanlocs`.
+- Figure 4: uses `Metadata`, `Topographies`, `Chanlocs`.
 - Figure 5: uses `Metadata`, `SpectraRedux`, `Frequencies`, `AverageSpectrograms`, `AllFrequencies`.
-- Figure 6: uses `Metadata`, `BurstInformationTopographyBands`, `Chanlocs`. Figure 6 is generated inside [`Analysis/Figure3_Figure6_TopographyAverage.m`](./Analysis/Figure3_Figure6_TopographyAverage.m).
-- Figure 7: uses `Metadata`, `BurstInformationTopographyBands`, `Chanlocs`.
-- Figure 8: uses `Metadata`, `BurstInformationTopography`, `Chanlocs`.
+- Figure 6: uses `Metadata`, `TopographiesBands`, `Chanlocs`. Figure 6 is generated inside [`Analysis/Figure3_Figure6_TopographyAverage.m`](./Analysis/Figure3_Figure6_TopographyAverage.m).
+- Figure 7: uses `Metadata`, `TopographiesBands`, `Chanlocs`.
+- Figure 8: uses `Metadata`, `Topographies`, `Chanlocs`.
 
 ## Variables
 
@@ -54,7 +54,7 @@ Where it is used:
 - Figure 7: loaded in `Analysis/Figure7_OvernightTopographiesBands.m:35-37`; used for age/task subsets, mixed models, and sleep-correlation analyses (`:46-80`, `:143-160`, `:184-202`).
 - Figure 8: loaded in `Analysis/Figure8_ADHD.m:36-38`; used as the model table for ADHD vs HC topography statistics (`:41-56`).
 
-### `BurstInformationTopography`
+### `Topographies`
 
 What it is:
 A struct of channel-level topographies across the full wake analysis frequency range (4-15 Hz after removing the upper edge). It is initialized in `Analysis2_Assemble_Data` at lines 67-72 and filled channel-by-channel at lines 168-193.
@@ -73,11 +73,11 @@ Each field is `nRecordings x 123`.
 
 Where it is used:
 
-- Figure 3: `Analysis/Figure3_Figure6_TopographyAverage.m:69-83` plots age-group average topographies from `BurstInformationTopography.(Measures{MeasureIdx})`.
-- Figure 4: `Analysis/Figure4_OvernightTopographies.m:57-78` uses `BurstInformationTopography.(Measures{MeasureIdx})` as the dependent variable for channel-wise mixed models; Figure 4 topoplots are rendered at `:104-123`.
-- Figure 8: `Analysis/Figure8_ADHD.m:50-57` uses `BurstInformationTopography.(Measures{MeasureIdx})` for channel-wise ADHD vs HC models; Figure 8 topoplots are rendered at `:83-95`.
+- Figure 3: `Analysis/Figure3_Figure6_TopographyAverage.m:69-83` plots age-group average topographies from `Topographies.(Measures{MeasureIdx})`.
+- Figure 4: `Analysis/Figure4_OvernightTopographies.m:57-78` uses `Topographies.(Measures{MeasureIdx})` as the dependent variable for channel-wise mixed models; Figure 4 topoplots are rendered at `:104-123`.
+- Figure 8: `Analysis/Figure8_ADHD.m:50-57` uses `Topographies.(Measures{MeasureIdx})` for channel-wise ADHD vs HC models; Figure 8 topoplots are rendered at `:83-95`.
 
-### `BurstInformationTopographyBands`
+### `TopographiesBands`
 
 What it is:
 A struct of channel-level topographies split into canonical bands from `Parameters.Bands`: Theta 4-7 Hz, Alpha 8-11 Hz, and Beta 12-16 Hz. It is initialized in `Analysis2_Assemble_Data` at lines 57-65 and filled at lines 134-161.
@@ -94,9 +94,9 @@ Each field is `nRecordings x 123 x 3`, where the third dimension is band order `
 
 Where it is used:
 
-- Figure 6: `Analysis/Figure3_Figure6_TopographyAverage.m:115-148` averages and plots `BurstInformationTopographyBands.(Measures{MeasureIdx})` by age group and band.
-- Figure 7: `Analysis/Figure7_OvernightTopographiesBands.m:59-80` uses `BurstInformationTopographyBands.(WakeMeasure)` for band-specific mixed models, and `:102-127` plots the resulting overnight-change topographies.
-- Additional Figure 7 analyses in the same script correlate band topographies with sleep measures using `BurstInformationTopographyBands.(WakeMeasure)` at `:157-160` and `:200-202`.
+- Figure 6: `Analysis/Figure3_Figure6_TopographyAverage.m:115-148` averages and plots `TopographiesBands.(Measures{MeasureIdx})` by age group and band.
+- Figure 7: `Analysis/Figure7_OvernightTopographiesBands.m:59-80` uses `TopographiesBands.(WakeMeasure)` for band-specific mixed models, and `:102-127` plots the resulting overnight-change topographies.
+- Additional Figure 7 analyses in the same script correlate band topographies with sleep measures using `TopographiesBands.(WakeMeasure)` at `:157-160` and `:200-202`.
 
 ### `SpectraRedux`
 
@@ -143,8 +143,8 @@ The EEGLAB channel-location struct for the 123 scalp channels used in the wake a
 
 This is label/geometry information in service of:
 
-- `BurstInformationTopography`
-- `BurstInformationTopographyBands`
+- `Topographies`
+- `TopographiesBands`
 
 Expected shape:
 EEGLAB struct array with 123 elements.
@@ -167,10 +167,10 @@ This is label information in service of:
 
 It also underlies the calculation of:
 
-- `BurstInformationTopography.Power`
-- `BurstInformationTopography.PeriodicPower`
-- `BurstInformationTopographyBands.Power`
-- `BurstInformationTopographyBands.PeriodicPower`
+- `Topographies.Power`
+- `Topographies.PeriodicPower`
+- `TopographiesBands.Power`
+- `TopographiesBands.PeriodicPower`
 - `Metadata.Power`
 - `Metadata.PeriodicPower`
 - `Metadata.AperiodicPower`

@@ -29,8 +29,8 @@ end
 CacheDir = Paths.Cache;
 CacheName = 'ProcessedData.mat';
 
-load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopographyBands', ...
-    'BurstInformationTopography', 'Chanlocs')
+load(fullfile(CacheDir, CacheName), 'Metadata', 'TopographiesBands', ...
+    'Topographies', 'Chanlocs')
 Metadata = basic_metadata_cleanup(Metadata, {'Ages', Ages, 'Datasets', {'SleepLearning'}});
 
 
@@ -51,10 +51,10 @@ for MeasureIdx = 1:nMeasures
         for ChannelIdx = 1:nChannels
             MetadataTemp = MetadataStat(MetadataStat.AgeGroups==AgeIdx, :);
             MetadataTemp.Oddball1 = ...
-                BurstInformationTopography.(Measures{MeasureIdx})(MetadataTemp.IndexesCategory1, ChannelIdx);
+                Topographies.(Measures{MeasureIdx})(MetadataTemp.IndexesCategory1, ChannelIdx);
 
             MetadataTemp.Oddball3 = ...
-                BurstInformationTopography.(Measures{MeasureIdx})(MetadataTemp.IndexesCategory2, ChannelIdx);
+                Topographies.(Measures{MeasureIdx})(MetadataTemp.IndexesCategory2, ChannelIdx);
 
             Models{AgeIdx, MeasureIdx, ChannelIdx} = fitlme(MetadataTemp, formula);
         end

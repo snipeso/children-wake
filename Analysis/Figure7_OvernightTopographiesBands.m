@@ -32,8 +32,8 @@ CacheDir = Paths.Cache;
 CacheName = 'ProcessedData.mat';
 
 %%% load data
-load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopographyBands', ...
-    'BurstInformationTopography', 'Chanlocs')
+load(fullfile(CacheDir, CacheName), 'Metadata', 'TopographiesBands', ...
+    'Topographies', 'Chanlocs')
 Metadata = basic_metadata_cleanup(Metadata, {'Ages', Ages, 'Tasks', Tasks});
 
 table_demographics(unique_metadata(Metadata), 'AgeGroups', ResultsFolder, 'AgeGroups')
@@ -61,7 +61,7 @@ for BandIdx = 1:nBands
     for AgeIdx = 1:nAges
         for ChannelIdx = 1:nChannels
             MetadataTemp = MetadataStat(MetadataStat.AgeGroups==AgeIdx, :);
-            MetadataTemp.Data = BurstInformationTopographyBands.(WakeMeasure)(MetadataTemp.Index, ChannelIdx, BandIdx);
+            MetadataTemp.Data = TopographiesBands.(WakeMeasure)(MetadataTemp.Index, ChannelIdx, BandIdx);
 
             if numel(unique(MetadataTemp.Task)) > 1
                 Fixed = TaskFixed;
@@ -131,8 +131,8 @@ chART.save_figure(['TopographyBandChange_',WakeMeasure], ResultsFolder, PlotProp
 %% check relationship with N3
 
 PlotProps.Colorbar.Location = 'eastoutside';
-load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopographyBands', ...
-    'BurstInformationTopography', 'Chanlocs')
+load(fullfile(CacheDir, CacheName), 'Metadata', 'TopographiesBands', ...
+    'Topographies', 'Chanlocs')
 Metadata = basic_metadata_cleanup(Metadata);
 
 %%% 
@@ -155,7 +155,7 @@ Rs = nan(nChannels, 1);
 Ps = Rs;
 
 for ChannelIdx = 1:nChannels
-MetadataTemp.Data = BurstInformationTopographyBands.(WakeMeasure)(MetadataTemp.Index, ChannelIdx, BandIdx);
+MetadataTemp.Data = TopographiesBands.(WakeMeasure)(MetadataTemp.Index, ChannelIdx, BandIdx);
 
 [Rs(ChannelIdx), Ps(ChannelIdx)] = corr(MetadataTemp.timeN3, MetadataTemp.Data, 'Rows','complete');
 end
@@ -178,8 +178,8 @@ Grid = [nBands, nAges+1];
 Hours = {'eve', 'mor'};
 
 %%% load data
-load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopographyBands', ...
-    'BurstInformationTopography', 'Chanlocs')
+load(fullfile(CacheDir, CacheName), 'Metadata', 'TopographiesBands', ...
+    'Topographies', 'Chanlocs')
 
 MetadataSimple = basic_metadata_cleanup(Metadata, {'Ages', Ages});
 MetadataSimple(contains(MetadataSimple.Task, {'3Oddball', 'GoNoGo', 'Fixation'}), :) = [];
@@ -198,7 +198,7 @@ for HourIdx = 1:numel(Hours)
             Ps = nan(nChannels, 1);
 
             for ChannelIdx = 1:nChannels
-                MetadataTemp.Data = BurstInformationTopographyBands.(WakeMeasure)(MetadataTemp.Index, ChannelIdx, BandIdx);
+                MetadataTemp.Data = TopographiesBands.(WakeMeasure)(MetadataTemp.Index, ChannelIdx, BandIdx);
                 [Rs(ChannelIdx), Ps(ChannelIdx)] = corr(MetadataTemp.(SleepMeasure), MetadataTemp.Data, 'Rows', 'complete');
             end
 

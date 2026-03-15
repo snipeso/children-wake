@@ -18,7 +18,7 @@ end
 CacheDir = Paths.Cache;
 CacheName = 'ProcessedData.mat';
 load(fullfile(CacheDir, CacheName), 'Metadata',  ...
-    'BurstInformationTopography', 'Chanlocs')
+    'Topographies', 'Chanlocs')
 
 % select data for the paper
 Metadata.Index = [1:size(Metadata, 1)]'; %#ok<NBRAK1> % add index so can chop up table as needed
@@ -49,7 +49,7 @@ OvernightMetadata = unique_metadata(EveningMetadata);
 
 figure('Units','normalized','OuterPosition',[0 0 1 .3])
 for MeasureIdx = 1:nMeasures
-        Topographies = BurstInformationTopography.(Measures{MeasureIdx});
+        Topographies = Topographies.(Measures{MeasureIdx});
     Indexes = [1:size(EveningMetadata, 1)]';
     Evening = average_by_column(EveningMetadata, Topographies, 'Participant', Indexes);
     Morning = average_by_column(MorningMetadata, Topographies, 'Participant', Indexes);
