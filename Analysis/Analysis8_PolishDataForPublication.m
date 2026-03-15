@@ -42,6 +42,6 @@ end
 
 
 
-save(fullfile(ResultsFolder, 'AllData.mat'), 'Metadata',  'BurstInformationTopography', 'BurstInformationTopographyBands', ...
+save(fullfile(ResultsFolder, 'ProcessedData.mat'), 'Metadata',  'BurstInformationTopography', 'BurstInformationTopographyBands', ...
     "BurstInformationClusters", 'Frequencies', 'Chanlocs', 'AllFrequencies', 'AverageSpectrograms')
 
