@@ -16,7 +16,7 @@ Paths = Parameters.Paths;
 
 % where data can be found
 CacheDir = Paths.Cache;
-CacheName = 'AllBursts.mat';
+CacheName = 'ProcessedData.mat';
 
 % where to save figures
 ResultsFolder = fullfile(Paths.Results, 'MainStatsStandardized');

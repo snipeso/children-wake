@@ -25,7 +25,7 @@ Paths = Parameters.Paths;
 
 % where data can be found
 CacheDir = Paths.Cache;
-CacheName = 'AllBursts.mat';
+CacheName = 'ProcessedData.mat';
 
 % where to save figures
 ResultsFolder = fullfile(Paths.Results, 'MainStatsStandardized');
@@ -463,7 +463,7 @@ CacheName = 'Durations.mat';
 load(fullfile(CacheDir, CacheName), 'Metadata')
 Durations = Metadata;
 
-CacheName = 'AllBursts.mat';
+CacheName = 'ProcessedData.mat';
 load(fullfile(CacheDir, CacheName), 'Metadata')
 Metadata = basic_metadata_cleanup(Metadata);
 Metadata.Dataset = Durations.Dataset; % recoded dataset names
@@ -480,4 +480,3 @@ end
 
 Destination = 'D:\Dropbox\Research\Publications and Presentations\Sleep\Papers\KidsBursts\Version6_ImagingNeuroscience\SupplMaterial';
 writetable(Metadata, fullfile(Destination, 'Data1_AllWakeData.csv'))
-

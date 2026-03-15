@@ -20,7 +20,7 @@ nVariables = 3;
 Source = fullfile(Paths.AnalyzedData, 'EEG', 'Bursts');
 
 CacheDir = Paths.Cache;
-CacheName = 'AllBursts.mat';
+CacheName = 'ProcessedData.mat';
 
 if ~exist(CacheDir, 'dir')
     mkdir(CacheDir)
@@ -134,5 +134,4 @@ for ParticipantIdx =  Indexes'
     Idx = Idx+1;
 end
 % chART.save_figure(FigLabel, ResultsFolder, PlotProps)
-
 
