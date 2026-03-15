@@ -413,10 +413,18 @@ for Idx1 = 1:numel(OutcomeMeasures)
             if Idx1==1
                 chART.set_axis_properties(PlotProps)
                 title(OutcomeMeasuresTitles{Idx1})
-                ylabel(OutcomeMeasures{Idx2})
-            end
-            if Idx2==1, ylabel(OutcomeMeasuresTitles{Idx2}); end
-            axis off
+                set(gca, 'XTick' ,[], 'YTick', [])
+                        axis square
+                        ylabel({OutcomeMeasuresTitles{Idx2}})
+                        ax = gca;
+                        ax.XColor = 'none';
+                        x = xlim; y = ylim;
+line([x(1) x(1)], y, 'Color','w', 'LineWidth',2)
+xlim(x)
+            else
+                axis off
+         end
+
             continue
         end
 
