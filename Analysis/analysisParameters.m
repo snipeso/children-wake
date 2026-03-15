@@ -56,8 +56,6 @@ Parameters.OutcomeMeasures.Units = {'\muV', '% Recording', 'A.U.', 'Log power', 
 
 if exist(fullfile('/Volumes/Animalia/AllWake'), 'dir') % run from mac
     Core = '/Volumes/Animalia/AllWake/';
-
-
     check_packages({'chART', 'Matcycle', 'eeglab'})
 elseif exist( 'D:\LSM\Preprocessed', 'dir') % KISPI desktop
     Core = 'D:\AllWake\';
@@ -69,9 +67,9 @@ elseif exist( 'D:\LSM\Preprocessed', 'dir') % KISPI desktop
     addpath('\\nausers01\user\sniso\Dokumente\MATLAB\eeglab2022.0') % https://sccn.ucsd.edu/eeglab/download.php
 elseif exist( 'X:\Data\Raw', 'dir')
     Core = 'X:\Data\';
-elseif exist('E:\AllWake', 'dir')
-    Core = 'E:\AllWake';
-elseif exist( 'D:\Data\AllWake', 'dir')
+% elseif exist('E:\AllWake', 'dir')
+%     Core = 'E:\AllWake';
+elseif exist( 'D:\Data\AllWake\', 'dir')
     Core = 'D:\Data\AllWake';
 else
     error('no data disk!')
@@ -157,16 +155,10 @@ Triggers.Tones = 'S 12';
 Parameters.Triggers = Triggers;
 
 Parameters.PlotProps.Manuscript = chART.load_plot_properties({'Iota', 'Manuscript'});
-Parameters.PlotProps.Manuscript.Figure.Width = 22;
-Parameters.PlotProps.Manuscript.Text.FontName = 'Helvetica';
-Parameters.PlotProps.Manuscript.Color.Background = 'none';
 
 Parameters.PlotProps.Powerpoint = chART.load_plot_properties({'Iota', 'Powerpoint'});
 Parameters.PlotProps.Poster = chART.load_plot_properties({'Iota', 'Poster'});
 
-Parameters.PlotProps.Poster.Color.Background = 'none';
-
-Parameters.PlotProps.Manuscript = Parameters.PlotProps.Manuscript;
 TopoPlotProps = Parameters.PlotProps.Manuscript;
 TopoPlotProps.Text.LegendSize = 10;
 TopoPlotProps.Text.AxisSize = 10;

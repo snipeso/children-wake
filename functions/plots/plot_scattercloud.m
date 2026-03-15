@@ -21,8 +21,6 @@ else
 end
 
 Colors = flip(chART.color_picker(nGroups), 1);
-Colors = [222 67, 117]/255; % pink
-Colors = [21 82 255]/255; % pink
 
 
 hold on
@@ -70,7 +68,7 @@ end
 
 RhoString = num2str(R, '%.2f');
 RhoString = replace(RhoString, '0.', '.');
-text(Start, YLim(end), ['\rho=', RhoString], ...
+text(Start, YLim(end), ['r=', RhoString], ...
     'FontName', PlotProps.Text.FontName, 'FontSize', PlotProps.Text.AxisSize, 'HorizontalAlignment', HA)
 chART.utils.pad_axis('y', .05)
 chART.utils.pad_axis('x', .05)

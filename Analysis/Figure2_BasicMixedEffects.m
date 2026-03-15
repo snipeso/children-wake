@@ -122,13 +122,11 @@ disp_stats_descriptive(MetadataStat.RSquared, 'rsquared', '', 3);
 
 close all
 PlotProps = Parameters.PlotProps.Manuscript;
-% PlotProps.Figure.Padding = 0;
-PlotProps.Axes.xPadding = 0;
+PlotProps.Axes.xPadding = 5;
 PlotProps.Axes.yPadding = 0;
 
 Grid = [3 numel(OutcomeMeasures)];
 
-PlotProps.Line.Width = 6;
 
 % fix y lims, so same for mor and eve
 YLimits = [5, 42; % amplitudes
@@ -151,7 +149,7 @@ OvernightMetadata = pair_recordings(MetadataScatter, 'Hour', {'eve', 'mor'});
 
 clc
 
-figure('Units','centimeters','OuterPosition',[0 0 25 18])
+figure('Units','centimeters','OuterPosition',[0 0 26 18])
 
 for VariableIdx = 1:numel(OutcomeMeasures)
 
@@ -175,7 +173,7 @@ for VariableIdx = 1:numel(OutcomeMeasures)
             title(OutcomeMeasuresTitles{VariableIdx})
         end
         if VariableIdx==1
-            chART.plot.vertical_text(HourLabels{HourIdx}, .55, .5, PlotProps)
+            chART.plot.vertical_text(HourLabels{HourIdx}, .5, .5, PlotProps)
         end
         disp([ Hours{HourIdx}, OutcomeMeasures{VariableIdx}, ...
             'N=', num2str(numel(unique(MetadataAverage.Participant)))])
@@ -195,7 +193,7 @@ for VariableIdx = 1:numel(OutcomeMeasures)
     end
 
     if VariableIdx==1
-        chART.plot.vertical_text('Overnight change', .55, .5, PlotProps)
+        chART.plot.vertical_text('Overnight change', .5, .5, PlotProps)
         xlabel('Age (years)')
     end
 
