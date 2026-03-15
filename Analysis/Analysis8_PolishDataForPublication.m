@@ -40,8 +40,16 @@ for DatasetIdx = 1:numel(Datasets)
 end
 
 
+%% codex
 
+OriginalTableLabels = Metadata.Properties.VariableNames;
+for MeasureIdx = 1:numel(Parameters.OutcomeMeasures.OriginalLabels)
+    ColumnIdx = strcmp(OriginalTableLabels, Parameters.OutcomeMeasures.OriginalLabels{MeasureIdx});
+    Metadata.Properties.VariableNames(ColumnIdx) = ...
+        genvarname(Parameters.OutcomeMeasures.Titles(MeasureIdx));
+end
+
+%%
 
 save(fullfile(ResultsFolder, 'ProcessedData.mat'), 'Metadata',  'BurstInformationTopography', 'BurstInformationTopographyBands', ...
     "BurstInformationClusters", 'Frequencies', 'Chanlocs', 'AllFrequencies', 'AverageSpectrograms')
-
