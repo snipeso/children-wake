@@ -27,7 +27,7 @@ CacheDir = Paths.Cache;
 CacheName = 'ProcessedData.mat';
 
 %%% load data
-load(fullfile(CacheDir, CacheName), 'Metadata', "BurstInformationClusters", 'Frequencies', 'AverageSpectrograms', 'AllFrequencies')
+load(fullfile(CacheDir, CacheName), 'Metadata', "SpectraRedux", 'FrequenciesRedux', 'AverageSpectrograms', 'Frequencies')
 
 MetadataOddball = Metadata;
 MetadataOddball.Task(strcmp(Metadata.Task, 'Oddball')) = {'1Oddball'};
@@ -57,14 +57,14 @@ OvernightMetadata = pair_recordings(MetadataOddball, 'Hour', {'eve', 'mor'});
 figure('Units','centimeters','OuterPosition',[0 0 10 22])
 
 for MeasureIdx = 1:nMeasures
-    Spectrogram = BurstInformationClusters.(Measures{MeasureIdx});
+    Spectrogram = SpectraRedux.(Measures{MeasureIdx});
     Evening = average_by_column(OvernightMetadata, Spectrogram, 'Participant', [1:size(OvernightMetadata, 1)]');
     MetadataTemp = unique_metadata(OvernightMetadata, 'Participant');
     EveningAverage = average_by_column(MetadataTemp, Evening, 'EquispacedAges', []);
 
     %%% plot average evening values
     chART.sub_plot([], [nMeasures, 1], [MeasureIdx, 1], [], true, '', PlotProps);
-    plot_age_by_frequency(EveningAverage, EquidistantAges(1:end-1), Frequencies, 'Linear', Labels{MeasureIdx}, PlotProps)
+    plot_age_by_frequency(EveningAverage, EquidistantAges(1:end-1), FrequenciesRedux, 'Linear', Labels{MeasureIdx}, PlotProps)
     title(MeasureTitles{MeasureIdx}, 'FontSize', PlotProps.Text.TitleSize)
     if MeasureIdx == nMeasures
         xlabel('Age')
@@ -81,7 +81,7 @@ figure('Units','centimeters','OuterPosition',[0 0 10 22])
 
 for MeasureIdx = 1:nMeasures
 
-    Spectrogram = BurstInformationClusters.(Measures{MeasureIdx});
+    Spectrogram = SpectraRedux.(Measures{MeasureIdx});
     Evening = average_by_column(OvernightMetadata, Spectrogram, 'Participant', [1:size(OvernightMetadata, 1)]');
 
     OvernightTemp = OvernightMetadata;
@@ -94,7 +94,7 @@ for MeasureIdx = 1:nMeasures
 
     %%% plot differences
     chART.sub_plot([], [nMeasures, 1], [MeasureIdx, 1], [], true, '', PlotProps);
-    plot_age_by_frequency(ChangeAverage, EquidistantAges(1:end-1), Frequencies, 'Divergent', 'difference', PlotProps)
+    plot_age_by_frequency(ChangeAverage, EquidistantAges(1:end-1), FrequenciesRedux, 'Divergent', 'difference', PlotProps)
     title(MeasureTitles{MeasureIdx}, 'FontSize', PlotProps.Text.TitleSize)
     if MeasureIdx == nMeasures
         xlabel('Age')
@@ -145,7 +145,7 @@ for AgeIdx = 1:nAges
 
     % plot
     chART.sub_plot(Space, MiniGridA, [1 AgeIdx], [], true, '', PlotProps);
-    plot_spectrogram(Evening, Morning, AllFrequencies, PlotProps)
+    plot_spectrogram(Evening, Morning, Frequencies, PlotProps)
     title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2)), ' y.o.'])
     if AgeIdx >1
         legend off
@@ -171,7 +171,7 @@ for TaskIdx = 1:nTasks
 
     % plot
     chART.sub_plot(Space, MiniGridB, [1 TaskIdx], [], true, '', PlotProps);
-    plot_spectrogram(Evening, Morning, AllFrequencies, PlotProps)
+    plot_spectrogram(Evening, Morning, Frequencies, PlotProps)
     title(Tasks{TaskIdx})
     ylim([.02 90])
     if TaskIdx > 1

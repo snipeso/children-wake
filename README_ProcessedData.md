@@ -2,7 +2,7 @@
 
 This file is the publication-ready version of the wake EEG cache. It is written in [`Analysis/Analysis8_PolishDataForPublication.m`](./Analysis/Analysis8_PolishDataForPublication.m), which loads the main cache from `AllBursts.mat`, cleans `Metadata`, recodes dataset names, renames several metadata outcome columns for publication, and then saves the variables listed below.
 
-The underlying data assembly happens in [`Analysis/Analysis2_Assemble_Data.m`](./Analysis/Analysis2_Assemble_Data.m). In that script, each row corresponds to one recording-task combination (`NewIdx`), and that same first dimension is shared across `Metadata`, `BurstInformationTopography`, `BurstInformationTopographyBands`, `BurstInformationClusters`, and `AverageSpectrograms`. In practice, row `i` in `Metadata` matches row `i` in every exported data matrix.
+The underlying data assembly happens in [`Analysis/Analysis2_Assemble_Data.m`](./Analysis/Analysis2_Assemble_Data.m). In that script, each row corresponds to one recording-task combination (`NewIdx`), and that same first dimension is shared across `Metadata`, `BurstInformationTopography`, `BurstInformationTopographyBands`, `SpectraRedux`, and `AverageSpectrograms`. In practice, row `i` in `Metadata` matches row `i` in every exported data matrix.
 
 ## Figure usage summary
 
@@ -10,7 +10,7 @@ The underlying data assembly happens in [`Analysis/Analysis2_Assemble_Data.m`](.
 - Figure 2: uses `Metadata`.
 - Figure 3: uses `Metadata`, `BurstInformationTopography`, `Chanlocs`.
 - Figure 4: uses `Metadata`, `BurstInformationTopography`, `Chanlocs`.
-- Figure 5: uses `Metadata`, `BurstInformationClusters`, `Frequencies`, `AverageSpectrograms`, `AllFrequencies`.
+- Figure 5: uses `Metadata`, `SpectraRedux`, `Frequencies`, `AverageSpectrograms`, `AllFrequencies`.
 - Figure 6: uses `Metadata`, `BurstInformationTopographyBands`, `Chanlocs`. Figure 6 is generated inside [`Analysis/Figure3_Figure6_TopographyAverage.m`](./Analysis/Figure3_Figure6_TopographyAverage.m).
 - Figure 7: uses `Metadata`, `BurstInformationTopographyBands`, `Chanlocs`.
 - Figure 8: uses `Metadata`, `BurstInformationTopography`, `Chanlocs`.
@@ -98,7 +98,7 @@ Where it is used:
 - Figure 7: `Analysis/Figure7_OvernightTopographiesBands.m:59-80` uses `BurstInformationTopographyBands.(WakeMeasure)` for band-specific mixed models, and `:102-127` plots the resulting overnight-change topographies.
 - Additional Figure 7 analyses in the same script correlate band topographies with sleep measures using `BurstInformationTopographyBands.(WakeMeasure)` at `:157-160` and `:200-202`.
 
-### `BurstInformationClusters`
+### `SpectraRedux`
 
 What it is:
 A struct of frequency-binned recording-level summaries, averaged across channels/non-edge channels as appropriate. It is initialized in `Analysis2_Assemble_Data` at lines 48-54 and filled in the frequency loop at lines 210-241.
@@ -117,17 +117,17 @@ Each field is `nRecordings x 12`. The 12 bins come from `Frequencies = 4:16` in 
 
 Where it is used:
 
-- Figure 5: `Analysis/Figure5_Spectrogram.m:47-68` uses `BurstInformationClusters.(Measures{MeasureIdx})` to plot age-by-frequency surfaces for evening recordings.
+- Figure 5: `Analysis/Figure5_Spectrogram.m:47-68` uses `SpectraRedux.(Measures{MeasureIdx})` to plot age-by-frequency surfaces for evening recordings.
 - Figure 5: `Analysis/Figure5_Spectrogram.m:82-103` uses the same variables to compute and plot overnight change surfaces.
 
 ### `Frequencies`
 
 What it is:
-The frequency-bin labels for `BurstInformationClusters`. In the assembly script it begins as bin edges `4:16` (`Analysis2_Assemble_Data.m:13`), is used for discretization (`:211-214`), and then the last edge is removed before saving (`:249`). The saved vector therefore labels the lower edge / plotting position for the 12 retained bins.
+The frequency-bin labels for `SpectraRedux`. In the assembly script it begins as bin edges `4:16` (`Analysis2_Assemble_Data.m:13`), is used for discretization (`:211-214`), and then the last edge is removed before saving (`:249`). The saved vector therefore labels the lower edge / plotting position for the 12 retained bins.
 
 This is label information in service of:
 
-- `BurstInformationClusters`
+- `SpectraRedux`
 
 Expected shape:
 `1 x 12` or `12 x 1`, depending on MATLAB load context.

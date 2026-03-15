@@ -46,7 +46,7 @@ CacheDir = Paths.Cache;
 CacheName = 'ProcessedData.mat';
 
 load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopographyBands', ...
-    'BurstInformationTopography', "BurstInformationClusters", 'Frequencies', 'Chanlocs')
+    'BurstInformationTopography', "SpectraRedux", 'Frequencies', 'Chanlocs')
 
 % select data for the paper
 Metadata.Index = [1:size(Metadata, 1)]'; %#ok<NBRAK1> % add index so can chop up table as needed
