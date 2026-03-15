@@ -225,7 +225,7 @@ writetable(CombinedTable, fullfile(ResultsFolder, 'OvernightChanges.csv'))
 
 
 % correlate every stage with variables
-StageLabels = {'timeN1', 'timeN2', 'timeN3','timeREM'};
+StageLabels = { 'timeN2', 'timeN3','timeREM'};
 clc
 for VariableIdx = 1:numel(OutcomeMeasures)
     for StageIdx = 1:numel(StageLabels)
@@ -258,7 +258,7 @@ for VariableIdx = 1:numel(OutcomeMeasures)
     disp('   ')
     disp('   ')
     disp(['____________________ ', OutcomeMeasures{VariableIdx}, ' ____________________'])
-    disp(Model);
+    % disp(Model);
     disp_mixed_stat(Model, 'Age_Table1')
     disp_mixed_stat(Model, StageLabels{StageIdx})
 disp_mixed_stat(Model, ['Age_Table1:', StageLabels{StageIdx}])
