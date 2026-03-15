@@ -14,7 +14,7 @@ SourcePower =  fullfile(Paths.AnalyzedData, 'EEG', 'Power');
 Folder = 'window4s_allt';
 
 CacheDir = Paths.Cache;
-CacheName = 'AllBursts.mat';
+CacheName = 'ProcessedData.mat';
 
 load(fullfile(CacheDir, CacheName), 'Metadata', 'Chanlocs')
 nRecordings = size(Metadata, 1); % this does not consider tasks

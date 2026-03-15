@@ -24,7 +24,7 @@ if ~exist(ResultsFolder,'dir')
 end
 
 CacheDir = Paths.Cache;
-CacheName = 'AllBursts.mat';
+CacheName = 'ProcessedData.mat';
 
 %%% load data
 load(fullfile(CacheDir, CacheName), 'Metadata', "BurstInformationClusters", 'Frequencies', 'AverageSpectrograms', 'AllFrequencies')
@@ -209,7 +209,6 @@ xlabel('Frequency (Hz)')
 ylabel('Power (\muV^2/Hz)')
 set(legend, 'ItemTokenSize', [10 10], 'location', 'southwest')
 end
-
 
 
 

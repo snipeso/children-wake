@@ -29,7 +29,7 @@ if ~exist(ResultsFolder,'dir')
 end
 
 CacheDir = Paths.Cache;
-CacheName = 'AllBursts.mat';
+CacheName = 'ProcessedData.mat';
 
 %%% load data
 load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopographyBands', ...
@@ -122,7 +122,6 @@ for MeasureIdx = 1:nMeasures
     colormap(PlotProps.Color.Maps.Divergent)
     chART.save_figure(['TopographyChange_', Measures{MeasureIdx}], ResultsFolder, PlotProps)
 end
-
 
 
 

@@ -25,7 +25,7 @@ if ~exist(ResultsFolder,'dir')
 end
 
 CacheDir = Paths.Cache;
-CacheName = 'AllBursts.mat';
+CacheName = 'ProcessedData.mat';
 
 
 

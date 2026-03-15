@@ -24,7 +24,7 @@ CacheNameSleep = 'AllSlowWaves.mat';
 load(fullfile(CacheDir, CacheNameSleep), 'MetadataSleep')
 
 % load in wake metadata
-CacheNameWake = 'AllBursts.mat';
+CacheNameWake = 'ProcessedData.mat';
 load(fullfile(CacheDir, CacheNameWake), 'Metadata')
 
 % fixes to metadata

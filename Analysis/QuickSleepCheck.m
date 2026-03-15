@@ -23,7 +23,7 @@ load("D:\Data\KISPISleep\Metadata\SleepScoring.mat",'Metadata')
 
 SleepStages = Metadata;
 
-load("E:\AllWake\Cache\children-wake\AllBursts.mat", 'Metadata')
+load("E:\AllWake\Cache\children-wake\ProcessedData.mat", 'Metadata')
  
 Metadata = basic_metadata_cleanup(Metadata);
 

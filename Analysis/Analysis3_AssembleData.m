@@ -20,7 +20,7 @@ SourcePower =  fullfile(Paths.AnalyzedData, 'EEG', 'Power');
 Folder = 'window4s_allt';
 
 CacheDir = Paths.Cache;
-CacheName = 'AllBursts.mat';
+CacheName = 'ProcessedData.mat';
 
 if ~exist(CacheDir, 'dir')
     mkdir(CacheDir)

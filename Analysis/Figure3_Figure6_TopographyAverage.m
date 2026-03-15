@@ -25,7 +25,7 @@ if ~exist(ResultsFolder,'dir')
 end
 
 CacheDir = Paths.Cache;
-CacheName = 'AllBursts.mat';
+CacheName = 'ProcessedData.mat';
 
 
 %%% load data
@@ -163,4 +163,3 @@ for MeasureIdx = 2 %1:nMeasures
     end
     chART.save_figure(['TopographyBandAverage_', Measures{MeasureIdx}], ResultsFolder, PlotProps)
 end
-

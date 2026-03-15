@@ -43,7 +43,7 @@ if ~exist(ResultsFolder,'dir')
 end
 
 CacheDir = Paths.Cache;
-CacheName = 'AllBursts.mat';
+CacheName = 'ProcessedData.mat';
 
 load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopographyBands', ...
     'BurstInformationTopography', "BurstInformationClusters", 'Frequencies', 'Chanlocs')
