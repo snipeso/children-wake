@@ -67,8 +67,8 @@ elseif exist( 'D:\LSM\Preprocessed', 'dir') % KISPI desktop
     addpath('\\nausers01\user\sniso\Dokumente\MATLAB\eeglab2022.0') % https://sccn.ucsd.edu/eeglab/download.php
 elseif exist( 'X:\Data\Raw', 'dir')
     Core = 'X:\Data\';
-% elseif exist('E:\AllWake', 'dir')
-%     Core = 'E:\AllWake';
+elseif exist('E:\AllWake', 'dir')
+    Core = 'E:\AllWake';
 elseif exist( 'D:\Data\AllWake\', 'dir')
     Core = 'D:\Data\AllWake';
 else
@@ -138,13 +138,6 @@ Bands.Theta = [4 7]; % add little gaps toavoid capturing edges
 Bands.Alpha = [8 11];
 Bands.Beta = [12 16];
 Parameters.Bands = Bands;
-
-PowerBands.Delta = [0.5 4];
-PowerBands.Theta = [4 8];
-PowerBands.Alpha = [8 12];
-PowerBands.Beta = [12 25];
-Parameters.PowerBands = PowerBands;
-
 
 Triggers.SyncEyes = 'S192';
 Triggers.Start = 'S  1';

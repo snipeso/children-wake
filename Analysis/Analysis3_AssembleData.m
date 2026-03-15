@@ -43,6 +43,11 @@ Metadata.Intercept =  nan(nRecordings, 1);
 Metadata.Quantity =  nan(nRecordings, 1);
 Metadata.Error = nan(nRecordings, 1);
 Metadata.RSquared = nan(nRecordings, 1);
+Metadata.RecordingDuration = nan(nRecordings, 1);
+
+for BandIdx = 1:numel(BandLabels)
+    Metadata.(BandLabels{BandIdx}) = nan(nRecordings, 1);
+end
 
 % average information across channels, split by frequencies
 BurstInformationClusters = struct();
@@ -111,7 +116,7 @@ for RecordingIdx = 1:nRecordings
         TaskMetadata = cat(1, TaskMetadata, Metadata(RecordingIdx, :));
         NewIdx = size(TaskMetadata, 1);
         TaskMetadata.Task{NewIdx} = Task;
-        TaskMetadata.RecordingDuration = EEGMetadata.pnts/EEGMetadata.srate/60; % in minutes
+        TaskMetadata.RecordingDuration(NewIdx) = EEGMetadata.pnts/EEGMetadata.srate/60; % in minutes
         TaskMetadata.Globality(NewIdx) = 100*mean([BurstClusters.ClusterGlobality]);
         TaskMetadata.Amplitude(NewIdx) = mean([BurstClusters.ClusterAmplitude]);
         TaskMetadata.Duration(NewIdx) = mean([BurstClusters.ClusterEnd]-[BurstClusters.ClusterStart])/SampleRate; % burst durations
@@ -127,6 +132,12 @@ for RecordingIdx = 1:nRecordings
 
         FreqRange = dsearchn(AllFrequencies', [Frequencies(1); Frequencies(end)]);
         TaskMetadata.Power(NewIdx) = mean(mean(log10(Power(NotEdgeChanIndex, FreqRange(1):FreqRange(2))), 2), 1);
+        for BandIdx = 1:numel(BandLabels)
+            Band = Bands.(BandLabels{BandIdx});
+            FreqRange = dsearchn(AllFrequencies', [Band(1); Band(end)]);
+            TaskMetadata.(BandLabels{BandIdx})(NewIdx) = ...
+                mean(mean(log10(Power(NotEdgeChanIndex, FreqRange(1):FreqRange(2))), 2), 1);
+        end
 
 
         %%% load in data for topographies

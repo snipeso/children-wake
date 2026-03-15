@@ -1,6 +1,6 @@
-% creates a massive matrix D x ch x f x v, so that data can then easily be
-% indexed as needed.
-% TODO: better documenation; rename to Assemble WakeData
+% Legacy backfill script.
+% Band-power metadata is now computed directly in Analysis3_AssembleData.m
+% when TaskMetadata is assembled and saved into AllBursts.mat.
 
 clear
 clc
@@ -50,6 +50,5 @@ for RecordingIdx = 1:nRecordings
     disp(num2str(RecordingIdx))
 end
 
-% save
-CacheName = 'WakeMetadata.mat';
-save(fullfile(CacheDir, CacheName), 'Metadata')
+% save legacy backfill into the main cache rather than a sidecar file
+save(fullfile(CacheDir, CacheName), 'Metadata', '-append')
