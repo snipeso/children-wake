@@ -27,7 +27,7 @@ CacheDir = Paths.Cache;
 CacheName = 'ProcessedData.mat';
 
 %%% load data
-load(fullfile(CacheDir, CacheName), 'Metadata', "SpectraRedux", 'FrequenciesRedux', 'AverageSpectrograms', 'Frequencies')
+load(fullfile(CacheDir, CacheName), 'Metadata', "SpectraRedux", 'FrequenciesRedux', 'SpectraAverage', 'Frequencies')
 
 MetadataOddball = Metadata;
 MetadataOddball.Task(strcmp(Metadata.Task, 'Oddball')) = {'1Oddball'};
@@ -137,11 +137,11 @@ for AgeIdx = 1:nAges
     HourIndexes = strcmp(MetadataSpectro.Hour, 'eve');
     MetadataTemp = MetadataSpectro(TaskIndexes & AgeIndexes & HourIndexes, :);
 
-    Evening = average_by_column(MetadataTemp, AverageSpectrograms, 'Participant', [1:size(MetadataTemp, 1)]'); % NB: I did not make sure that each recording was paired to another
+    Evening = average_by_column(MetadataTemp, SpectraAverage, 'Participant', [1:size(MetadataTemp, 1)]'); % NB: I did not make sure that each recording was paired to another
 
     HourIndexes = strcmp(MetadataSpectro.Hour, 'mor');
     MetadataTemp = MetadataSpectro(TaskIndexes & AgeIndexes & HourIndexes, :);
-    Morning = average_by_column(MetadataTemp, AverageSpectrograms, 'Participant', [1:size(MetadataTemp, 1)]');
+    Morning = average_by_column(MetadataTemp, SpectraAverage, 'Participant', [1:size(MetadataTemp, 1)]');
 
     % plot
     chART.sub_plot(Space, MiniGridA, [1 AgeIdx], [], true, '', PlotProps);
@@ -163,11 +163,11 @@ for TaskIdx = 1:nTasks
     TaskIndexes = contains(MetadataSpectro.Task, Tasks{TaskIdx});
     HourIndexes = strcmp(MetadataSpectro.Hour, 'eve');
     MetadataTemp = MetadataSpectro(TaskIndexes & HourIndexes, :);
-    Evening = average_by_column(MetadataTemp, AverageSpectrograms, 'Participant', [1:size(MetadataTemp, 1)]'); % NB: I did not make sure that each recording was paired to another
+    Evening = average_by_column(MetadataTemp, SpectraAverage, 'Participant', [1:size(MetadataTemp, 1)]'); % NB: I did not make sure that each recording was paired to another
 
     HourIndexes = strcmp(MetadataSpectro.Hour, 'mor');
     MetadataTemp = MetadataSpectro(TaskIndexes & HourIndexes, :);
-    Morning = average_by_column(MetadataTemp, AverageSpectrograms, 'Participant', [1:size(MetadataTemp, 1)]');
+    Morning = average_by_column(MetadataTemp, SpectraAverage, 'Participant', [1:size(MetadataTemp, 1)]');
 
     % plot
     chART.sub_plot(Space, MiniGridB, [1 TaskIdx], [], true, '', PlotProps);

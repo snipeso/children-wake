@@ -76,7 +76,7 @@ Topographies.Amplitude = nan(nRecordings, nChans);
 Topographies.Power = nan(nRecordings, nChans);
 Topographies.PeriodicPower = nan(nRecordings, nChans);
 
-AverageSpectrograms = nan(nRecordings, 513);
+SpectraAverage = nan(nRecordings, 513);
 
 TaskMetadata = table(); % set up new metadata table that also takes into account task
 
@@ -206,7 +206,7 @@ for RecordingIdx = 1:nRecordings
 
         % get power for all non-edge channels
         AveragePower = mean(Power(NotEdgeChanIndex, :), 1);
-        AverageSpectrograms(NewIdx, :) = AveragePower;
+        SpectraAverage(NewIdx, :) = AveragePower;
 
         % run fooof
         [Slope, Intercept, WhitenedPower, FooofFrequencies, Fit, AperiodicPower] = fooof_spectrum(AveragePower, Frequencies, [2 35]);
@@ -261,4 +261,4 @@ FrequenciesRedux(end) = []; % remove last edge;
 
 % save
 save(fullfile(CacheDir, CacheName), 'Metadata',  'Topographies', 'TopographiesBands', ...
-    "SpectraRedux", 'FrequenciesRedux', 'Chanlocs', 'Frequencies', 'AverageSpectrograms')
+    "SpectraRedux", 'FrequenciesRedux', 'Chanlocs', 'Frequencies', 'SpectraAverage')

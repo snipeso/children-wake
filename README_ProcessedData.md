@@ -2,7 +2,7 @@
 
 This file is the publication-ready version of the wake EEG cache. It is written in [`Analysis/Analysis8_PolishDataForPublication.m`](./Analysis/Analysis8_PolishDataForPublication.m), which loads the main cache from `AllBursts.mat`, cleans `Metadata`, recodes dataset names, renames several metadata outcome columns for publication, and then saves the variables listed below.
 
-The underlying data assembly happens in [`Analysis/Analysis2_Assemble_Data.m`](./Analysis/Analysis2_Assemble_Data.m). In that script, each row corresponds to one recording-task combination (`NewIdx`), and that same first dimension is shared across `Metadata`, `Topographies`, `TopographiesBands`, `SpectraRedux`, and `AverageSpectrograms`. In practice, row `i` in `Metadata` matches row `i` in every exported data matrix.
+The underlying data assembly happens in [`Analysis/Analysis2_Assemble_Data.m`](./Analysis/Analysis2_Assemble_Data.m). In that script, each row corresponds to one recording-task combination (`NewIdx`), and that same first dimension is shared across `Metadata`, `Topographies`, `TopographiesBands`, `SpectraRedux`, and `SpectraAverage`. In practice, row `i` in `Metadata` matches row `i` in every exported data matrix.
 
 ## Figure usage summary
 
@@ -10,7 +10,7 @@ The underlying data assembly happens in [`Analysis/Analysis2_Assemble_Data.m`](.
 - Figure 2: uses `Metadata`.
 - Figure 3: uses `Metadata`, `Topographies`, `Chanlocs`.
 - Figure 4: uses `Metadata`, `Topographies`, `Chanlocs`.
-- Figure 5: uses `Metadata`, `SpectraRedux`, `Frequencies`, `AverageSpectrograms`, `AllFrequencies`.
+- Figure 5: uses `Metadata`, `SpectraRedux`, `Frequencies`, `SpectraAverage`, `AllFrequencies`.
 - Figure 6: uses `Metadata`, `TopographiesBands`, `Chanlocs`. Figure 6 is generated inside [`Analysis/Figure3_Figure6_TopographyAverage.m`](./Analysis/Figure3_Figure6_TopographyAverage.m).
 - Figure 7: uses `Metadata`, `TopographiesBands`, `Chanlocs`.
 - Figure 8: uses `Metadata`, `Topographies`, `Chanlocs`.
@@ -163,7 +163,7 @@ The full frequency axis returned with the power spectra loaded from disk (`Analy
 
 This is label information in service of:
 
-- `AverageSpectrograms`
+- `SpectraAverage`
 
 It also underlies the calculation of:
 
@@ -176,13 +176,13 @@ It also underlies the calculation of:
 - `Metadata.AperiodicPower`
 
 Expected shape:
-Frequency vector matching the second dimension of `AverageSpectrograms` and the loaded PSD arrays. In `Analysis2_Assemble_Data`, `AverageSpectrograms` is preallocated with 513 columns, so this is expected to have length 513.
+Frequency vector matching the second dimension of `SpectraAverage` and the loaded PSD arrays. In `Analysis2_Assemble_Data`, `SpectraAverage` is preallocated with 513 columns, so this is expected to have length 513.
 
 Where it is used:
 
 - Figure 5: `Analysis/Figure5_Spectrogram.m:145` and `:171` pass `AllFrequencies` into `plot_spectrogram(...)` as the x-axis for the full average spectra.
 
-### `AverageSpectrograms`
+### `SpectraAverage`
 
 What it is:
 The average power spectrum for each recording-task, computed as the mean PSD across the non-edge channels (`Analysis2_Assemble_Data.m:196-198`). Despite the variable name, this is a 1D average spectrum per recording, not a time-resolved spectrogram.
@@ -192,8 +192,8 @@ Expected shape:
 
 Where it is used:
 
-- Figure 5 supplementary panels: `Analysis/Figure5_Spectrogram.m:137-145` averages `AverageSpectrograms` within age groups and plots evening vs morning spectra using `AllFrequencies`.
-- Figure 5 supplementary task panels: `Analysis/Figure5_Spectrogram.m:163-171` averages `AverageSpectrograms` within task and hour, again plotted against `AllFrequencies`.
+- Figure 5 supplementary panels: `Analysis/Figure5_Spectrogram.m:137-145` averages `SpectraAverage` within age groups and plots evening vs morning spectra using `AllFrequencies`.
+- Figure 5 supplementary task panels: `Analysis/Figure5_Spectrogram.m:163-171` averages `SpectraAverage` within task and hour, again plotted against `AllFrequencies`.
 
 ## Notes
 
