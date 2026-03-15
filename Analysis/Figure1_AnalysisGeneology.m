@@ -168,7 +168,7 @@ ylim([-3 3])
 set(gca, 'XTick', [], 'YTick', []) % NB. i remove the ticks because for slopes, the specific values dont really matter
 axis square
 box off
-chART.save_figure('Slope', ResultsFolder, PlotProps)
+chART.save_figure('Exponent', ResultsFolder, PlotProps)
 
 
 % cartoon intercept example
@@ -190,7 +190,7 @@ xlim(log10([0.8 35]))
 ylim([-2 4])
 axis square
 box off
-chART.save_figure('Intercept', ResultsFolder, PlotProps)
+chART.save_figure('Offset', ResultsFolder, PlotProps)
 
 
 % histogram quantity and amplitude

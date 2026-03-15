@@ -44,7 +44,7 @@ PlotProps = Parameters.PlotProps.Manuscript;
 % PlotProps.Figure.Padding = 28;
 % PlotProps.Axes.yPadding = 20;
 
-Measures = {'Amplitude', 'Quantity', 'Power', 'PeriodicPower'};
+Measures = {'Amplitude', 'Density', 'Power', 'PeriodicPower'};
 MeasureTitles = {'Amplitude', 'Density', 'Power', 'Periodic power'};
 Labels = {'\muV', '%', 'log power', 'log power'};
 nMeasures = numel(Measures);

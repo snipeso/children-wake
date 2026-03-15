@@ -16,7 +16,7 @@ Ages = Parameters.Ages;
 nAges = size(Ages, 1);
 nChannels = 123;
 Tasks = {'Oddball', 'GoNoGo', 'Alertness', 'Fixation'}; % oddball first is important; its the reference. Learning excluded because different in morning
-Measures = Parameters.OutcomeMeasures.OriginalLabels;
+Measures = Parameters.OutcomeMeasures.Fields;
 MeasuresTitles = Parameters.OutcomeMeasures.Titles;
 MeaureLabels = append('\beta ',{'\muV', '%', 'a.u.', 'log power', 'log power', 'log power'});
 ColorParameter = 'Estimate'; % this is what gets colored in the topoplots, the beta estimates
@@ -91,9 +91,9 @@ PlotProps.Text.AxisSize = 16;
 PlotProps.Colorbar.Location= 'north';
 CLims = struct();
 CLims.Amplitude = [-4 4];
-CLims.Quantity = [-10 10];
-CLims.Slope = [-.15 .15];
-CLims.Intercept = [-.15 .15];
+CLims.Density = [-10 10];
+CLims.Exponent = [-.15 .15];
+CLims.Offset = [-.15 .15];
 CLims.Power = [-.4 .4];
 CLims.PeriodicPower = [-.08 .08];
 
@@ -131,9 +131,9 @@ end
 
 CLims = struct();
 CLims.Amplitude = [-4 4];
-CLims.Quantity = [-10 10];
-CLims.Slope = [-.15 .15];
-CLims.Intercept = [-.15 .15];
+CLims.Density = [-10 10];
+CLims.Exponent = [-.15 .15];
+CLims.Offset = [-.15 .15];
 CLims.Power = [-.4 .4];
 CLims.PeriodicPower = [-.08 .08];
 
@@ -172,7 +172,7 @@ chART.save_figure('TopographyChange', ResultsFolder, PlotProps)
 
 %% TODO fit model for bands
 
-Measure = 'Quantity';
+Measure = 'Density';
 
 MetadataStat = Metadata;
 MetadataStat = make_categorical(MetadataStat, 'Task', Tasks);
@@ -221,9 +221,9 @@ end
 %%
 CLims = struct();
 CLims.Amplitude = [-4 4];
-CLims.Quantity = [-10 10];
-CLims.Slope = [-.15 .15];
-CLims.Intercept = [-.15 .15];
+CLims.Density = [-10 10];
+CLims.Exponent = [-.15 .15];
+CLims.Offset = [-.15 .15];
 CLims.Power = [-.4 .4];
 CLims.PeriodicPower = [-.08 .08];
 

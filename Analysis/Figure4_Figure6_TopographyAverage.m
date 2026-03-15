@@ -45,14 +45,14 @@ table_demographics(unique_metadata(Metadata), 'AgeGroups', ResultsFolder, 'AgeGr
 %% Figure 4
 
 CLims = struct();
-CLims.Quantity = [5 40];
+CLims.Density = [5 40];
 CLims.Amplitude = [10, 34];
-CLims.Slope = [1.3 2.1];
-CLims.Intercept = [.8 2.3];
+CLims.Exponent = [1.3 2.1];
+CLims.Offset = [.8 2.3];
 CLims.Power = [-.7  1.7];
 CLims.PeriodicPower = [0.1 .44];
 
-Measures = Parameters.OutcomeMeasures.OriginalLabels;
+Measures = Parameters.OutcomeMeasures.Fields;
 MeasuresTitles = Parameters.OutcomeMeasures.Titles;
 
 MeasureUnits = {'\muV', '% recording', 'a.u.', 'log power', 'log power', 'log power'};
@@ -100,12 +100,12 @@ chART.save_figure('TopographyAverage', ResultsFolder, PlotProps)
 %% Average topographies, split by band (Figure 6)
 
 CLims = struct();
-CLims.Quantity = [0 5; 3 30; 0 6.5];
+CLims.Density = [0 5; 3 30; 0 6.5];
 CLims.Amplitude = [-1, 18; 10, 30; 1, 16];
 CLims.Power = [-.5 2.5; -.25 2.25; -1.5 .5];
 CLims.PeriodicPower = [0.05 .3; .2 .8; -.05 .4];
 
-Measures = Parameters.OutcomeMeasures.OriginalLabels([1, 2, 5, 6]); % exclude aperiodic labels
+Measures = Parameters.OutcomeMeasures.Fields([1, 2, 5, 6]); % exclude aperiodic labels
 MeasuresTitles = Parameters.OutcomeMeasures.Titles([1, 2, 5, 6]);
 MeasureUnits = {'\muV', '% recording', 'log power', 'log power'};
 nMeasures = numel(Measures);

@@ -16,7 +16,7 @@ Ages = Ages(2:end, :); % exclude youngest group; too few
 nAges = size(Ages, 1);
 nChannels = 123;
 Tasks = {'Oddball', 'GoNoGo', 'Alertness', 'Fixation'}; % oddball first is important; its the reference. Learning excluded because different in morning
-Measures = Parameters.OutcomeMeasures.OriginalLabels;
+Measures = Parameters.OutcomeMeasures.Fields;
 MeasuresTitles = Parameters.OutcomeMeasures.Titles;
 MeaureLabels = append('\beta ',{'\muV', '%', 'a.u.', 'log power', 'log power', 'log power'});
 ColorParameter = 'Estimate'; % this is what gets colored in the topoplots, the beta estimates
@@ -41,7 +41,7 @@ table_demographics(unique_metadata(Metadata), 'AgeGroups', ResultsFolder, 'AgeGr
 
 %% fit model for bands
 
-WakeMeasure = 'Quantity';
+WakeMeasure = 'Density';
 
 MetadataStat = Metadata;
 MetadataStat = make_categorical(MetadataStat, 'Task', Tasks);
@@ -136,7 +136,7 @@ load(fullfile(CacheDir, CacheName), 'Metadata', 'TopographiesBands', ...
 Metadata = basic_metadata_cleanup(Metadata);
 
 %%% 
-WakeMeasure = 'Quantity';
+WakeMeasure = 'Density';
 
 load(fullfile(Paths.Metadata, 'SleepScoring.mat'), 'ScoringMetadata')
 
@@ -169,7 +169,7 @@ title(strjoin([WakeMeasure,  MetadataSimple.Hour(1), BandLabels{BandIdx}], ' '))
 
 %% for codex
 
-WakeMeasure = 'Quantity';
+WakeMeasure = 'Density';
 SleepMeasure = 'timeN3';
 PlotProps = Parameters.PlotProps.TopoPlots;
 PlotProps.Color.Background = 'white';

@@ -12,7 +12,7 @@ Paths = Parameters.Paths;
 nChannels = 123;
 Tasks = {'Oddball', 'Learning', 'GoNoGo', 'Alertness', 'Fixation'}; % oddball first is important; its the reference
 
-Measures =  Parameters.OutcomeMeasures.OriginalLabels;
+Measures =  Parameters.OutcomeMeasures.Fields;
 MeasureTitles = Parameters.OutcomeMeasures.Titles;
 MeasureLabels = append('\beta ',{'\muV', '%', 'a.u.', 'log power', 'log power', 'log power'});
 
@@ -68,9 +68,9 @@ ColorParameter = 'Estimate';
 
 CLims = struct();
 CLims.Amplitude = [-4 4];
-CLims.Quantity = [-10 10];
-CLims.Slope = [-.15 .15];
-CLims.Intercept = [-.15 .15];
+CLims.Density = [-10 10];
+CLims.Exponent = [-.15 .15];
+CLims.Offset = [-.15 .15];
 CLims.Power = [-.4 .4];
 CLims.PeriodicPower = [-.08 .08];
 

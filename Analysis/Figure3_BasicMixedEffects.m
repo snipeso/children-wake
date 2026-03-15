@@ -12,7 +12,7 @@ Parameters = analysisParameters();
 
 Hours = Parameters.Hours;
 
-OutcomeMeasures = Parameters.OutcomeMeasures.OriginalLabels;
+OutcomeMeasures = Parameters.OutcomeMeasures.Fields;
 OutcomeMeasuresTitles = Parameters.OutcomeMeasures.Titles;
 MeasureUnits = Parameters.OutcomeMeasures.Units;
 
@@ -455,8 +455,8 @@ disp(Mask)
 clc
 % Compare dependent correlations using the QuantPsy-style Steiger test.
 Comparisons = {
-    'Power', 'Amplitude', 'Intercept';
-    'PeriodicPower', 'Quantity', 'Amplitude';
+    'Power', 'Amplitude', 'Offset';
+    'PeriodicPower', 'Density', 'Amplitude';
     };
 
 for ComparisonIdx = 1:size(Comparisons, 1)
@@ -518,15 +518,6 @@ load(fullfile(CacheDir, CacheName), 'Metadata')
 Metadata = basic_metadata_cleanup(Metadata);
 Metadata.Dataset = Durations.Dataset; % recoded dataset names
 Metadata.RecordingDuration = Durations.RecordingDuration;
-
-% rename columns
-OriginalTableLables = Metadata.Properties.VariableNames;
-for Idx = 1:numel(OutcomeMeasuresTitles)
-
-    IdxTable = strcmp(OriginalTableLables, OutcomeMeasures{Idx});
-    Metadata.Properties.VariableNames(IdxTable) = genvarname(OutcomeMeasuresTitles(Idx));
-end
-
 
 Destination = 'D:\Dropbox\Research\Publications and Presentations\Sleep\Papers\KidsBursts\Version6_ImagingNeuroscience\SupplMaterial';
 writetable(Metadata, fullfile(Destination, 'Data1_AllWakeData.csv'))

@@ -38,13 +38,17 @@ Metadata.Duration =  nan(nRecordings, 1);
 Metadata.Power =  nan(nRecordings, 1);
 Metadata.PeriodicPower = nan(nRecordings, 1);
 Metadata.AperiodicPower =  nan(nRecordings, 1);
-Metadata.Slope =  nan(nRecordings, 1);
-Metadata.Intercept =  nan(nRecordings, 1);
-Metadata.Quantity =  nan(nRecordings, 1);
+Metadata.Exponent =  nan(nRecordings, 1);
+Metadata.Offset =  nan(nRecordings, 1);
+Metadata.Density =  nan(nRecordings, 1);
 Metadata.Error = nan(nRecordings, 1);
 Metadata.RSquared = nan(nRecordings, 1);
 Metadata.RecordingDuration = nan(nRecordings, 1);
 
+% average information per channel, averaging frequencies into bands
+Bands = Parameters.Bands;
+BandLabels = fieldnames(Bands);
+nBands = numel(BandLabels);
 for BandIdx = 1:numel(BandLabels)
     Metadata.(BandLabels{BandIdx}) = nan(nRecordings, 1);
 end
@@ -52,26 +56,21 @@ end
 % average information across channels, split by frequencies
 SpectraRedux = struct();
 SpectraRedux.Amplitude = nan(nRecordings, nFrequencies);
-SpectraRedux.Quantity =nan(nRecordings, nFrequencies);
+SpectraRedux.Density =nan(nRecordings, nFrequencies);
 SpectraRedux.Duration =nan(nRecordings, nFrequencies);
 SpectraRedux.Globality =nan(nRecordings, nFrequencies);
 SpectraRedux.Power = nan(nRecordings, nFrequencies);
 SpectraRedux.PeriodicPower = nan(nRecordings, nFrequencies);
 
-
-% average information per channel, averaging frequencies into bands
-Bands = Parameters.Bands;
-BandLabels = fieldnames(Bands);
-nBands = numel(BandLabels);
 TopographiesBands = struct();
-TopographiesBands.Quantity = nan(nRecordings, nChans, nBands);
+TopographiesBands.Density = nan(nRecordings, nChans, nBands);
 TopographiesBands.Amplitude = nan(nRecordings, nChans, nBands);
 TopographiesBands.Power = nan(nRecordings, nChans, nBands);
 TopographiesBands.PeriodicPower = nan(nRecordings, nChans, nBands);
 
-Topographies.Slope = nan(nRecordings, nChans);
-Topographies.Intercept = nan(nRecordings, nChans);
-Topographies.Quantity = nan(nRecordings, nChans);
+Topographies.Exponent = nan(nRecordings, nChans);
+Topographies.Offset = nan(nRecordings, nChans);
+Topographies.Density = nan(nRecordings, nChans);
 Topographies.Amplitude = nan(nRecordings, nChans);
 Topographies.Power = nan(nRecordings, nChans);
 Topographies.PeriodicPower = nan(nRecordings, nChans);
@@ -121,7 +120,7 @@ for RecordingIdx = 1:nRecordings
         TaskMetadata.Amplitude(NewIdx) = mean([BurstClusters.ClusterAmplitude]);
         TaskMetadata.Duration(NewIdx) = mean([BurstClusters.ClusterEnd]-[BurstClusters.ClusterStart])/SampleRate; % burst durations
 
-        TaskMetadata.Quantity(NewIdx) = 100*sum([BurstClusters.ClusterEnd]-[BurstClusters.ClusterStart])/EEGMetadata.pnts; % number of bursts
+        TaskMetadata.Density(NewIdx) = 100*sum([BurstClusters.ClusterEnd]-[BurstClusters.ClusterStart])/EEGMetadata.pnts; % number of bursts
 
         % load in power spectra
         Path = fullfile(SourcePower, Folder, Dataset, Task);
@@ -162,7 +161,7 @@ for RecordingIdx = 1:nRecordings
                 BurstsTemp = Bursts(BurstChannels==ChannelIdx & ...
                     [Bursts.BurstFrequency]>=Band(1) & [Bursts.BurstFrequency]<=Band(2));
 
-                TopographiesBands.Quantity(NewIdx, ChannelIdx, BandIdx) = ...
+                TopographiesBands.Density(NewIdx, ChannelIdx, BandIdx) = ...
                     100*sum([BurstsTemp.DurationPoints])/EEGMetadata.pnts; % NOT CYCLES PER MINUTE!!
 
                 if numel(BurstsTemp)<MinBursts
@@ -180,7 +179,7 @@ for RecordingIdx = 1:nRecordings
             BurstsTemp = Bursts(BurstChannels==ChannelIdx);
 
             % average quantity of bursts in that channel (as % duration recording)
-            Topographies.Quantity(NewIdx, ChannelIdx) = ...
+            Topographies.Density(NewIdx, ChannelIdx) = ...
                 100*sum([BurstsTemp.DurationPoints])/EEGMetadata.pnts; % NOT CYCLES PER MINUTE!!
 
             % average amplitude in that channel
@@ -196,9 +195,9 @@ for RecordingIdx = 1:nRecordings
             Topographies.Power(NewIdx, ChannelIdx) = mean(log10(Power(ChannelIdx, FreqRange(1):FreqRange(2))), 2);
 
             % slopes and stuff
-            [Slope, Intercept, WhitenedPower, FooofFrequencies] = fooof_spectrum(Power(ChannelIdx, :), Frequencies, [2 35]);
-            Topographies.Slope(NewIdx, ChannelIdx) = Slope;
-            Topographies.Intercept(NewIdx, ChannelIdx) = Intercept;
+            [Exponent, Offset, WhitenedPower, FooofFrequencies] = fooof_spectrum(Power(ChannelIdx, :), Frequencies, [2 35]);
+            Topographies.Exponent(NewIdx, ChannelIdx) = Exponent;
+            Topographies.Offset(NewIdx, ChannelIdx) = Offset;
 
             FreqRangeFooof = dsearchn(FooofFrequencies', [FrequenciesRedux(1); FrequenciesRedux(end)]);
             Topographies.PeriodicPower(NewIdx, ChannelIdx) = mean(WhitenedPower(FreqRangeFooof(1):FreqRangeFooof(2)), 2);
@@ -209,9 +208,9 @@ for RecordingIdx = 1:nRecordings
         SpectraAverage(NewIdx, :) = AveragePower;
 
         % run fooof
-        [Slope, Intercept, WhitenedPower, FooofFrequencies, Fit, AperiodicPower] = fooof_spectrum(AveragePower, Frequencies, [2 35]);
-        TaskMetadata.Slope(NewIdx) = Slope;
-        TaskMetadata.Intercept(NewIdx) = Intercept;
+        [Exponent, Offset, WhitenedPower, FooofFrequencies, Fit, AperiodicPower] = fooof_spectrum(AveragePower, Frequencies, [2 35]);
+        TaskMetadata.Exponent(NewIdx) = Exponent;
+        TaskMetadata.Offset(NewIdx) = Offset;
         FreqRangeFooof = dsearchn(FooofFrequencies', [FrequenciesRedux(1); FrequenciesRedux(end)]);
         TaskMetadata.PeriodicPower(NewIdx) = mean(WhitenedPower(FreqRangeFooof(1):FreqRangeFooof(2)));
         TaskMetadata.Error(NewIdx) = Fit(1);
@@ -226,7 +225,7 @@ for RecordingIdx = 1:nRecordings
             BurstIdx = BurstFrequencies==FrequencyIdx;
             BurstsTemp = BurstClusters(BurstIdx);
 
-            SpectraRedux.Quantity(NewIdx, FrequencyIdx) = ...
+            SpectraRedux.Density(NewIdx, FrequencyIdx) = ...
                 100*sum([BurstsTemp.ClusterEnd]-[BurstsTemp.ClusterStart])/EEGMetadata.pnts;
 
             if numel(BurstsTemp)<MinBursts
