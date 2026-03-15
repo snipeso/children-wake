@@ -404,6 +404,7 @@ PlotProps.Scatter.Alpha = .4;
 
 Grid = [numel(OutcomeMeasures) numel(OutcomeMeasures)];
 figure('Units','centimeters','OuterPosition',[0 0 18 18])
+R = nan(numel(OutcomeMeasures));
 for Idx1 = 1:numel(OutcomeMeasures)
     for Idx2 = 1:numel(OutcomeMeasures)
         chART.sub_plot([], Grid, [Idx2, Idx1], [], false, '', PlotProps);
@@ -414,11 +415,12 @@ for Idx1 = 1:numel(OutcomeMeasures)
                 title(OutcomeMeasuresTitles{Idx1})
                 ylabel(OutcomeMeasures{Idx2})
             end
+            if Idx2==1, ylabel(OutcomeMeasuresTitles{Idx2}); end
             axis off
             continue
         end
 
-        plot_scattercloud(Metadata, OutcomeMeasures{Idx1}, OutcomeMeasures{Idx2}, PlotProps, '', false)
+        [R(Idx1, Idx2), ~] = plot_scattercloud(Metadata, OutcomeMeasures{Idx1}, OutcomeMeasures{Idx2}, PlotProps, '', false);
         set(gca, 'XTick' ,[], 'YTick', [])
         axis square
         if Idx2 == numel(OutcomeMeasures)
@@ -434,9 +436,38 @@ end
 chART.save_figure('CorrelateVariables', ResultsFolder, PlotProps)
 
 
-%% For codex:
+%% significant differences
 
+clc
+% Compare dependent correlations using the QuantPsy-style Steiger test.
+Comparisons = {
+    'Power', 'Amplitude', 'Quantity';
+    'PeriodicPower', 'Quantity', 'Amplitude';
+    };
 
+for ComparisonIdx = 1:size(Comparisons, 1)
+    SharedVariable = Comparisons{ComparisonIdx, 1};
+    Variable1 = Comparisons{ComparisonIdx, 2};
+    Variable2 = Comparisons{ComparisonIdx, 3};
+
+    SharedIdx = strcmp(OutcomeMeasures, SharedVariable);
+    Variable1Idx = strcmp(OutcomeMeasures, Variable1);
+    Variable2Idx = strcmp(OutcomeMeasures, Variable2);
+
+    Data = Metadata(:, {SharedVariable, Variable1, Variable2});
+    CompleteCases = all(~ismissing(Data), 2);
+    n = nnz(CompleteCases);
+
+    StatsCorr = corrtest2_dependent_shared( ...
+        R(SharedIdx, Variable1Idx), ...
+        R(SharedIdx, Variable2Idx), ...
+        R(Variable1Idx, Variable2Idx), ...
+        n);
+
+    disp([SharedVariable, ': ', Variable1, ' vs ', Variable2, ...
+        ' -> z = ', num2str(StatsCorr.z_score, '%.3f'), ...
+        '; p = ', num2str(StatsCorr.two_tail_p, '%.4g')])
+end
 
 
 

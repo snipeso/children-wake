@@ -1,4 +1,4 @@
-function plot_scattercloud(Table, XColumn, YColumn, PlotProps, ColorgroupColumn, PlotZeroLine, XLim, YLim)
+function [R, p] = plot_scattercloud(Table, XColumn, YColumn, PlotProps, ColorgroupColumn, PlotZeroLine, XLim, YLim)
 arguments
     Table
     XColumn
