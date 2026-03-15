@@ -94,7 +94,13 @@ CD = mfilename('fullpath');
 Paths.Analysis = fullfile(extractBefore(CD, 'children-wake'), 'children-wake');
 
 % get all folders in functions
-Subfolders = deblank(string(ls(fullfile(Paths.Analysis, 'functions')))); % all content
+
+if ispc
+    Subfolders = deblank(string(ls(fullfile(Paths.Analysis, 'functions')))); % all content
+elseif ismac
+    Subfolders = deblank(split(string(ls(fullfile(Paths.Analysis, 'functions'))))); % all content
+end
+
 Subfolders(contains(Subfolders, '.')) = []; % remove all files
 
 for Indx_F = 1:numel(Subfolders)

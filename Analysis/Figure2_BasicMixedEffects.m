@@ -39,6 +39,7 @@ load(fullfile(CacheDir, CacheName), 'Metadata')
 % fixes to metadata
 Metadata = basic_metadata_cleanup(Metadata);
 
+%%
 % overview of final dataset
 Patients = Metadata(contains(Metadata.Group, 'ADHD'), :);
 table_demographics(unique_metadata(Patients), 'Subgroup', ResultsFolder, 'SubgroupPatients')
@@ -95,7 +96,7 @@ for MeasureIdx = 1:numel(OutcomeMeasures_Extended)
 
     % Display the model summary
     disp('   ')
-disp('   ')
+    disp('   ')
     disp(['____________________ ', OutcomeMeasures_ExtendedLabels{MeasureIdx}, ' ____________________'])
     disp(Model);
     disp_mixed_stat(Model, 'Age')
@@ -110,8 +111,8 @@ end
 % diary off
 
 FormulaString = ' ~ Task + Hour*Age + Group + Sex + (1|Participant) + (1|Participant:SessionUnique)'; % MAIN ONE
- Model = fitlme(MetadataStat, formula);
- disp(Model);
+Model = fitlme(MetadataStat, formula);
+disp(Model);
 
 %% average error and r squared
 
@@ -135,7 +136,7 @@ YLimits = [5, 42; % amplitudes
     .3, 2.5; % intercept
     -.8, 1; % power
     -.05, .705; % periodic power
-      -.07, .5; % periodic power
+    -.07, .5; % periodic power
     ];
 XLim = [3 25];
 
@@ -204,6 +205,64 @@ chART.save_figure('BasicScatterAge', ResultsFolder, PlotProps)
 
 
 
+%% compare overnight changes to sleep duration
+
+load(fullfile(Paths.Metadata, 'SleepScoring.mat'), 'ScoringMetadata')
+
+MetadataScatter = Metadata;
+
+OvernightMetadata = pair_recordings(MetadataScatter, 'Hour', {'eve', 'mor'});
+OvernightMetadata(contains(OvernightMetadata.Task, {'3Oddball', 'GoNoGo', 'Fixation'}), :) = [];
+% OvernightMetadata = unique_metadata(OvernightMetadata, 'Participant');
+
+CombinedTable = combine_metadata_tables(OvernightMetadata, ScoringMetadata, {'Participant', 'Session'});
+CombinedTable(isnan(CombinedTable.TST), :) = [];
+
+% save table to add to publication
+writetable(CombinedTable, fullfile(ResultsFolder, 'OvernightChanges.csv'))
+
+
+% correlate every stage with variables
+StageLabels = { 'timeN2', 'timeN3','timeREM'};
+clc
+for VariableIdx = 1:numel(OutcomeMeasures)
+    for StageIdx = 1:numel(StageLabels)
+        X = CombinedTable.(OutcomeMeasures{VariableIdx});
+        Y = CombinedTable.(StageLabels{StageIdx});
+        [r, p] = corr(X, Y, 'Rows','complete');
+        if p < .001
+            pstring = '< .001';
+        else
+            pstring = ['= ', num2str(round(p, 3))];
+        end
+        disp([OutcomeMeasures{VariableIdx}, ' vs ', StageLabels{StageIdx}, ' r = ', num2str(round(r, 2)), '; p ', pstring]);
+    end
+
+end
+
+%%
+clc
+
+% run mixed model
+StageLabels = {'timeN2', 'timeN3','timeREM'};
+
+    for StageIdx = 1:numel(StageLabels)
+for VariableIdx = 1:numel(OutcomeMeasures)
+        formula = [OutcomeMeasures{VariableIdx}, ' ~ ', StageLabels{StageIdx}, ' * Age_Table1 + (1|Participant)'];
+
+        Model = fitlme(CombinedTable, formula);
+
+    % Display the model summary
+    disp('   ')
+    disp('   ')
+    disp(['____________________ ', OutcomeMeasures{VariableIdx}, ' ____________________'])
+    % disp(Model);
+    disp_mixed_stat(Model, 'Age_Table1')
+    disp_mixed_stat(Model, StageLabels{StageIdx})
+disp_mixed_stat(Model, ['Age_Table1:', StageLabels{StageIdx}])
+    end
+end
+
 
 
 %% mixed model to correct for multiple recordings etc.
@@ -251,6 +310,8 @@ disp(Stats)
 writetable(Stats, fullfile(ResultsFolder, 'CorrelationsOutcomeVariables.xlsx'))
 writetable(TValues, fullfile(ResultsFolder, 'CorrelationsOutcomeVariables_TValues.csv'))
 
+
+%% 
 
 
 %% plot errors (Suppl. Figure 2-1)
@@ -374,7 +435,7 @@ chART.save_figure('CorrelateVariables', ResultsFolder, PlotProps)
 
 
 
-%% calculate how many intact datasets there were 
+%% calculate how many intact datasets there were
 
 Datasets = {'SleepLearning', 'Providence', 'ADHD', 'BMSAdults', 'BMS', 'BMSSL'};
 nRecordings = [8, 2, 4, 4, 16, 12]; % total expected recordings per dataset

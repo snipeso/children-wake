@@ -41,7 +41,7 @@ table_demographics(unique_metadata(Metadata), 'AgeGroups', ResultsFolder, 'AgeGr
 
 %% fit model for bands
 
-Measure = 'Quantity';
+WakeMeasure = 'Quantity';
 
 MetadataStat = Metadata;
 MetadataStat = make_categorical(MetadataStat, 'Task', Tasks);
@@ -61,7 +61,7 @@ for BandIdx = 1:nBands
     for AgeIdx = 1:nAges
         for ChannelIdx = 1:nChannels
             MetadataTemp = MetadataStat(MetadataStat.AgeGroups==AgeIdx, :);
-            MetadataTemp.Data = BurstInformationTopographyBands.(Measure)(MetadataTemp.Index, ChannelIdx, BandIdx);
+            MetadataTemp.Data = BurstInformationTopographyBands.(WakeMeasure)(MetadataTemp.Index, ChannelIdx, BandIdx);
 
             if numel(unique(MetadataTemp.Task)) > 1
                 Fixed = TaskFixed;
@@ -89,6 +89,7 @@ end
 
 %% Plot bands change (Figure 7)
 
+PlotProps.Color.Background = 'white';
 CLims = [-1 1;
     -12 12;
     -2.5 2.5];
@@ -117,9 +118,112 @@ for BandIdx = 1:nBands
 
     % plot colorbar
     Axes= chART.sub_plot([], Grid, [BandIdx, nAges+1], [], false, '', PlotProps);
+    axis off
     Axes.Position(1) = Axes.Position(1)+.02;
-    chART.plot.pretty_colorbar('Divergent', CLims(BandIdx, :), MeaureLabels{strcmp(Measures, Measure)}, PlotProps)
+    chART.plot.pretty_colorbar('Divergent', CLims(BandIdx, :), MeaureLabels{strcmp(Measures, WakeMeasure)}, PlotProps)
 end
 
 
-chART.save_figure(['TopographyBandChange_',Measure], ResultsFolder, PlotProps)
+chART.save_figure(['TopographyBandChange_',WakeMeasure], ResultsFolder, PlotProps)
+
+
+
+%% check relationship with N3
+
+PlotProps.Colorbar.Location = 'eastoutside';
+load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopographyBands', ...
+    'BurstInformationTopography', 'Chanlocs')
+Metadata = basic_metadata_cleanup(Metadata);
+
+%%% 
+WakeMeasure = 'Quantity';
+
+load(fullfile(Paths.Metadata, 'SleepScoring.mat'), 'ScoringMetadata')
+
+MetadataSimple = Metadata;
+MetadataSimple(contains(MetadataSimple.Task, {'3Oddball', 'GoNoGo', 'Fixation'}), :) = [];
+
+MetadataSimple(strcmp(MetadataSimple.Hour, 'mor'), :) = [];
+MetadataSimple(MetadataSimple.Age < 18, :) = [];
+
+MetadataSimple = combine_metadata_tables(MetadataSimple, ScoringMetadata, {'Participant', 'Session'});
+
+BandIdx = 2;
+
+MetadataTemp = MetadataSimple;
+Rs = nan(nChannels, 1);
+Ps = Rs;
+
+for ChannelIdx = 1:nChannels
+MetadataTemp.Data = BurstInformationTopographyBands.(WakeMeasure)(MetadataTemp.Index, ChannelIdx, BandIdx);
+
+[Rs(ChannelIdx), Ps(ChannelIdx)] = corr(MetadataTemp.timeN3, MetadataTemp.Data, 'Rows','complete');
+end
+
+[~, PMask] = fdr(Ps, Parameters.Stats.Alpha);
+
+figure
+chART.plot.eeglab_topoplot(Rs, Chanlocs, PMask, [-1 1], 'R', 'Divergent', PlotProps)
+title(strjoin([WakeMeasure,  MetadataSimple.Hour(1), BandLabels{BandIdx}], ' '))
+
+
+%% for codex
+
+WakeMeasure = 'Quantity';
+SleepMeasure = 'timeN3';
+PlotProps = Parameters.PlotProps.TopoPlots;
+PlotProps.Color.Background = 'white';
+CLims = [-1 1];
+Grid = [nBands, nAges+1];
+Hours = {'eve', 'mor'};
+
+%%% load data
+load(fullfile(CacheDir, CacheName), 'Metadata', 'BurstInformationTopographyBands', ...
+    'BurstInformationTopography', 'Chanlocs')
+
+MetadataSimple = basic_metadata_cleanup(Metadata, {'Ages', Ages});
+MetadataSimple(contains(MetadataSimple.Task, {'3Oddball', 'GoNoGo', 'Fixation'}), :) = [];
+MetadataSimple = combine_metadata_tables(MetadataSimple, ScoringMetadata, {'Participant', 'Session'});
+
+for HourIdx = 1:numel(Hours)
+    Hour = Hours{HourIdx};
+    MetadataHour = MetadataSimple(strcmp(MetadataSimple.Hour, Hour), :);
+
+    figure('Units','centimeters','Position',[0 0 22 15])
+
+    for BandIdx = 1:nBands
+        for AgeIdx = 1:nAges
+            MetadataTemp = MetadataHour(MetadataHour.AgeGroups == AgeIdx, :);
+            Rs = nan(nChannels, 1);
+            Ps = nan(nChannels, 1);
+
+            for ChannelIdx = 1:nChannels
+                MetadataTemp.Data = BurstInformationTopographyBands.(WakeMeasure)(MetadataTemp.Index, ChannelIdx, BandIdx);
+                [Rs(ChannelIdx), Ps(ChannelIdx)] = corr(MetadataTemp.(SleepMeasure), MetadataTemp.Data, 'Rows', 'complete');
+            end
+
+            [~, PMask] = fdr(Ps, Parameters.Stats.Alpha);
+
+            chART.sub_plot([], Grid, [BandIdx, AgeIdx], [], false, '', PlotProps);
+            chART.plot.eeglab_topoplot(Rs, Chanlocs, PMask, CLims, 'R', 'Divergent', PlotProps);
+            colorbar off
+
+            if BandIdx == 1
+                title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2)), ' y.o.'], 'FontSize', PlotProps.Text.TitleSize)
+            end
+
+            if AgeIdx == 1
+                chART.plot.vertical_text(BandLabels{BandIdx}, .12, .5, PlotProps)
+            end
+
+            topo_corner_text(['N=', num2str(numel(unique(MetadataTemp.Participant(~isnan(MetadataTemp.timeN3)))))], PlotProps)
+        end
+
+        Axes = chART.sub_plot([], Grid, [BandIdx, nAges+1], [], false, '', PlotProps);
+        axis off
+        Axes.Position(1) = Axes.Position(1)+.02;
+        chART.plot.pretty_colorbar('Divergent', CLims, 'R', PlotProps)
+    end
+
+    chART.save_figure(['Corr_', WakeMeasure, '-', SleepMeasure,'_', Hour], ResultsFolder, PlotProps)
+end
