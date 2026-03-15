@@ -1,4 +1,4 @@
-% Detects bursts in EEG data, saves them. Can take >6 h to run.
+% Calcualtes power in each recording.
 
 clear
 clc
@@ -47,9 +47,10 @@ for DatasetCell = Datasets
         end
 
         parfor FilenameIdx = 1:numel(Filenames)
-            Filename = Filenames{FilenameIdx};
             % for Filename = Filenames'
+            Filename = Filenames{FilenameIdx};
 
+            
             % load data
             if exist(fullfile(Destination, Filename), 'file') && ~RerunAnalysis
                 disp(['Skipping ', Filename])

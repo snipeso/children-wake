@@ -111,6 +111,7 @@ for RecordingIdx = 1:nRecordings
         TaskMetadata = cat(1, TaskMetadata, Metadata(RecordingIdx, :));
         NewIdx = size(TaskMetadata, 1);
         TaskMetadata.Task{NewIdx} = Task;
+        TaskMetadata.RecordingDuration = EEGMetadata.pnts/EEGMetadata.srate/60; % in minutes
         TaskMetadata.Globality(NewIdx) = 100*mean([BurstClusters.ClusterGlobality]);
         TaskMetadata.Amplitude(NewIdx) = mean([BurstClusters.ClusterAmplitude]);
         TaskMetadata.Duration(NewIdx) = mean([BurstClusters.ClusterEnd]-[BurstClusters.ClusterStart])/SampleRate; % burst durations
