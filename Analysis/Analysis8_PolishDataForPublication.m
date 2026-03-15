@@ -39,7 +39,7 @@ for DatasetIdx = 1:numel(Datasets)
         repmat(DatasetsNew(DatasetIdx), nnz(strcmp(Metadata.Dataset, Datasets{DatasetIdx})), 1);
 end
 
-%% for codex:
+
 
 
 save(fullfile(ResultsFolder, 'AllData.mat'), 'Metadata',  'BurstInformationTopography', 'BurstInformationTopographyBands', ...
