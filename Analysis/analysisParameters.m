@@ -30,6 +30,7 @@ Parameters.Sessions.BMSAdults = {'Session1'};
 
 
 Parameters.Ages = [
+    3 7;
     7 10;
     10 14;
     14 18;
@@ -166,7 +167,6 @@ TopoPlotProps.Axes.yPadding = 5;
 TopoPlotProps.Figure.Padding = 20;
 TopoPlotProps.Stats.PlotN = true;
 TopoPlotProps.External.EEGLAB.TopoRes = 200;
-TopoPlotProps.Color.Background = 'none';
 
 Parameters.PlotProps.TopoPlots = TopoPlotProps;
 

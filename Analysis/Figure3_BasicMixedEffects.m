@@ -246,26 +246,26 @@ clc
 % run mixed model
 StageLabels = {'timeN2', 'timeN3','timeREM'};
 
-    for StageIdx = 1:numel(StageLabels)
-for VariableIdx = 1:numel(OutcomeMeasures)
+for StageIdx = 1:numel(StageLabels)
+    for VariableIdx = 1:numel(OutcomeMeasures)
         formula = [OutcomeMeasures{VariableIdx}, ' ~ ', StageLabels{StageIdx}, ' * Age_Table1 + (1|Participant)'];
 
         Model = fitlme(CombinedTable, formula);
 
-    % Display the model summary
-    disp('   ')
-    disp('   ')
-    disp(['____________________ ', OutcomeMeasures{VariableIdx}, ' ____________________'])
-    % disp(Model);
-    disp_mixed_stat(Model, 'Age_Table1')
-    disp_mixed_stat(Model, StageLabels{StageIdx})
-disp_mixed_stat(Model, ['Age_Table1:', StageLabels{StageIdx}])
+        % Display the model summary
+        disp('   ')
+        disp('   ')
+        disp(['____________________ ', OutcomeMeasures{VariableIdx}, ' ____________________'])
+        % disp(Model);
+        disp_mixed_stat(Model, 'Age_Table1')
+        disp_mixed_stat(Model, StageLabels{StageIdx})
+        disp_mixed_stat(Model, ['Age_Table1:', StageLabels{StageIdx}])
     end
 end
 
 
 
-%% mixed model to correct for multiple recordings etc.
+%% mixed model to correct for multiple recordings etc. Table 2-1
 
 FormulaFixed = '~ Task + Hour*Age +';
 FormulaRandom = '+ (1|Participant) + (1|Participant:SessionUnique)';
@@ -400,11 +400,14 @@ PlotProps.Text.TitleSize = 10;
 PlotProps.Axes.yPadding = 5;
 PlotProps.Axes.xPadding = 5;
 PlotProps.Scatter.Size = 5;
-PlotProps.Scatter.Alpha = .4;
+PlotProps.Scatter.Alpha = .2;
+
 
 Grid = [numel(OutcomeMeasures) numel(OutcomeMeasures)];
 figure('Units','centimeters','OuterPosition',[0 0 18 18])
 R = nan(numel(OutcomeMeasures));
+Ps = R;
+
 for Idx1 = 1:numel(OutcomeMeasures)
     for Idx2 = 1:numel(OutcomeMeasures)
         chART.sub_plot([], Grid, [Idx2, Idx1], [], false, '', PlotProps);
@@ -414,26 +417,26 @@ for Idx1 = 1:numel(OutcomeMeasures)
                 chART.set_axis_properties(PlotProps)
                 title(OutcomeMeasuresTitles{Idx1})
                 set(gca, 'XTick' ,[], 'YTick', [])
-                        axis square
-                        ylabel({OutcomeMeasuresTitles{Idx2}})
-                        ax = gca;
-                        ax.XColor = 'none';
-                        x = xlim; y = ylim;
-line([x(1) x(1)], y, 'Color','w', 'LineWidth',2)
-xlim(x)
+                axis square
+                ylabel({OutcomeMeasuresTitles{Idx2}})
+                ax = gca;
+                ax.XColor = 'none';
+                x = xlim; y = ylim;
+                line([x(1) x(1)], y, 'Color', 'w', 'LineWidth',2)
+                xlim(x)
             else
                 axis off
-         end
+            end
 
             continue
         end
 
-        [R(Idx1, Idx2), ~] = plot_scattercloud(Metadata, OutcomeMeasures{Idx1}, OutcomeMeasures{Idx2}, PlotProps, '', false);
+        [R(Idx1, Idx2), Ps(Idx1, Idx2)] = plot_scattercloud(Metadata, OutcomeMeasures{Idx1}, OutcomeMeasures{Idx2}, PlotProps, '', false);
+        legend off
         set(gca, 'XTick' ,[], 'YTick', [])
         axis square
-        if Idx2 == numel(OutcomeMeasures)
-            xlabel(OutcomeMeasuresTitles{Idx1})
-        elseif Idx2==1
+
+        if Idx2==1
             title(OutcomeMeasuresTitles{Idx1})
         end
         if Idx1==1
@@ -443,13 +446,16 @@ xlim(x)
 end
 chART.save_figure('CorrelateVariables', ResultsFolder, PlotProps)
 
+Ps(tril(true(size(Ps)),-1)) = NaN;
+[~, Mask] = fdr(Ps, Parameters.Stats.Alpha);
+disp(Mask)
 
 %% significant differences
 
 clc
 % Compare dependent correlations using the QuantPsy-style Steiger test.
 Comparisons = {
-    'Power', 'Amplitude', 'Quantity';
+    'Power', 'Amplitude', 'Intercept';
     'PeriodicPower', 'Quantity', 'Amplitude';
     };
 
@@ -473,7 +479,7 @@ for ComparisonIdx = 1:size(Comparisons, 1)
         n);
 
     disp([SharedVariable, ': ', Variable1, ' vs ', Variable2, ...
-        ' -> z = ', num2str(StatsCorr.z_score, '%.3f'), ...
+        ' -> z = ', num2str(StatsCorr.z_score, '%.2f'), ...
         '; p = ', num2str(StatsCorr.two_tail_p, '%.4g')])
 end
 

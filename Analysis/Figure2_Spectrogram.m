@@ -37,12 +37,12 @@ MetadataOddball = basic_metadata_cleanup(MetadataOddball, {'Ages', Ages, 'Tasks'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%
 
-%% Plot spectrogram (Figure 5)
+%% Plot spectrogram (Figure 6-1)
 
 
 PlotProps = Parameters.PlotProps.Manuscript;
-PlotProps.Figure.Padding = 28;
-PlotProps.Axes.yPadding = 20;
+% PlotProps.Figure.Padding = 28;
+% PlotProps.Axes.yPadding = 20;
 
 Measures = {'Amplitude', 'Quantity', 'Power', 'PeriodicPower'};
 MeasureTitles = {'Amplitude', 'Density', 'Power', 'Periodic power'};
@@ -104,7 +104,7 @@ colormap(PlotProps.Color.Maps.Divergent)
 chART.save_figure('FrequencyByAgeChange', ResultsFolder, PlotProps)
 
 
-%% suppl figure frequencies by age group (Suppl. Figure 5-1)
+%% suppl figure frequencies by age group (Suppl. Figure 2)
 
 Ages = Parameters.Ages;
 nAges = size(Ages, 1);
@@ -113,7 +113,10 @@ MetadataSpectro = basic_metadata_cleanup(Metadata, {'Ages', Ages});
 MegaGrid = [2, 1];
 
 PlotProps = Parameters.PlotProps.Manuscript;
-PlotProps.Axes.yPadding = 20;
+PlotProps.Axes.yPadding = 10;
+PlotProps.Axes.xPadding = 5;
+
+PlotProps.Figure.Padding = 30;
 
 MiniGridA = [1 nAges];
 
