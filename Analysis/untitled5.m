@@ -28,18 +28,19 @@ CacheDir = Paths.Cache;
 CacheName = 'ProcessedData.mat';
 
 % where to save figures
-ResultsFolder = fullfile(Paths.Results, 'MainStatsStandardized');
+ResultsFolder = fullfile(Paths.Results, 'MainStats');
 if ~exist(ResultsFolder,'dir')
     mkdir(ResultsFolder)
 end
+
 
 %%% load data
 load(fullfile(CacheDir, CacheName), 'Metadata')
 
 % fixes to metadata
 Metadata = basic_metadata_cleanup(Metadata);
+% Metadata. = Durations(:, end-1:end);
 
-%%
 % overview of final dataset
 Patients = Metadata(contains(Metadata.Group, 'ADHD'), :);
 table_demographics(unique_metadata(Patients), 'Subgroup', ResultsFolder, 'SubgroupPatients')
@@ -52,6 +53,19 @@ table_demographics(Metadata, 'Hour', ResultsFolder, 'Hour')
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Analyses
 
+
+%% save table to publish
+
+MetadataPublish = Metadata;
+
+OriginalTableLables = MetadataPublish.Properties.VariableNames;
+for Idx = 1:numel(OutcomeMeasuresTitles)
+
+    IdxTable = strcmp(OriginalTableLables, OutcomeMeasures{Idx});
+    MetadataPublish.Properties.VariableNames(IdxTable) = genvarname(OutcomeMeasuresTitles(Idx));
+end
+
+writetable(MetadataPublish, fullfile(ResultsFolder, 'AllData_Wake.csv'))
 
 
 %% run mixed models
@@ -73,9 +87,6 @@ MetadataStat = make_categorical(MetadataStat, 'Hour', {'eve', 'mor'}); % compare
 MetadataStat = make_categorical(MetadataStat, 'Group', {'HC', 'ADHD'}); % compare patietns to controls
 MetadataStat = make_categorical(MetadataStat, 'Sex', {'f', 'm'}); % compare males to females
 
-% z-score data
-
-
 
 %%% run models
 clc
@@ -84,18 +95,16 @@ if exist(fullfile(ResultsFolder, "BasicModel_AllStats.txt"), 'file')
 end
 
 diary(fullfile(ResultsFolder, "BasicModel_AllStats.txt"))
-% diary on
+diary on
 OutcomeMeasures_Extended = [OutcomeMeasures, ErrorMeasures];
 OutcomeMeasures_ExtendedLabels = [OutcomeMeasuresTitles, ErrorMeasuresTitles];
 for MeasureIdx = 1:numel(OutcomeMeasures_Extended)
-    Measure = OutcomeMeasures_Extended{MeasureIdx};
-    % MetadataStat.(Measure) = zscore(MetadataStat.(Measure)); check to see if looks nicer; don't bother, nothing changes
     formula = [OutcomeMeasures_Extended{MeasureIdx}, FormulaString];
     Model = fitlme(MetadataStat, formula);
 
     % Display the model summary
     disp('   ')
-    disp('   ')
+disp('   ')
     disp(['____________________ ', OutcomeMeasures_ExtendedLabels{MeasureIdx}, ' ____________________'])
     disp(Model);
     disp_mixed_stat(Model, 'Age')
@@ -107,11 +116,8 @@ for MeasureIdx = 1:numel(OutcomeMeasures_Extended)
 
     save_model(Model, fullfile(ResultsFolder, ['BasicModel_', OutcomeMeasures_ExtendedLabels{MeasureIdx}, '.txt']))
 end
-% diary off
+diary off
 
-FormulaString = ' ~ Task + Hour*Age + Group + Sex + (1|Participant) + (1|Participant:SessionUnique)'; % MAIN ONE
-Model = fitlme(MetadataStat, formula);
-disp(Model);
 
 %% average error and r squared
 
@@ -122,20 +128,19 @@ disp_stats_descriptive(MetadataStat.RSquared, 'rsquared', '', 3);
 
 close all
 PlotProps = Parameters.PlotProps.Manuscript;
-PlotProps.Axes.xPadding = 5;
-PlotProps.Axes.yPadding = 0;
-
+PlotProps.Figure.Padding = 20;
+PlotProps.Axes.xPadding = 18;
 Grid = [3 numel(OutcomeMeasures)];
 
+% PlotProps.Text.FontName = 'Tw Cen MT';
 
 % fix y lims, so same for mor and eve
 YLimits = [5, 42; % amplitudes
     70, 550; % quantities
-    1 2.1; % slope
+    .7 2.25; % slope
     .3, 2.5; % intercept
-    -.8, 1; % power
+    -1.6, 2; % power
     -.05, .705; % periodic power
-    -.07, .5; % periodic power
     ];
 XLim = [3 25];
 
@@ -148,10 +153,8 @@ MetadataScatter = MetadataScatter(contains(MetadataScatter.Task, {'Oddball'}), :
 OvernightMetadata = pair_recordings(MetadataScatter, 'Hour', {'eve', 'mor'});
 
 clc
+figure('Units','centimeters','OuterPosition',[0 0 25 18])
 
-figure('Units','centimeters','OuterPosition',[0 0 26 18])
-
-Ps = nan(3, numel(OutcomeMeasures));
 for VariableIdx = 1:numel(OutcomeMeasures)
 
     %%% plot age x v split by evening and morning, averaged across sessions
@@ -165,9 +168,8 @@ for VariableIdx = 1:numel(OutcomeMeasures)
 
         % plot
         chART.sub_plot([], Grid, [HourIdx, VariableIdx], [], true, '', PlotProps);
-        [~, Ps(HourIdx, VariableIdx)] = plot_scattercloud(MetadataAverage, 'Age', OutcomeMeasures{VariableIdx}, ...
-            PlotProps, '', false, XLim, YLimits(VariableIdx, :));
-
+        plot_scattercloud(MetadataAverage, 'Age', OutcomeMeasures{VariableIdx}, ...
+            PlotProps, '', false, XLim, YLimits(VariableIdx, :))
         ylabel(MeasureUnits{VariableIdx})
         legend off
 
@@ -175,7 +177,7 @@ for VariableIdx = 1:numel(OutcomeMeasures)
             title(OutcomeMeasuresTitles{VariableIdx})
         end
         if VariableIdx==1
-            chART.plot.vertical_text(HourLabels{HourIdx}, .5, .5, PlotProps)
+            chART.plot.vertical_text(HourLabels{HourIdx}, .55, .5, PlotProps)
         end
         disp([ Hours{HourIdx}, OutcomeMeasures{VariableIdx}, ...
             'N=', num2str(numel(unique(MetadataAverage.Participant)))])
@@ -186,8 +188,8 @@ for VariableIdx = 1:numel(OutcomeMeasures)
     chART.sub_plot([], Grid, [3, VariableIdx], [], true, '', PlotProps);
     MetadataAverage = unique_metadata(OvernightMetadata, 'Participant');
 
-    [~, Ps(3, VariableIdx)] = plot_scattercloud(MetadataAverage, 'Age', OutcomeMeasures{VariableIdx}, ...
-        PlotProps, '', true, XLim);
+    plot_scattercloud(MetadataAverage, 'Age', OutcomeMeasures{VariableIdx}, ...
+        PlotProps, '', true, XLim)
     ylabel(MeasureUnits{VariableIdx})
     xlabel('Age')
     if VariableIdx ~=numel(OutcomeMeasures)
@@ -195,7 +197,7 @@ for VariableIdx = 1:numel(OutcomeMeasures)
     end
 
     if VariableIdx==1
-        chART.plot.vertical_text('Overnight change', .5, .5, PlotProps)
+        chART.plot.vertical_text('Overnight change', .55, .5, PlotProps)
         xlabel('Age (years)')
     end
 
@@ -205,75 +207,10 @@ end
 chART.save_figure('BasicScatterAge', ResultsFolder, PlotProps)
 
 
-% NB: it was easier to just check if the same plots were significant after
-% the fact than directly run fdr correction in the plots. it worked because
-% they are indeed the same set of significant correlations, but its bad
-% practice.
-[~, Mask] = fdr(Ps, Parameters.Stats.Alpha);
-disp(Mask)
-
-
-%% compare overnight changes to sleep duration
-
-load(fullfile(Paths.Metadata, 'SleepScoring.mat'), 'ScoringMetadata')
-
-MetadataScatter = Metadata;
-
-OvernightMetadata = pair_recordings(MetadataScatter, 'Hour', {'eve', 'mor'});
-OvernightMetadata(contains(OvernightMetadata.Task, {'3Oddball', 'GoNoGo', 'Fixation'}), :) = [];
-% OvernightMetadata = unique_metadata(OvernightMetadata, 'Participant');
-
-CombinedTable = combine_metadata_tables(OvernightMetadata, ScoringMetadata, {'Participant', 'Session'});
-CombinedTable(isnan(CombinedTable.TST), :) = [];
-
-% save table to add to publication
-writetable(CombinedTable, fullfile(ResultsFolder, 'OvernightChanges.csv'))
-
-
-% correlate every stage with variables
-StageLabels = { 'timeN2', 'timeN3','timeREM'};
-clc
-for VariableIdx = 1:numel(OutcomeMeasures)
-    for StageIdx = 1:numel(StageLabels)
-        X = CombinedTable.(OutcomeMeasures{VariableIdx});
-        Y = CombinedTable.(StageLabels{StageIdx});
-        [r, p] = corr(X, Y, 'Rows','complete');
-        if p < .001
-            pstring = '< .001';
-        else
-            pstring = ['= ', num2str(round(p, 3))];
-        end
-        disp([OutcomeMeasures{VariableIdx}, ' vs ', StageLabels{StageIdx}, ' r = ', num2str(round(r, 2)), '; p ', pstring]);
-    end
-
-end
-
-%%
-clc
-
-% run mixed model
-StageLabels = {'timeN2', 'timeN3','timeREM'};
-
-for StageIdx = 1:numel(StageLabels)
-    for VariableIdx = 1:numel(OutcomeMeasures)
-        formula = [OutcomeMeasures{VariableIdx}, ' ~ ', StageLabels{StageIdx}, ' * Age_Table1 + (1|Participant)'];
-
-        Model = fitlme(CombinedTable, formula);
-
-        % Display the model summary
-        disp('   ')
-        disp('   ')
-        disp(['____________________ ', OutcomeMeasures{VariableIdx}, ' ____________________'])
-        % disp(Model);
-        disp_mixed_stat(Model, 'Age_Table1')
-        disp_mixed_stat(Model, StageLabels{StageIdx})
-        disp_mixed_stat(Model, ['Age_Table1:', StageLabels{StageIdx}])
-    end
-end
 
 
 
-%% mixed model to correct for multiple recordings etc. Table 2-1
+%% mixed model to correct for multiple recordings etc.
 
 FormulaFixed = '~ Task + Hour*Age +';
 FormulaRandom = '+ (1|Participant) + (1|Participant:SessionUnique)';
@@ -320,14 +257,12 @@ writetable(TValues, fullfile(ResultsFolder, 'CorrelationsOutcomeVariables_TValue
 
 
 
-
 %% plot errors (Suppl. Figure 2-1)
 
 
 PlotProps = Parameters.PlotProps.Manuscript;
-PlotProps.Axes.xPadding = 5;
-PlotProps.Axes.yPadding = 0;
-
+PlotProps.Figure.Padding = 20;
+PlotProps.Axes.xPadding = 20;
 Grid = [3 numel(ErrorMeasures)];
 
 % fix y lims, so same for mor and eve
@@ -408,14 +343,10 @@ PlotProps.Text.TitleSize = 10;
 PlotProps.Axes.yPadding = 5;
 PlotProps.Axes.xPadding = 5;
 PlotProps.Scatter.Size = 5;
-PlotProps.Scatter.Alpha = .2;
-
+PlotProps.Scatter.Alpha = .4;
 
 Grid = [numel(OutcomeMeasures) numel(OutcomeMeasures)];
 figure('Units','centimeters','OuterPosition',[0 0 18 18])
-R = nan(numel(OutcomeMeasures));
-Ps = R;
-
 for Idx1 = 1:numel(OutcomeMeasures)
     for Idx2 = 1:numel(OutcomeMeasures)
         chART.sub_plot([], Grid, [Idx2, Idx1], [], false, '', PlotProps);
@@ -424,27 +355,18 @@ for Idx1 = 1:numel(OutcomeMeasures)
             if Idx1==1
                 chART.set_axis_properties(PlotProps)
                 title(OutcomeMeasuresTitles{Idx1})
-                set(gca, 'XTick' ,[], 'YTick', [])
-                axis square
-                ylabel({OutcomeMeasuresTitles{Idx2}})
-                ax = gca;
-                ax.XColor = 'none';
-                x = xlim; y = ylim;
-                line([x(1) x(1)], y, 'Color', 'w', 'LineWidth',2)
-                xlim(x)
-            else
-                axis off
+                ylabel(OutcomeMeasures{Idx2})
             end
-
+            axis off
             continue
         end
 
-        [R(Idx1, Idx2), Ps(Idx1, Idx2)] = plot_scattercloud(Metadata, OutcomeMeasures{Idx1}, OutcomeMeasures{Idx2}, PlotProps, '', false);
-        legend off
+        plot_scattercloud(Metadata, OutcomeMeasures{Idx1}, OutcomeMeasures{Idx2}, PlotProps, '', false)
         set(gca, 'XTick' ,[], 'YTick', [])
         axis square
-
-        if Idx2==1
+        if Idx2 == numel(OutcomeMeasures)
+            xlabel(OutcomeMeasuresTitles{Idx1})
+        elseif Idx2==1
             title(OutcomeMeasuresTitles{Idx1})
         end
         if Idx1==1
@@ -454,50 +376,9 @@ for Idx1 = 1:numel(OutcomeMeasures)
 end
 chART.save_figure('CorrelateVariables', ResultsFolder, PlotProps)
 
-% NB: it was easier to just check if the same plots were significant after
-% the fact than directly run fdr correction in the plots. it worked because
-% they are indeed the same set of significant correlations, but its bad
-% practice.
-Ps(tril(true(size(Ps)),-1)) = NaN;
-[~, Mask] = fdr(Ps, Parameters.Stats.Alpha);
-disp(Mask)
-
-%% significant differences
-
-clc
-% Compare dependent correlations using the QuantPsy-style Steiger test.
-Comparisons = {
-    'Power', 'Amplitude', 'Offset';
-    'PeriodicPower', 'Density', 'Amplitude';
-    };
-
-for ComparisonIdx = 1:size(Comparisons, 1)
-    SharedVariable = Comparisons{ComparisonIdx, 1};
-    Variable1 = Comparisons{ComparisonIdx, 2};
-    Variable2 = Comparisons{ComparisonIdx, 3};
-
-    SharedIdx = strcmp(OutcomeMeasures, SharedVariable);
-    Variable1Idx = strcmp(OutcomeMeasures, Variable1);
-    Variable2Idx = strcmp(OutcomeMeasures, Variable2);
-
-    Data = Metadata(:, {SharedVariable, Variable1, Variable2});
-    CompleteCases = all(~ismissing(Data), 2);
-    n = nnz(CompleteCases);
-
-    StatsCorr = corrtest2_dependent_shared( ...
-        R(SharedIdx, Variable1Idx), ...
-        R(SharedIdx, Variable2Idx), ...
-        R(Variable1Idx, Variable2Idx), ...
-        n);
-
-    disp([SharedVariable, ': ', Variable1, ' vs ', Variable2, ...
-        ' -> z = ', num2str(StatsCorr.z_score, '%.2f'), ...
-        '; p = ', num2str(StatsCorr.two_tail_p, '%.4g')])
-end
 
 
-
-%% calculate how many intact datasets there were
+%% calculate how many intact datasets there were 
 
 Datasets = {'SleepLearning', 'Providence', 'ADHD', 'BMSAdults', 'BMS', 'BMSSL'};
 nRecordings = [8, 2, 4, 4, 16, 12]; % total expected recordings per dataset
@@ -525,11 +406,20 @@ CacheName = 'Durations.mat';
 load(fullfile(CacheDir, CacheName), 'Metadata')
 Durations = Metadata;
 
-CacheName = 'ProcessedData.mat';
+CacheName = 'AllBursts.mat';
 load(fullfile(CacheDir, CacheName), 'Metadata')
 Metadata = basic_metadata_cleanup(Metadata);
 Metadata.Dataset = Durations.Dataset; % recoded dataset names
 Metadata.RecordingDuration = Durations.RecordingDuration;
+
+% rename columns
+OriginalTableLables = Metadata.Properties.VariableNames;
+for Idx = 1:numel(OutcomeMeasuresTitles)
+
+    IdxTable = strcmp(OriginalTableLables, OutcomeMeasures{Idx});
+    Metadata.Properties.VariableNames(IdxTable) = genvarname(OutcomeMeasuresTitles(Idx));
+end
+
 
 Destination = 'D:\Dropbox\Research\Publications and Presentations\Sleep\Papers\KidsBursts\Version6_ImagingNeuroscience\SupplMaterial';
 writetable(Metadata, fullfile(Destination, 'Data1_AllWakeData.csv'))
