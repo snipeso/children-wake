@@ -90,8 +90,7 @@ for MeasureIdx = 1:nMeasures
 
     % plot colorbar
     chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, nAges+1], [], false, '', PlotProps);axis off
-    chART.plot.pretty_colorbar('Linear', CLims.(Measures{MeasureIdx}), MeasureUnits{MeasureIdx}, PlotProps)
-
+    chART.plot.pretty_colorbar('Linear', CLims.(Measures{MeasureIdx}), MeasureUnits{MeasureIdx}, PlotProps);
 end
 chART.save_figure('TopographyAverage', ResultsFolder, PlotProps)
 
