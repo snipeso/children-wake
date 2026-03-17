@@ -72,6 +72,8 @@ elseif exist( 'X:\Data\Raw', 'dir')
 %     Core = 'E:\AllWake';
 elseif exist( 'D:\Data\AllWake\', 'dir')
     Core = 'D:\Data\AllWake';
+elseif exist('/Users/sophia/Documents/Data/WakeData', 'dir')
+    Core = '/Users/sophia/Documents/Data/WakeData';
 else
     error('no data disk!')
     % Core = 'E:\'
