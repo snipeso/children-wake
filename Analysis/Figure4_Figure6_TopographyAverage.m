@@ -61,12 +61,12 @@ nMeasures = numel(Measures);
 
 figure('Units','centimeters','OuterPosition',[0 0 25 30])
 for MeasureIdx = 1:nMeasures
-    Topographies = Topographies.(Measures{MeasureIdx});
+    Topos = Topographies.(Measures{MeasureIdx});
     for AgeIdx = 1:nAges
 
         % assemble and average data
         Indexes = Metadata.AgeGroups==AgeIdx;
-        AverageSessions = average_by_column(Metadata, Topographies, 'Participant', Indexes);
+        AverageSessions = average_by_column(Metadata, Topos, 'Participant', Indexes);
         TooFewChannels = sum(isnan(AverageSessions), 2) > MinNaNChannels;
         AverageSessions(TooFewChannels, :) = nan; % make nan all channels, too sparse data % TODO, move to assemble data?
 
@@ -111,8 +111,8 @@ MeasureUnits = {'\muV', '% recording', 'log power', 'log power'};
 nMeasures = numel(Measures);
 
 for MeasureIdx = 2 %1:nMeasures
-    Topographies = TopographiesBands.(Measures{MeasureIdx});
-    nBands = size(Topographies, 3);
+    Topos = TopographiesBands.(Measures{MeasureIdx});
+    nBands = size(Topos, 3);
 
     figure('Units','centimeters','OuterPosition',[0 0 25 16])
     for BandIdx = 1:nBands
@@ -121,7 +121,7 @@ for MeasureIdx = 2 %1:nMeasures
             % gather data
             Indexes = Metadata.AgeGroups==AgeIdx;
             AverageSessions = average_by_column(Metadata, ...
-                Topographies(:, :, BandIdx), 'Participant', Indexes);
+                Topos(:, :, BandIdx), 'Participant', Indexes);
 
             TooFewChannels = sum(isnan(AverageSessions), 2) > MinNaNChannels;
             nParticipants = nnz(~TooFewChannels);
