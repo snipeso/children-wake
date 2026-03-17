@@ -49,8 +49,9 @@ CLims.Density = [5 40];
 CLims.Amplitude = [10, 34];
 CLims.Exponent = [1.3 2.1];
 CLims.Offset = [.8 2.3];
-CLims.Power = [-.7  1.7];
+CLims.Power = [-.2  .7];
 CLims.PeriodicPower = [0.1 .44];
+
 
 Measures = Parameters.OutcomeMeasures.Fields;
 MeasuresTitles = Parameters.OutcomeMeasures.Titles;

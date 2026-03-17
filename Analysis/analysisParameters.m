@@ -169,6 +169,8 @@ TopoPlotProps.Axes.yPadding = 5;
 TopoPlotProps.Figure.Padding = 20;
 TopoPlotProps.Stats.PlotN = true;
 TopoPlotProps.External.EEGLAB.TopoRes = 200;
+ TopoPlotProps.Color.Steps.Divergent = 200;
+
 
 Parameters.PlotProps.TopoPlots = TopoPlotProps;
 
