@@ -36,4 +36,6 @@ if isempty(CLims)
 end
 
 chART.plot.eeglab_topoplot(Effect, Chanlocs, Stats, CLims, ColorLabel, 'Divergent', PlotProps)
+DF = Model.Coefficients.DF(1);
+topo_corner_text(['df=', num2str(DF)], PlotProps)
 
