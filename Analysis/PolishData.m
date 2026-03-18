@@ -9,7 +9,7 @@ close all
 %%% setup variables and parameters
 
 Parameters = analysisParameters();
-
+Bands = Parameters.Bands;
 
 %%% set paths
 Paths = Parameters.Paths;
@@ -40,5 +40,7 @@ for DatasetIdx = 1:numel(Datasets)
 end
 
 
-save(fullfile(ResultsFolder, 'AllData.mat'), 'Metadata', 'SpectraAverage', 'SpectraRedux', 'FrequenciesRedux', 'Frequencies', 'TopographiesBands', 'Topographies')
+save(fullfile(ResultsFolder, 'ProcessedData.mat'), 'Metadata', 'SpectraAverage', ...
+    'SpectraRedux', 'FrequenciesRedux', 'Frequencies', 'TopographiesBands', 'Topographies',...
+    'Chanlocs', "Bands")
 writetable(Metadata, fullfile(ResultsFolder, 'AllWakeData.csv'))
