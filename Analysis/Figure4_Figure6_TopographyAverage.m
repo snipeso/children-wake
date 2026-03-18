@@ -49,8 +49,9 @@ CLims.Density = [5 40];
 CLims.Amplitude = [10, 34];
 CLims.Exponent = [1.3 2.1];
 CLims.Offset = [.8 2.3];
-CLims.Power = [-.7  1.7];
+CLims.Power = [-.2  .7];
 CLims.PeriodicPower = [0.1 .44];
+
 
 Measures = Parameters.OutcomeMeasures.Fields;
 MeasuresTitles = Parameters.OutcomeMeasures.Titles;
@@ -90,8 +91,7 @@ for MeasureIdx = 1:nMeasures
 
     % plot colorbar
     chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, nAges+1], [], false, '', PlotProps);axis off
-    chART.plot.pretty_colorbar('Linear', CLims.(Measures{MeasureIdx}), MeasureUnits{MeasureIdx}, PlotProps)
-
+    chART.plot.pretty_colorbar('Linear', CLims.(Measures{MeasureIdx}), MeasureUnits{MeasureIdx}, PlotProps);
 end
 chART.save_figure('TopographyAverage', ResultsFolder, PlotProps)
 

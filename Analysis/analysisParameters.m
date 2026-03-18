@@ -72,6 +72,8 @@ elseif exist( 'X:\Data\Raw', 'dir')
 %     Core = 'E:\AllWake';
 elseif exist( 'D:\Data\AllWake\', 'dir')
     Core = 'D:\Data\AllWake';
+elseif exist('/Users/sophia/Documents/Data/WakeData', 'dir')
+    Core = '/Users/sophia/Documents/Data/WakeData';
 else
     error('no data disk!')
     % Core = 'E:\'
@@ -167,6 +169,8 @@ TopoPlotProps.Axes.yPadding = 5;
 TopoPlotProps.Figure.Padding = 20;
 TopoPlotProps.Stats.PlotN = true;
 TopoPlotProps.External.EEGLAB.TopoRes = 200;
+ TopoPlotProps.Color.Steps.Divergent = 200;
+
 
 Parameters.PlotProps.TopoPlots = TopoPlotProps;
 

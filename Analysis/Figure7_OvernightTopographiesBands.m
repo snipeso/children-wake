@@ -23,7 +23,7 @@ ColorParameter = 'Estimate'; % this is what gets colored in the topoplots, the b
 nMeasures = numel(Measures);
 
 %%% paths
-ResultsFolder = fullfile(Paths.Results, 'AverageTopographies');
+ResultsFolder = fullfile(Paths.Results, 'DifferenceTopographies');
 if ~exist(ResultsFolder,'dir')
     mkdir(ResultsFolder)
 end
@@ -89,7 +89,8 @@ end
 
 %% Plot bands change (Figure 7)
 
-PlotProps.Color.Background = 'white';
+ PlotProps.Color.Steps.Divergent = 200;
+
 CLims = [-1 1;
     -12 12;
     -2.5 2.5];

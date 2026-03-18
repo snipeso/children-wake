@@ -12,18 +12,18 @@ Parameters = analysisParameters();
 Paths = Parameters.Paths;
 BandLabels = {'Theta', 'Alpha', 'Beta_{low}'};
 nBands = numel(BandLabels);
-Ages = Parameters.Ages;
+Ages = Parameters.Ages(2:end, :);
 nAges = size(Ages, 1);
 nChannels = 123;
 Tasks = {'Oddball', 'GoNoGo', 'Alertness', 'Fixation'}; % oddball first is important; its the reference. Learning excluded because different in morning
 Measures = Parameters.OutcomeMeasures.Fields;
 MeasuresTitles = Parameters.OutcomeMeasures.Titles;
-MeaureLabels = append('\beta ',{'\muV', '%', 'a.u.', 'log power', 'log power', 'log power'});
+MeasureLabels = append('\beta ',{'\muV', '%', 'a.u.', 'log power', 'log power', 'log power'});
 ColorParameter = 'Estimate'; % this is what gets colored in the topoplots, the beta estimates
 nMeasures = numel(Measures);
 
 %%% paths
-ResultsFolder = fullfile(Paths.Results, 'AverageTopographies');
+ResultsFolder = fullfile(Paths.Results, 'DifferenceTopographies');
 if ~exist(ResultsFolder,'dir')
     mkdir(ResultsFolder)
 end
@@ -86,42 +86,54 @@ end
 %% plot overnight change topographies (Figure 4)
 
 PlotProps = Parameters.PlotProps.TopoPlots;
-PlotProps.External.EEGLAB.MarkerSize = 3;
-PlotProps.Text.AxisSize = 16;
-PlotProps.Colorbar.Location= 'north';
+
 CLims = struct();
 CLims.Amplitude = [-4 4];
 CLims.Density = [-10 10];
 CLims.Exponent = [-.15 .15];
 CLims.Offset = [-.15 .15];
 CLims.Power = [-.4 .4];
-CLims.PeriodicPower = [-.08 .08];
+CLims.PeriodicPower = [-.08 .08];close all
+
 
 Coefficient = 'Hour_2';
 Grid = [nAges+1, 1];
 
+figure('Units','centimeters','OuterPosition',[0 0 25 30])
 
 for MeasureIdx = 1:nMeasures
-    figure('Units','centimeters','Position',[0 0 10 35])
     for AgeIdx = 1:nAges
 
         %%% plot
-        chART.sub_plot([], Grid, [AgeIdx, 1], [], false, '', PlotProps);
+        chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, AgeIdx], [], false, '', PlotProps);
         mixed_model_topography(squeeze(Models(AgeIdx, MeasureIdx, :)), ...
             ColorParameter, Coefficient, Chanlocs, CLims.(Measures{MeasureIdx}), PlotProps)
         colorbar off
+
+           if MeasureIdx == 1
+            title([num2str(Ages(AgeIdx, 1)),'-' num2str(Ages(AgeIdx, 2)), ' y.o.'])
+        end
+
+        if AgeIdx ==1
+            chART.plot.vertical_text(MeasuresTitles{MeasureIdx}, .15, .5, PlotProps)
+        end
+
+
     end
 
-    % plot colorbar
-    Axes= chART.sub_plot([], Grid, [nAges+1, 1], [], false, '', PlotProps);
-    
-    axis off
-    Axes.Position(1) = .15;
-    Axes.Position(3) = .7;
-    chART.plot.pretty_colorbar('Divergent', CLims.(Measures{MeasureIdx}), MeaureLabels{MeasureIdx}, PlotProps);
-    colormap(PlotProps.Color.Maps.Divergent)
-    chART.save_figure(['TopographyChange_', Measures{MeasureIdx}], ResultsFolder, PlotProps)
+      % plot colorbar
+    chART.sub_plot([], [nMeasures, nAges+1], [MeasureIdx, nAges+1], [], false, '', PlotProps);axis off
+    chART.plot.pretty_colorbar('Divergent', CLims.(Measures{MeasureIdx}), MeasureLabels{MeasureIdx}, PlotProps);
+
+    % axis off
+    % Axes.Position(1) = .15;
+    % Axes.Position(3) = .7;
+    % chART.plot.pretty_colorbar('Divergent', CLims.(Measures{MeasureIdx}), MeaureLabels{MeasureIdx}, PlotProps);
+    % colormap(PlotProps.Color.Maps.Divergent)
 end
+
+chART.save_figure('TopographyDifference', ResultsFolder, PlotProps)
+
 
 
 
@@ -162,7 +174,7 @@ for MeasureIdx = 1:nMeasures
     % plot colorbar
     Axes= chART.sub_plot([], Grid, [MeasureIdx, nAges+1], [], false, '', PlotProps);
     Axes.Position(1) = Axes.Position(1)+.02;
-    chART.plot.pretty_colorbar('Divergent', CLims.(Measures{MeasureIdx}), MeaureLabels{MeasureIdx}, PlotProps)
+    chART.plot.pretty_colorbar('Divergent', CLims.(Measures{MeasureIdx}), MeasureLabels{MeasureIdx}, PlotProps)
 end
 
 
@@ -252,7 +264,7 @@ for MeasureIdx = 1:nMeasures
     % plot colorbar
     Axes= chART.sub_plot([], Grid, [MeasureIdx, nAges+1], [], false, '', PlotProps);
     Axes.Position(1) = Axes.Position(1)+.02;
-    chART.plot.pretty_colorbar('Divergent', CLims.(Measures{MeasureIdx}), MeaureLabels{MeasureIdx}, PlotProps)
+    chART.plot.pretty_colorbar('Divergent', CLims.(Measures{MeasureIdx}), MeasureLabels{MeasureIdx}, PlotProps)
 end
 
 
@@ -291,7 +303,7 @@ for BandIdx = 1:nBands
     % plot colorbar
     Axes= chART.sub_plot([], Grid, [BandIdx, nAges+1], [], false, '', PlotProps);
     Axes.Position(1) = Axes.Position(1)+.02;
-    chART.plot.pretty_colorbar('Divergent', CLims(BandIdx, :), MeaureLabels{strcmp(Measures, Measure)}, PlotProps)
+    chART.plot.pretty_colorbar('Divergent', CLims(BandIdx, :), MeasureLabels{strcmp(Measures, Measure)}, PlotProps)
 end
 
 

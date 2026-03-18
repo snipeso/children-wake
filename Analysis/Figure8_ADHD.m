@@ -77,7 +77,6 @@ CLims.PeriodicPower = [-.08 .08];
 Grid = [1, nMeasures];
 
 PlotProps = Parameters.PlotProps.Manuscript;
-PlotProps.Color.Steps.Divergent = 20;
 PlotProps.Colorbar.Location = 'southoutside';
 
 figure('Units','centimeters','OuterPosition',[0 0 25 10])
