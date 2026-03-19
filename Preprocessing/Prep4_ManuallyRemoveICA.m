@@ -1,3 +1,5 @@
+% Manual ICA review helper for young children's data to be safe.
+
 
 
 close all
@@ -53,4 +55,3 @@ for Indx_F = 1:numel(AllFiles)
     save(fullfile(Destination, File), 'EEG')
     disp(['Finished ', char(File) ' in ' num2str(round(toc)), 's'])
 end
-
