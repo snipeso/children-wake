@@ -1,6 +1,6 @@
-% creates a massive matrix D x ch x f x v, so that data can then easily be
-% indexed as needed.
-% TODO: better documenation; rename to Assemble WakeData
+% Assembles per-recording burst and power outputs into manuscript-ready
+% summary variables. This is the script that converts file-by-file EEG
+% outputs into the cache consumed by the figure and statistics scripts.
 
 clear
 clc
@@ -10,6 +10,8 @@ Parameters = analysisParameters();
 Paths = Parameters.Paths;
 Datasets = Parameters.Datasets;
 
+% Use 4-16 Hz for the main wake analyses; the last bin edge is removed at
+% the end after discretization.
 FrequenciesRedux = 4:16;
 nFrequencies = numel(FrequenciesRedux)-1;
 nChans = 123;
@@ -77,7 +79,7 @@ Topographies.PeriodicPower = nan(nRecordings, nChans);
 
 SpectraAverage = nan(nRecordings, 513);
 
-TaskMetadata = table(); % set up new metadata table that also takes into account task
+TaskMetadata = table(); % expands recording-level metadata so each row is one dataset/task/hour entry
 
 for RecordingIdx = 1:nRecordings
     A = tic;
@@ -104,14 +106,16 @@ for RecordingIdx = 1:nRecordings
         Chanlocs = EEGMetadata.chanlocs;
         NotEdgeChanIndex = labels2indexes(Parameters.Channels.NotEdge, Chanlocs);
 
-        % remove bursts outside of frequency range
+        % Burst detection is broader than the final reported range; trim to
+        % the manuscript's 4-16 Hz window here.
         Bursts([Bursts.BurstFrequency]<FrequenciesRedux(1) | [Bursts.BurstFrequency]>FrequenciesRedux(end)) = [];
         BurstClusters([BurstClusters.BurstFrequency]<FrequenciesRedux(1) | [BurstClusters.BurstFrequency]>FrequenciesRedux(end)) = [];
 
         SampleRate = EEGMetadata.srate;
         RecordingDuration = EEGMetadata.times(end)/60; % in minutes
 
-        % load in variables that apply to whole recording
+        % These variables summarize one recording/task pair and become the
+        % columns used in the mixed-effects models.
         TaskMetadata = cat(1, TaskMetadata, Metadata(RecordingIdx, :));
         NewIdx = size(TaskMetadata, 1);
         TaskMetadata.Task{NewIdx} = Task;
@@ -140,6 +144,8 @@ for RecordingIdx = 1:nRecordings
 
 
         %%% load in data for topographies
+        % Topographies keep one value per channel so later scripts can fit
+        % models independently at each electrode.
         BurstChannels = [Bursts.ChannelIndex];
         for ChannelIdx = 1:nChans
             for BandIdx = 1:nBands
@@ -203,7 +209,8 @@ for RecordingIdx = 1:nRecordings
             Topographies.PeriodicPower(NewIdx, ChannelIdx) = mean(WhitenedPower(FreqRangeFooof(1):FreqRangeFooof(2)), 2);
         end
 
-        % get power for all non-edge channels
+        % The manuscript-wide average spectrum excludes edge electrodes to
+        % reduce interpolation and cap-fit edge effects.
         AveragePower = mean(Power(NotEdgeChanIndex, :), 1);
         SpectraAverage(NewIdx, :) = AveragePower;
 
@@ -217,7 +224,7 @@ for RecordingIdx = 1:nRecordings
         TaskMetadata.RSquared(NewIdx) = Fit(2);
         TaskMetadata.AperiodicPower(NewIdx) = mean(AperiodicPower(FreqRangeFooof(1):FreqRangeFooof(2))); % TODO, change WhitenedPower to periodicPower
 
-        %%% load in data for spectrogram
+        %%% load in data for spectrogram-like age x frequency plots
         BurstFrequencies = discretize([BurstClusters.BurstFrequency], FrequenciesRedux);
         FooofPowerFrequencies = discretize(FooofFrequencies, FrequenciesRedux);
         PowerFrequencies = discretize(Frequencies, FrequenciesRedux);
