@@ -1,3 +1,5 @@
+% Builds the combined manuscript metadata table from per-dataset CSV files.
+
 clear
 clc
 close all
