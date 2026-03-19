@@ -1,4 +1,6 @@
-% script to calculate components used to clean data
+% Prepares ICA decompositions for later artifact rejection.
+% The script trims obviously bad channels/windows first so ICA is fit on
+% cleaner data and ICLabel can classify the components more reliably.
 
 close all
 clc
@@ -46,7 +48,9 @@ for Indx_D = 1:numel(Datasets)
         Files = list_filenames(Source);
         Files(~contains(Files, '.mat'))=  [];
 
-        % for Indx_F = 1:numel(Files)
+        % ICA is the slowest preprocessing step, so files are processed in
+        % parallel when the toolbox is available.
+          % for Indx_F = 1:numel(Files)
         parfor Indx_F = 1:numel(Files)
             File = Files{Indx_F};
 
@@ -68,7 +72,8 @@ for Indx_D = 1:numel(Datasets)
             % convert to double
             EEG.data = double(EEG.data);
 
-            % remove bad channels and really bad timepoints
+            % First pass: remove the worst channels and windows so ICA is
+            % not dominated by large artifacts.
             [~, BadChannels, BadWindows_t] = find_bad_segments(EEG, WindowLength, MinNeighborCorrelation, ...
                 Channels.notEEG, true, MinDataKeep, CorrelationFrequencyRange);
             EEG.data(:, BadWindows_t) = [];
@@ -84,7 +89,6 @@ for Indx_D = 1:numel(Datasets)
                 continue
             end
 
-            % remove maybe other noise (flatlines, and little bad windows)
             FlatChannels = find_flat_channels(EEG);
 
             % save info of which are bad channels
@@ -96,8 +100,6 @@ for Indx_D = 1:numel(Datasets)
 
             % remove also external electrodes
             EEG.badchans = unique([Channels.notEEG, EEG.badchans]);
-
-            % remove really bad channels
             EEG = pop_select(EEG, 'nochannel', EEG.badchans);
 
             % remove bad timepoints
@@ -122,7 +124,8 @@ for Indx_D = 1:numel(Datasets)
             % rereference to average
             EEG = pop_reref(EEG, []);
 
-            % run ICA (takes a while)
+            % ICA rank is estimated after channel removal so PCA only kicks
+            % in when the data are no longer full rank.
             Rank = sum(eig(cov(double(EEG.data'))) > 1E-7);
             if Rank ~= size(EEG.data, 1)
                 warning(['Applying PCA reduction for ', File])
@@ -131,7 +134,8 @@ for Indx_D = 1:numel(Datasets)
             % calculate components
             EEG = pop_runica(EEG, 'runica', 'pca', Rank);
 
-            % classify components
+            % ICLabel probabilities are used later to decide which
+            % components to reject automatically.
             EEG = iclabel(EEG);
 
             parsave(fullfile(Destination, File), EEG)
@@ -147,6 +151,5 @@ end
 function parsave(Path, EEG)
 save(Path, 'EEG')
 end
-
 
 
