@@ -1,5 +1,6 @@
-% Removes bad components in EEG automatically, based on ICLabel's
-% classification.
+% Applies the automatic ICA-cleaning stage used for the final wake EEG.
+% Component labels, spectral slopes, and a last round of window/channel
+% cleaning are combined to produce the clean datasets used in analysis.
 
 close all
 clc
@@ -17,7 +18,7 @@ EEG_Channels = P.EEG_Channels;
 
 Refresh = false;
 
-Spread = 0; % how many times more the main component has to be larger than the next largest component ("Spread" is a reference to the italian term "spread" referring to the difference between the yields of italian and german bonds) 
+Spread = 0; % minimum gap between the top ICLabel class and the runner-up class
 SlopeRange = [8 30];
 MuscleSlopeMin = -.5;
 WindowLength = 3; % s, bad time windows
@@ -104,6 +105,8 @@ for Indx_D = 1:numel(Datasets)
 
 
             %%% preprocess data
+            % Apply the ICA solution to the power-preprocessed data rather
+            % than to the ICA copy itself.
 
             % remove bad channels
             Data = pop_select(Data, 'nochannel', labels2indexes(EEG.badchans, Data.chanlocs));
@@ -115,6 +118,7 @@ for Indx_D = 1:numel(Datasets)
             Data = pop_reref(Data, []);
 
             %%% remove major artifact components
+            % Start from ICLabel's most likely class for each component.
             Components = EEG.etc.ic_classification.ICLabel.classifications;
 
             % assign one category to each component
@@ -123,8 +127,8 @@ for Indx_D = 1:numel(Datasets)
             % identify slope in beta-gamma range
             Slopes = channel_slopes(EEG, SlopeRange, 'ICA', 'fooof');
 
-            % if anything classified as noise or other that has a flat
-            % slope, or tilts positive, then its muscle activity.
+            % Reassign unusually flat/high slopes to muscle so they are
+            % rejected even when ICLabel calls them generic noise/other.
             Top(ismember(Top, [5 6 7]) & Slopes>=MuscleSlopeMin) = 2;
 
             % remove Muscle, Eye, and Heart components
@@ -134,8 +138,6 @@ for Indx_D = 1:numel(Datasets)
             % save separate location of removed comps
             save(fullfile(Destination_Rejects, File), 'EEG')
 
-
-            % create new data structure with ICA metadata, and EEG data
             NewEEG = EEG; % gets everything from IC structure
             NewEEG.data = Data.data; % replace data
             NewEEG.pnts = Data.pnts; % replaces data related fields
@@ -150,7 +152,8 @@ for Indx_D = 1:numel(Datasets)
             NewEEG = pop_subcomp(NewEEG, badcomps);
 
 
-            % last cleaning of data
+            % Last cleaning pass after component removal: first windows,
+            % then channels, then interpolation back to the standard net.
             NewEEG = clean_windows(NewEEG,MinDataKeep,WindowCriteriaTolerances); % EEGLABs (veeery lax)
 
             [~, BadCh, BadWindows_t] = ...
@@ -189,5 +192,4 @@ for Indx_D = 1:numel(Datasets)
         end
     end
 end
-
 

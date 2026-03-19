@@ -1,6 +1,5 @@
 function Parameters = prepParameters()
-% Here is located all the common variables, paths, and parameters that get
-% repeatedly called by more than one preprocessing script.
+% Central preprocessing configuration: raw and output paths, line-noise settings, channel masks, and filter/downsample presets.
 
 Parameters.Datasets = {'ADHD', 'BMS', 'BMSSL', 'SleepLearning', 'Providence', 'BMSAdults'};
 Parameters.LineNoise.ADHD = 50;
@@ -107,5 +106,4 @@ PreprocessingParameters.Waves.hp_stopband = 0.25; % high pass filter gradual rol
 Parameters.Parameters = PreprocessingParameters;
 
 % Trigger_Padding = 1; % amount of time in seconds to keep around start and stop triggers
-
 
