@@ -1,4 +1,5 @@
 function Parameters = analysisParameters()
+% Central analysis configuration: dataset lists, task names, age bins, band definitions, plotting presets, path selection, and statistics defaults.
 % parameters for detecting bursts
 % children-wake
 
