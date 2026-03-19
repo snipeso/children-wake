@@ -1,4 +1,6 @@
-% Calcualtes power in each recording.
+% Computes Welch power spectra for each cleaned recording.
+% Saves the channel x frequency power matrix together with the frequency
+% axis and enough EEG metadata to trace each output back to its source.
 
 clear
 clc
@@ -16,8 +18,8 @@ Paths = Parameters.Paths;
 Datasets = Parameters.Datasets;
 TaskList = Parameters.Tasks;
 
-WelchWindow = 4; % duration of window to do FFT
-Overlap = .5; % overlap of hanning windows for FFT
+WelchWindow = 4; % window length in seconds passed to Matcycle's pwelch wrapper
+Overlap = .5; % ratio of overlap between adjacent Welch windows
 
 Tag = ['window',num2str(WelchWindow), 's_allt'];
 
@@ -46,8 +48,9 @@ for DatasetCell = Datasets
             continue
         end
 
+        % Each recording can be processed independently, so power is
+        % computed in parallel across files.
         parfor FilenameIdx = 1:numel(Filenames)
-            % for Filename = Filenames'
             Filename = Filenames{FilenameIdx};
 
             
@@ -66,11 +69,12 @@ for DatasetCell = Datasets
 
             [Power, Freqs] = cycy.utils.compute_power(Output.EEG.data, SampleRate, WelchWindow, Overlap);
 
-            % keep track of how much data is being used
+            % Keep only metadata fields needed for later assembly so the
+            % saved files stay light.
             EEGMetadata = Output.EEG;
             EEGMetadata.data = [];
             EEGMetadata.pnts = size(Output.EEG.data, 2); % just making sure its correct
-            EEGMetadata.data = []; % only save the metadata
+            EEGMetadata.data = [];
 
             % save
             parsave_file(fullfile(Destination, Filename), Power, Freqs, Duration, Chanlocs, EEGMetadata)
