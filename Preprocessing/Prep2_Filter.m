@@ -1,5 +1,7 @@
-% Sorts files by relevant folder, and applies selected preprocessing to
-% selected task batch.
+% Builds the filtered EEG copies used by the rest of the pipeline.
+% Each output format has its own sampling rate and filter settings, so the
+% same source recording is written into separate ICA, Power, and Cutting
+% versions.
 
 close all
 clc
@@ -11,7 +13,6 @@ clear
 P = prepParameters();
 Paths = P.Paths;
 Datasets = P.Datasets;
-Datasets = {'Providence'};
 AllParameters = P.Parameters;
 OverheadLinenoise = P.LineNoise;
 
@@ -19,7 +20,7 @@ Refresh = false;
 
 Template = '000';
 Ignore = {};
-Destination_Formats = {'ICA', 'Power', 'Cutting'}; % chooses which filtering to do
+Destination_Formats = {'ICA', 'Power', 'Cutting'}; % each format feeds a later preprocessing/analysis step
 % options: 'Scoring', 'Cutting', 'ICA', 'Power'
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -27,6 +28,7 @@ Destination_Formats = {'ICA', 'Power', 'Cutting'}; % chooses which filtering to 
 Dataset_Path = Paths.Datasets;
 Preprocessed_Path = Paths.Preprocessed;
 
+% Assign stable anonymized participant IDs before filenames are built.
 DataTable = assemble_codes(Paths, Datasets, Template, Ignore);
 
 for Indx_D = 1:numel(Datasets)
@@ -70,7 +72,6 @@ for Indx_D = 1:numel(Datasets)
                     continue
                 end
 
-                % identify meaningful folders traversed
                 Levels = split(Subfolders{Indx_SF}, '\');
                 Levels(cellfun('isempty',Levels)) = []; % remove blanks
                 Levels{end} = 'n'; % indicate that it's new
@@ -101,13 +102,11 @@ for Indx_D = 1:numel(Datasets)
 
                     Levels{end} = 'o'; % indicate that its old
                 end
-
-                % set up destination location
+            
                 Destination = fullfile(Preprocessed_Path, Destination_Format, 'MAT', Dataset, Task);
                 if ~exist(Destination, 'dir')
                     mkdir(Destination)
                 end
-
 
                 Filename_Core = strjoin([Participant_NewID, Dataset, Levels(:)', num2str(numel(MAT))], '_');
                 Filename_Destination = [Filename_Core, '.mat'];
@@ -118,7 +117,8 @@ for Indx_D = 1:numel(Datasets)
                     continue
                 end
 
-                % load all mat files in folder, merging them
+                % Some raw folders contain several MAT files; merge them
+                % into one continuous EEGLAB dataset after filtering.
                 ALLEEG = struct();
                 for Indx_F = 1:numel(MAT)
 
@@ -160,7 +160,8 @@ for Indx_D = 1:numel(Datasets)
                 end
 
 
-                % save preprocessing info in eeg structure
+                % Keep enough provenance in the EEGLAB struct for later QC
+                % and paper traceability.
                 EEG.setname = Filename_Core;
                 EEG.filename = Filename_Destination;
                 EEG.original.filename = Filename_MAT;
@@ -238,5 +239,4 @@ clc
 save(Filepath, 'EEG')
 disp(['saving ', Filepath])
 end
-
 
