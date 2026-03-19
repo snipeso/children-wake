@@ -1,4 +1,4 @@
-% Detects bursts in EEG data, saves them. Can take >6 h to run.
+% Detects bursts in EEG data, saves them.
 
 clear
 clc
