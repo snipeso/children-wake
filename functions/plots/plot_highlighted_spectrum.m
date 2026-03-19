@@ -1,4 +1,5 @@
 function plot_highlighted_spectrum(Power, Freqs, Bands, PlotProps)
+% Plots a spectrum with manuscript band ranges highlighted.
 
 Colors = chART.color_picker(11, 'rainbow');
 Colors = flip(Colors(1:3, :));

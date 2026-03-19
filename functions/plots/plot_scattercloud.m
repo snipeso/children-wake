@@ -1,4 +1,5 @@
 function [R, p] = plot_scattercloud(Table, XColumn, YColumn, PlotProps, ColorgroupColumn, PlotZeroLine, XLim, YLim)
+% Scatterplot plus regression summary used in age/outcome panels.
 arguments
     Table
     XColumn

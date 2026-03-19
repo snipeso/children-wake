@@ -1,4 +1,5 @@
 function [Metadata1, Metadata2] = split_groups(Metadata, Column, Items)
+% Splits a metadata table into two named groups.
 
 Metadata = unique_metadata(Metadata, 'Participant');
 Metadata1 = Metadata(ismember(Metadata.(Column), Items(1)), :);

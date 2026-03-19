@@ -1,3 +1,5 @@
+% Legacy plotting example for EGI data inspection.
+
 clear all; close all;
 
 fsgsi=500;

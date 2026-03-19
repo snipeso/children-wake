@@ -1,4 +1,5 @@
 function EEG = center_eeg(EEG)
+% Removes large DC offsets by recentering channels.
 % for data with major DC shifts, this moves all the traces to be centered
 % to their mean, so that the high-pass filter struggles less. 
 

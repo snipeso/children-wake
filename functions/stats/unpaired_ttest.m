@@ -1,4 +1,5 @@
 function Stats = unpaired_ttest(Data1, Data2, StatsP)
+% Unpaired t-tests with effect sizes and FDR correction.
 
 % [~, p, CI, stats] = ttest2(Data1, Data2);
 [~, p, CI, stats] = ttest2(Data2, Data1);

@@ -1,4 +1,5 @@
 function [HistogramAmplitude, HistogramQuantities] = assemble_burst_distributions(Bursts, Frequencies, MaxTimepoints)
+% Converts burst lists into frequency-binned amplitude and density histograms.
 
 nFrequencies = numel(Frequencies)-1;
 DiscreteFrequencies = discretize([Bursts.BurstFrequency], Frequencies);

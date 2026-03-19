@@ -1,4 +1,5 @@
 function Top = top_components_by_category(Components, Spread)
+% Converts ICLabel probabilities into one chosen category per component.
 % function to identify the components that are definitely a given category,
 % based on it being Spread times more than the next highest component
 

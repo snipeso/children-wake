@@ -1,4 +1,5 @@
 function [MatchedWaves_FH, MatchedWaves_LH] = match_sw_amplitudes(FH_Amplitudes, LH_Amplitudes, ToleranceThreshold)
+% Matches two slow-wave amplitude distributions within a tolerance.
 arguments
     FH_Amplitudes % list of amplitdes
     LH_Amplitudes

@@ -1,5 +1,5 @@
 function Labels = indexes2labels(Indexes, Chanlocs)
-% outputs channel indices based on chanlocs labels
+% Converts numeric channel indices to EEGLAB labels.
 
 AllLabels =  string({Chanlocs.labels});
 AllLabels(strcmpi(AllLabels, 'CZ')) = "129";

@@ -1,4 +1,5 @@
 function Folder = list_filenames(Folder)
+% Lightweight folder listing that ignores `.` and `..`.
 % little function for getting whatever is inside a folder, ignoring the
 % stupid dots and turning everything into a string
 

@@ -1,5 +1,5 @@
 function events_el = fieldtrip2eeglab_events(events_ft)
-% renames fields in the structure
+% Renames FieldTrip event fields into EEGLAB-style event structs.
 
 Fields = fieldnames(events_ft);
 

@@ -1,4 +1,5 @@
 function [Exponent, Offset, Amplitude, Density, Power, PeriodicPower] = simulate_recording(ExponentOG, OffsetOG, DensityOG)
+% Simulates one recording's exponent, offset, amplitude, density, and power relationships.
 
 Duration = 20*60; % much longer than actual recording, because densities are always lower in simulated signal compared to those created (unless super high amplitudes)
 SampleRate = 250;

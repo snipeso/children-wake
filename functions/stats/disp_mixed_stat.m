@@ -1,4 +1,5 @@
 function disp_mixed_stat(Model, Coefficient)
+% Prints one mixed-model coefficient in manuscript-friendly format.
 
 RowIdx = strcmp(Model.Coefficients.Name, Coefficient);
 

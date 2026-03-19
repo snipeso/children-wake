@@ -1,4 +1,5 @@
 function save_model(Model, Filename)
+% Writes a mixed-model summary to disk.
 
 Text = formattedDisplayText(Model);
 

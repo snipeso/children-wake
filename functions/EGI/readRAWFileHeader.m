@@ -1,4 +1,5 @@
 function [segInfo, dataFormat, header_array, EventCodes,Samp_Rate, NChan, scale, NSamp, NEvent] = readRAWFileHeader(fid);
+% Parses EGI raw-file header information.
 
 % [segInfo, dataFormat, header_array, EventCodes,Samp_Rate, NChan, scale, NSamp, NEvent] = 
 %	readRAWFileHeader(fid);

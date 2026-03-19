@@ -1,4 +1,5 @@
 function [dataFormat, header_array, EventCodes,Samp_Rate, NChan, scale, NSamp, NEvent, channelData] = loadEGIRaw(rawFileName)
+% Lower-level EGI raw loader returning header and channel data.
 
 % function [header_array, EventCodes,Samp_Rate, NChan, scale,
 %	NSamp, NEvent, channelData] = loadEGIRaw(rawFileName)

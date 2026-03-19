@@ -1,4 +1,4 @@
-% brogden
+% Legacy EGI utility script kept with the import code.
 
 % set up the path to access the Brogden MATLAB code.
 

@@ -1,4 +1,5 @@
 function CorrectedMetadata = correct_for_age(Metadata)
+% Removes linear age effects from the outcome variables.
 % identifies the linear correlation between each outcome variable and age,
 % and adjusts the outcome value accordingly
 

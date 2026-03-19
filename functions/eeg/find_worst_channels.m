@@ -1,4 +1,5 @@
 function Worst = find_worst_channels(R, Threshold)
+% Returns the most poorly correlated channels under a threshold.
 
 Remaining = R;
 Worst = [];

@@ -1,4 +1,5 @@
 function plot_age_by_frequency(Data, Ages, Frequencies, Colormap, Label, PlotProps)
+% Draws the age-by-frequency heatmaps used in the manuscript.
 % Data is an age x frequency matrix
 
 contourf(Ages, Frequencies, Data', 100, 'linecolor','none')

@@ -1,4 +1,5 @@
 function mixed_model_topography(Models, ColorParameter, Coefficient, Chanlocs, CLims, PlotProps, ColorLabel)
+% Extracts one coefficient from many channel-wise mixed models and plots it as a topography with FDR masking.
 % plots topographies from mixed effects models, whichever statistic is
 % specified in ColorParameters, and whichever estimate is specified by the
 % coefficient (e.g. 'Age', or 'Age:Hour_2').

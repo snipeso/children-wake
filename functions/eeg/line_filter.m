@@ -1,5 +1,5 @@
 function EEG_filt = line_filter(EEG, linefs, showFiltPlots)
-% removes line noise, and harmonics
+% Removes line frequency and harmonics before later processing.
 
 EEG_filt = EEG;
 fs = EEG.srate; % Sampling Frequency (Hz)
@@ -47,4 +47,3 @@ if exist('showFiltPlots', 'var') && showFiltPlots
     legend({'unfilt', 'filt'})
     
 end
-

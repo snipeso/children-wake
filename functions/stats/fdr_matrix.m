@@ -1,4 +1,5 @@
 function [FDR, h, crit_p] = fdr_matrix(pValues, StatsParameters)
+% Runs FDR correction on a matrix after vectorizing it.
 % applies FDR correction to a N x N matrix of pvalues, by turning them
 % first into a vector, then back into the original matrix.
 

@@ -1,4 +1,5 @@
 function Stats = unpaired_hedgesG(Data1, Data2, StatsP)
+% Unpaired effect sizes for matrix-form data.
 
 Dims1 = size(Data1);
 Dims2 = size(Data2);

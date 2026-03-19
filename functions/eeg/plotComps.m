@@ -1,4 +1,5 @@
 function plotComps(EEG)
+% Opens the ICA component review interface.
 
 
 

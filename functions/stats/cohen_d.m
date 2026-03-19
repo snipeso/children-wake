@@ -1,4 +1,5 @@
 function CohenD = cohen_d(Data1, Data2)
+% Computes Cohen's d for topographic contrasts.
 % for when dealing with topography. If doing paired; provide already the
 % difference values.
 

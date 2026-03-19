@@ -1,4 +1,5 @@
 function Bursts = burst_bands(Bursts, Bands)
+% Labels each burst by manuscript band membership.
 
 Frequencies = [Bursts.BurstFrequency];
 FrequencyCategories = zeros(size(Frequencies));

@@ -1,4 +1,5 @@
 function plot_multicolored_histogram(Histogram, Frequencies, Bands, PlotProps)
+% Colors burst histograms by theta, alpha, and beta band.
 
 Width = .8;
 Colors = chART.color_picker(11, 'rainbow');

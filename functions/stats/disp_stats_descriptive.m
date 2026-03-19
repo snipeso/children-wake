@@ -1,4 +1,5 @@
 function String = disp_stats_descriptive(Data, String, Unit, Roundedness)
+% Formats descriptive statistics text.
 % String = disp_stats_descriptive(Data, String, Unit, Roundedness)
 % Roundedness is precision of numbers ('%.0f')
 % Data is P x 1 matrix.

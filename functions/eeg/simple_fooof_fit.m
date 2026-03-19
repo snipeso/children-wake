@@ -1,5 +1,5 @@
 function [Exponent, Offset] = simple_fooof_fit(X, Y, Range)
-% used for preprocessing
+% Minimal exponent/offset wrapper used during preprocessing.
 
 Results = fooof(X, Y, Range, struct(), false);
 

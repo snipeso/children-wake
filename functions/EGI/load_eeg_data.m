@@ -1,4 +1,5 @@
 function [EEG, MAT] = load_eeg_data(Filename, Filepath)
+% Main import wrapper for EGI `.raw` and BrainVision `.eeg/.vhdr` files.
 % Reads either EGI or BrainAmp data, saves it into a EEGLAB structure. Uses
 % both Fieldtrip and EEGLAB. Fileformats are a pain.
 % from children-wake, Snipes 2023

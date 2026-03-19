@@ -1,4 +1,5 @@
 function Metadata = assign_unique_session(Metadata)
+% Creates a session identifier that is unique across datasets and participants.
 
 Metadata.SessionUnique = nan(size(Metadata, 1), 1);
 Participants = unique(Metadata.Participant);

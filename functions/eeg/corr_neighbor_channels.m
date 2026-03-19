@@ -1,4 +1,5 @@
 function R = corr_neighbor_channels(Data, Chanlocs)
+% Measures how well each channel agrees with its neighbors.
 % correlates neighboring channels; lets you determine when one channel is
 % an outlier.
 % Data is a Ch x t matrix

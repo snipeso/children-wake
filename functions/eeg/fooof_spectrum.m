@@ -1,4 +1,5 @@
 function [Exponent, Offset, PeriodicPower, FooofFrequencies, Fit, AperiodicPower] = fooof_spectrum(Power, Frequencies, simple_fooof_fittingRange)
+% Runs `fooof()` and returns exponent, offset, periodic power, fit quality, and aperiodic fit.
 
 
 Power = smooth_frequencies(Power, Frequencies, 2);

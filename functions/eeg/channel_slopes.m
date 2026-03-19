@@ -1,4 +1,5 @@
 function [Slopes, Intercepts, Power, Freqs] = channel_slopes(EEG, Ranges, Datatype, FitType)
+% Estimates per-channel spectral slopes, used mainly for ICA artifact decisions.
 % identifies the slopes of each channel, used especially for detecting
 % which components are noise vs EEG
 

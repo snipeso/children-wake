@@ -1,4 +1,5 @@
 function Stats = paired_hedges_g(Data1, Data2, StatsP)
+% Paired effect sizes for matrix-form data.
 % Data1 and Data2 are P x m x n matrices resulting in m x n stats matrices
 % with Hedge's g m x n matrix and confidence intervals m x n x 2. If only
 % Data1 is provided, then it should be a P x m matrix, and g values will be

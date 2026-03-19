@@ -1,4 +1,5 @@
 function VIF = gpt_vif(Model)
+% Computes variance inflation factors from a fitted linear model.
 
 X = designMatrix(Model, 'Fixed');
 

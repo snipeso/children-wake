@@ -1,4 +1,5 @@
 function EEG_filt = highpass_eeg(EEG, high_pass, hp_stopband)
+% High-pass FIR helper used to control the transition band explicitly.
 % special filter for high-pas filtering; done to have more control over
 % which frequencies really get removed.
 

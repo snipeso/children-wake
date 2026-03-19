@@ -1,4 +1,5 @@
 function dat = loadEGIBigRaw(rawFileName,chans)
+% Reads the EGI sample matrix from large raw files.
 
 % function dat = loadEGIBigRaw(rawFileName,chans)
 % 

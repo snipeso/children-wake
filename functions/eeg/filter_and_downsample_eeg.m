@@ -1,4 +1,5 @@
 function EEG = filter_and_downsample_eeg(EEG, Parameters)
+% Applies line filtering, low/high-pass filtering, and resampling using the preset parameter struct.
 % Parameters should have .fs, .lp, .hp, .hp_stopband, .line
 
 % set selected parameters

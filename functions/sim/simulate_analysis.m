@@ -1,6 +1,7 @@
 function [LogPower, Frequencies, Exponent, Offset, PeriodicPower, FooofFrequencies, ...
     Amplitude, Density, nBursts, Bursts] = simulate_analysis(Signal, ...
     SampleRate, WelchWindow, WelchWindowOverlap, SmoothSpan, PowerRange, BurstRange, CriteriaSet, Plot)
+% Generates simulated spectra and burst-like quantities for method checks.
 
 
 

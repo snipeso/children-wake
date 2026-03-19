@@ -1,4 +1,5 @@
 function Data = interpolate_point_channels(Data, Chanlocs)
+% Interpolates isolated bad channels in point data.
 
 Dims = size(Data);
 

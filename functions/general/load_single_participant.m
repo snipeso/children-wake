@@ -1,4 +1,5 @@
 function [EEG, Bursts, BurstClusters, Power, Freqs] = load_single_participant(Filename_Core, Paths)
+% Convenience loader for the Figure 1 example participant.
 
 Levels = split(Filename_Core, '_');
 Participant = Levels{1};

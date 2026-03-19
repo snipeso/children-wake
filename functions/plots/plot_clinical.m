@@ -1,4 +1,5 @@
 function plot_clinical(EEG)
+% Quick clinical-style rereferenced visualization of EEG traces.
 
 EEG = pop_reref(EEG, labels2indexes([57 100], EEG.chanlocs));
 

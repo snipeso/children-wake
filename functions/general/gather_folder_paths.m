@@ -1,4 +1,5 @@
 function [Subfolders, Datasets] = gather_folder_paths(DataPath, TemplateFolder, isFullPath, IgnoreFolders)
+% Finds dataset subfolders and participant folders matching the expected raw-data layout.
 % DataPath should indicate the folder where all the datasets are.
 % TemplateFolder indicates the name of the folder that has the template
 % folder structure.

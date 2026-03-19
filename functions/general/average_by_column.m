@@ -1,4 +1,5 @@
 function AverageData = average_by_column(Metadata, Data, ColumnName, MetadataIndexes)
+% Averages rows of data according to a metadata column such as participant or age bin.
 % Averages data rows based on whether information in ColunmnName is the
 % same in the Metadata table. So for example you can have participants with
 % multiple recordings that you want to average together.

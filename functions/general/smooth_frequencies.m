@@ -1,4 +1,5 @@
 function sData = smooth_frequencies(Data, Frequencies, SmoothSpan)
+% Frequency-aware smoothing used in spectra and FOOOF preparation.
 % smooth_frequencies(Data, Freqs, FreqDim, SmoothSpan)
 % function for smoothing data by "smoothSpan".
 % horrible mess, to fix once I figure out how

@@ -1,4 +1,5 @@
 function plot_quick_eeg(EEG, PlotICA)
+% Fast visual check of EEG traces, with optional ICA overlays.
 arguments
     EEG
     PlotICA = false;

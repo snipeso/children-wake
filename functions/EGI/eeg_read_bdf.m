@@ -1,4 +1,5 @@
 function [data,numChan,labels,txt,fs,gain,prefiltering,ChanDim] = eeg_read_bdf(filename,SecLoad,reshape)
+% Reads BDF data chunks and header metadata.
 
 % this function loads at least "SecLoad" seconds of EEG data from the
 % specified bdf-file "filename". If all available data is needed, specify

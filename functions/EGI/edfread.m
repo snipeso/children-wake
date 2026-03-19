@@ -1,5 +1,5 @@
 function [hdr, record] = edfread(fname, varargin)
-% Read European Data Format file into MATLAB
+% EDF reader bundled with the repo.
 %
 % [hdr, record] = edfread(fname)
 %         Reads data from ALL RECORDS of file fname ('*.edf'). Header

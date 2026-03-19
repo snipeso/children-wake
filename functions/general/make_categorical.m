@@ -1,4 +1,5 @@
 function Metadata = make_categorical(Metadata, ColumnName, VariableOrder)
+% Reorders a metadata column into the category baseline needed for mixed-effects models.
 % removes also rows that do not have that category
 Metadata(~contains(Metadata.(ColumnName), VariableOrder), :) = [];
 

@@ -1,4 +1,5 @@
 function EEG = manuallyRemoveBadComps(EEG)
+% GUI-assisted manual selection of ICA components to reject.
 % 1:Brain, 2:Muscle, 3:Eye, 4:Heart, 5:Line Noise, 6:Channel Noise, 7:Other
 clc
 

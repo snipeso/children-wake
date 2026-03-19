@@ -1,5 +1,5 @@
 function [WhitenedPower, FooofFrequencies] = whiten_spectrum(Power, Frequencies, simple_fooof_fittingRange)
-% uses FOOOF
+% Removes the aperiodic fit from a spectrum to isolate periodic power.
 
 FooofModel = fooof(Frequencies, Power, simple_fooof_fittingRange, struct(), true);
 FooofFrequencies = FooofModel.freqs;

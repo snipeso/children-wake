@@ -1,4 +1,5 @@
 function PeakFreq = find_periodic_peak(Data, Freqs, Range)
+% Finds the strongest periodic peak within a requested frequency range.
 % recommendation: use smoothed data
 
 [~, PeakFreqs, ~, Prominence] = findpeaks(log10(Data), Freqs);

@@ -1,4 +1,5 @@
 function UniqueMetadata = unique_metadata(Metadata, Column)
+% Keeps one row per unique value, usually one row per participant.
 arguments
     Metadata
     Column = 'Participant';

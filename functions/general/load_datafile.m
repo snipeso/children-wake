@@ -1,4 +1,5 @@
 function DataOut = load_datafile(Path, Participant, Session, Hour, Variables, Extention)
+% Loads one participant/session/hour file by matching the filename core and requested variables.
 % loads a mat file containing the data of a single participant and single
 % session. If Variables is a single string, output will be whatever that
 % variable was. If its a cell array, dataout will also be a cell array with

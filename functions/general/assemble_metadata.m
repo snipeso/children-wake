@@ -1,4 +1,5 @@
 function Metadata = assemble_metadata(MetadataPath, Datasets)
+% Merges participant, session, and code tables into the unified metadata table.
 % creates a table with columns:
 % Dataset, Participant, Session, Hour (mor/eve), Sex, Handedness, Age,
 % Group, Subgroup (Melanie devised split by medication), Condition

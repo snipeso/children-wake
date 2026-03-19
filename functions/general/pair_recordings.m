@@ -1,4 +1,5 @@
 function PairedMetadata = pair_recordings(Metadata, ColumnName, Categories)
+% Builds evening/morning or first/last pairing tables for within-subject comparisons.
 % pairs up recordings to create table of item 1, with the index to item 2
 % ColumnName is where the categories are saved, and Categories is a cell of
 % 2 strings, such that the second will be associated to the first like

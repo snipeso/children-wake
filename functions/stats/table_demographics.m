@@ -1,4 +1,5 @@
 function table_demographics(Metadata, CategoryColumn, Destination, Filename)
+% Exports demographic tables used in the paper and supplements.
 % creates table of how many of each binary category there is, and average
 % of the main outcome variables
 

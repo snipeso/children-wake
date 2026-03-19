@@ -1,5 +1,6 @@
 function [BadSegments, BadCh, BadWindows_t, Starts, Ends] = ...
     find_bad_segments(EEG, Window, MinNeighborCorrelation, NotEEGChannels, CorrectCz, MinDataKeep, CorrelationFrequencyRange, AmplitudeThreshold)
+% Detects noisy windows and channels using neighbor correlations and amplitude criteria.
 % based on correlations with neighboring channels, identifies bad channels
 % and timewindows with artefacts. EEG is an EEGLAB structure. Window is in
 % seconds the duration of windows to check for bad segments (~4 s),
@@ -152,6 +153,5 @@ end
 BadSegments(isnan(BadSegments)) = 1;
 BadSegments = logical(BadSegments);
 end
-
 
 

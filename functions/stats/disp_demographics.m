@@ -1,4 +1,5 @@
 function disp_demographics(Metadata, CategoryColumn)
+% Prints compact demographic summaries to the MATLAB console.
 % display proportion of male/female, age ranges, handedness, group,
 % subgroup, and dataset, split by unique elements in Category
 

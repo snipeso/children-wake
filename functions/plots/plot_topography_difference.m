@@ -1,4 +1,5 @@
 function plot_topography_difference(Data1, Data2, Chanlocs, CLims, StatParameters, PlotProps)
+% Computes paired or unpaired topographic contrasts and plots effect size maps.
 % plots the t-values (color) and significant channels (white dots) of
 % Data2 vs Data1 using chART plots.
 % Data are P x Ch matrices.

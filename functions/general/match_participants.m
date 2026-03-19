@@ -1,4 +1,5 @@
 function [MetadataPatients, MetadataControls] = match_participants(Datatable, PatientIndexes)
+% Matches patient and control participants on age, sex, and task constraints.
 % matches participants by gender, task and age (should be unique Patients)
 % 
 

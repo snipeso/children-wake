@@ -1,4 +1,5 @@
 function [PeakFrequency, Amplitude, Status] = find_iota(Power, Freqs)
+% Detects an oscillatory peak and reports its status for developmental analyses.
 % Status: 0 no peak found, 1: peak found, with harmonic. 2: small peak found, no harmonic;
 % 3: large peak found, no harmonic; 4: large peak found, no other periodic
 % NB: if there's a peak alpha, but in it both sinusoidal and not signal,

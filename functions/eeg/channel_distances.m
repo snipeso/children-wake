@@ -1,5 +1,5 @@
 function M = channel_distances(X, Y, Z)
-% distances between electrodes
+% Computes inter-electrode distances from XYZ coordinates.
 
 M = nan(numel(X));
 

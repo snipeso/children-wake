@@ -1,4 +1,5 @@
 function [p_value, z_statistic] = gpt_compare_standardized_coefficients(Model1, Model2, Factor1, Factor2)
+% Compares standardized regression coefficients between models.
 
 % Extract standardized coefficients and standard errors
 beta_Z_V1 = Model1.Coefficients.Estimate(strcmp(Model1.Coefficients.Name, Factor1));

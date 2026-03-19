@@ -1,5 +1,5 @@
 function Stats = corrtest2_dependent_shared(r_jk, r_jh, r_kh, n)
-% Compare two dependent correlations with one variable in common.
+% Compares two dependent correlations that share one variable.
 %
 % This mirrors the QuantPsy "corrtest2" calculator:
 % https://quantpsy.org/corrtest/corrtest2.htm

@@ -1,3 +1,5 @@
+% Legacy EGI score-file helper kept with the import code.
+
 clear all
 dat=loadEGIBigRaw('c:\data\human\MarcMass200208291518.raw',[71 93 174 191]);
 

@@ -1,4 +1,5 @@
 function Metadata = basic_metadata_cleanup(Metadata, Extras)
+% Standardizes task labels, age bins, session labels, and other metadata fields used across figures.
 arguments
     Metadata
     Extras = {};
