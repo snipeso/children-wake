@@ -1,7 +1,5 @@
-% Plots age-by-frequency matrices and average spectra showing evening, morning, and overnight differences.
-% Used in the wake EEG manuscript pipeline.
-
-% plots the age x frequency and spectrograms of the data
+% Plots age-by-frequency matrices and average spectra showing evening,
+% morning, and overnight differences.
 clear
 clc
 close all
@@ -215,6 +213,5 @@ xlabel('Frequency (Hz)')
 ylabel('Power (\muV^2/Hz)')
 set(legend, 'ItemTokenSize', [10 10], 'location', 'southwest')
 end
-
 
 

@@ -1,5 +1,5 @@
-% Applies final metadata cleanup, anonymized dataset relabeling, and saves the `ExtendedData_*.mat` files.
-% Used in the wake EEG manuscript pipeline.
+% Applies final metadata cleanup, anonymized dataset relabeling, and saves
+% the `ExtendedData_*.mat` files.
 
 %% Polish data
 
@@ -56,6 +56,5 @@ save(fullfile(ResultsFolder, 'ExtendedData_4.mat'), 'Metadata',  ...
 
 save(fullfile(ResultsFolder, 'ExtendedData_6.mat'), 'Metadata',  ...
     'TopographiesBands',  'Chanlocs', "Bands")
-
 
 

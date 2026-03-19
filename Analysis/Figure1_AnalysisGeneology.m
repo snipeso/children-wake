@@ -1,8 +1,5 @@
-% Builds the conceptual Figure 1 examples from one participant's cleaned EEG, bursts, and spectra.
-% Used in the wake EEG manuscript pipeline.
-
-% This is just some basic code to plot the little example data used in
-% figure 1.
+% Builds the conceptual Figure 1 examples from one participant's cleaned
+% EEG, bursts, and spectra.
 clear
 clc
 close all
@@ -217,4 +214,3 @@ xlim([2 18])
 xlabel('Frequency (Hz)')
 ylabel('\muV')
 chART.save_figure('Amplitudes', ResultsFolder, PlotProps)
-

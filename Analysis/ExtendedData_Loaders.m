@@ -1,6 +1,3 @@
-% Commented helper snippets showing which exported `ExtendedData_*.mat` file corresponds most closely to each figure script.
-% Used in the wake EEG manuscript pipeline.
-
 % ExtendedData_Loaders.m
 % Commented helper snippets for loading the manuscript's exported
 % ExtendedData MAT files without editing the original figure scripts.

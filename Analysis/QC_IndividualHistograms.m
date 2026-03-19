@@ -1,5 +1,5 @@
-% Quality-control visualization of per-participant burst-frequency histograms.
-% Used in the wake EEG manuscript pipeline.
+% Quality-control visualization of per-participant burst-frequency
+% histograms.
 
 
 clear
@@ -99,7 +99,6 @@ for idxRecording = 1:nRecordings
         end
 
 end
-
 
 
 
