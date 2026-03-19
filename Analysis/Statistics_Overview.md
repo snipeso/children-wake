@@ -8,8 +8,6 @@ OutcomeVariable ~ Condition + Task + Hour + Age + Group + (1|Participant) + (1|P
 ### Fixed effects:
 The fixed effects are the ones that would theoretically re-appear in someone else's experiment. I change which ones I use in the model, depending on what is the effect I'm interested in, and how much that affect appeared significant in previous analyses.
 
-For age, I center the values to the mean, because something something dependancy of intercept and slope?
-
 ### Random effects:
 These are sources of variance that I can easily identify, but would not appear in anyone else's experiment. So that's participants, and the different sessions they were recorded.
 
