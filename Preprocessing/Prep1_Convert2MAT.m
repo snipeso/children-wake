@@ -1,4 +1,5 @@
-% first script is for converting eeg files so there's.raw a .mat with the data.
+% Converts raw EEG folders to EEGLAB `EEG` `.mat` files and fixes a
+% Providence channel-order issue.
 close all
 clear
 clc
