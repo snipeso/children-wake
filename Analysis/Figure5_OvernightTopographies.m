@@ -1,5 +1,6 @@
-%%% plot estimates for each outcome variable for each age, to determine how
-%%% large the overnight effect is.
+% Fits channel-wise mixed models and plots overnight-change topographies.
+% The same mixed-effects structure is rerun separately at each electrode so
+% the age dependence of the overnight effect can be visualized spatially.
 
 clear
 clc
@@ -40,6 +41,8 @@ table_demographics(unique_metadata(Metadata), 'AgeGroups', ResultsFolder, 'AgeGr
 
 
 %% make model (this is a bit slow)
+% Every channel gets its own model because the coefficient map itself is
+% the result of interest.
 
 MetadataStat = Metadata;
 MetadataStat = make_categorical(MetadataStat, 'Task', Tasks);
@@ -62,6 +65,8 @@ for MeasureIdx = 1:nMeasures
             MetadataTemp = MetadataStat(MetadataStat.AgeGroups==AgeIdx, :);
             MetadataTemp.Data = Topographies.(Measures{MeasureIdx})(MetadataTemp.Index, ChannelIdx);
 
+            % Drop task or session terms when the subset does not contain
+            % enough levels for that part of the model to make sense.
             if numel(unique(MetadataTemp.Task)) > 1
                 Fixed = TaskFixed;
             else
@@ -308,5 +313,4 @@ end
 
 
 chART.save_figure(['TopographyBandChange_',Measure], ResultsFolder, PlotProps)
-
 

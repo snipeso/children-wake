@@ -1,3 +1,6 @@
+% Plots age-group average topographies for whole-range and band-limited measures.
+% Used in the wake EEG manuscript pipeline.
+
 % plots the average topographies for different ages
 
 clear

@@ -1,4 +1,6 @@
-% plots topographies of ADHD vs HC
+% Fits channel-wise ADHD versus control models and plots group effects.
+% The model keeps age, hour, and task in the design so the ADHD term is
+% estimated after accounting for the main structure of the pooled dataset.
 
 clear
 clc

@@ -1,5 +1,6 @@
-% script to run main mixed effects models to determine the significance of
-% the most important factors for the paper's analysis on the wake EEG data.
+% Runs the manuscript's main mixed-effects statistics and summary tables.
+% This script is the statistical hub for the paper: demographics, core
+% models, age scatterplots, and several follow-up checks all live here.
 
 clear
 clc
@@ -56,7 +57,7 @@ table_demographics(Metadata, 'Hour', ResultsFolder, 'Hour')
 
 %% run mixed models
 
-FormulaString = ' ~ Task + Hour*Age + Group + Sex + (1|Participant) + (1|Participant:SessionUnique)'; % MAIN ONE
+FormulaString = ' ~ Task + Hour*Age + Group + Sex + (1|Participant) + (1|Participant:SessionUnique)'; % main manuscript model
 % FormulaString = ' ~ Task + Hour*Age + (1|Participant) + (1|Participant:SessionUnique)'; % this model provides the better BIC
 % FormulaString = ' ~ Task + Hour*Age + Group + Sex + (1|Participant) + (1|Participant:SessionUnique) + (1|Participant:Dataset)'; % control
 
@@ -93,7 +94,8 @@ for MeasureIdx = 1:numel(OutcomeMeasures_Extended)
     formula = [OutcomeMeasures_Extended{MeasureIdx}, FormulaString];
     Model = fitlme(MetadataStat, formula);
 
-    % Display the model summary
+    % Print the full model, then the specific coefficients reported in the
+    % manuscript text.
     disp('   ')
     disp('   ')
     disp(['____________________ ', OutcomeMeasures_ExtendedLabels{MeasureIdx}, ' ____________________'])
@@ -119,6 +121,8 @@ disp_stats_descriptive(MetadataStat.Error, 'Error', '', 3);
 disp_stats_descriptive(MetadataStat.RSquared, 'rsquared', '', 3);
 
 %% scatterplot of basic information (Figure 2)
+% These plots are simpler descriptive checks that mirror the mixed-model
+% findings with participant-level averages.
 
 close all
 PlotProps = Parameters.PlotProps.Manuscript;
@@ -154,7 +158,7 @@ figure('Units','centimeters','OuterPosition',[0 0 26 18])
 Ps = nan(3, numel(OutcomeMeasures));
 for VariableIdx = 1:numel(OutcomeMeasures)
 
-    %%% plot age x v split by evening and morning, averaged across sessions
+    %%% plot age x variable split by evening and morning, averaged across sessions
     for HourIdx = 1:numel(Hours)
 
         % select data of either evening or morning
@@ -183,6 +187,7 @@ for VariableIdx = 1:numel(OutcomeMeasures)
     end
 
     %%% plot overnight change
+    % pair_recordings creates within-participant evening/morning deltas.
     chART.sub_plot([], Grid, [3, VariableIdx], [], true, '', PlotProps);
     MetadataAverage = unique_metadata(OvernightMetadata, 'Participant');
 

@@ -1,3 +1,6 @@
+% Applies final metadata cleanup, anonymized dataset relabeling, and saves the `ExtendedData_*.mat` files.
+% Used in the wake EEG manuscript pipeline.
+
 %% Polish data
 
 

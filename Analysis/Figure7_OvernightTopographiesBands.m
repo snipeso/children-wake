@@ -1,4 +1,6 @@
-% plots the beta estimates for the overnight change split by band
+% Plots band-limited overnight-change topographies and sleep correlations.
+% This script focuses on the band-resolved density results highlighted in
+% the manuscript, then relates them to N3 sleep duration.
 clear
 clc
 close all
@@ -40,6 +42,8 @@ table_demographics(unique_metadata(Metadata), 'AgeGroups', ResultsFolder, 'AgeGr
 
 
 %% fit model for bands
+% As in Figure 5, one model is fit per electrode, now separately within
+% each frequency band.
 
 WakeMeasure = 'Density';
 
@@ -130,6 +134,8 @@ chART.save_figure(['TopographyBandChange_',WakeMeasure], ResultsFolder, PlotProp
 
 
 %% check relationship with N3
+% Follow-up analysis relating band-limited wake changes to sleep-stage
+% duration in the paired sleep dataset.
 
 PlotProps.Colorbar.Location = 'eastoutside';
 load(fullfile(CacheDir, CacheName), 'Metadata', 'TopographiesBands', ...

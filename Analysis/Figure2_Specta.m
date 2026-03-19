@@ -1,3 +1,6 @@
+% Plots age-by-frequency matrices and average spectra showing evening, morning, and overnight differences.
+% Used in the wake EEG manuscript pipeline.
+
 % plots the age x frequency and spectrograms of the data
 clear
 clc

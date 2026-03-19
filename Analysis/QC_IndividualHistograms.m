@@ -1,3 +1,6 @@
+% Quality-control visualization of per-participant burst-frequency histograms.
+% Used in the wake EEG manuscript pipeline.
+
 
 clear
 clc
