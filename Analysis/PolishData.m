@@ -43,4 +43,16 @@ end
 save(fullfile(ResultsFolder, 'ProcessedData.mat'), 'Metadata', 'SpectraAverage', ...
     'SpectraRedux', 'FrequenciesRedux', 'Frequencies', 'TopographiesBands', 'Topographies',...
     'Chanlocs', "Bands")
-writetable(Metadata, fullfile(ResultsFolder, 'AllWakeData.csv'))
+writetable(Metadata, fullfile(ResultsFolder, 'ExtendedData_2.csv'))
+
+save(fullfile(ResultsFolder, 'ExtendedData_2.mat'), 'Metadata', 'SpectraAverage', ...
+ 'Frequencies')
+
+save(fullfile(ResultsFolder, 'ExtendedData_4.mat'), 'Metadata',  ...
+    'Topographies',  'Chanlocs')
+
+save(fullfile(ResultsFolder, 'ExtendedData_6.mat'), 'Metadata',  ...
+    'TopographiesBands',  'Chanlocs', "Bands")
+
+
+
