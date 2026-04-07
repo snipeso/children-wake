@@ -43,17 +43,25 @@ for DatasetIdx = 1:numel(Datasets)
 end
 
 
-save(fullfile(ResultsFolder, 'ProcessedData.mat'), 'Metadata', 'SpectraAverage', ...
-    'SpectraRedux', 'FrequenciesRedux', 'Frequencies', 'TopographiesBands', 'Topographies',...
-    'Chanlocs', "Bands")
-writetable(Metadata, fullfile(ResultsFolder, 'ExtendedData_2.csv'))
 
+writetable(Metadata, fullfile(ResultsFolder, 'ExtendedData_3.csv'))
+
+
+SpectraAverage = SpectraAverage(Metadata.Index, :); % only used data for this study
 save(fullfile(ResultsFolder, 'ExtendedData_2.mat'), 'Metadata', 'SpectraAverage', ...
- 'Frequencies')
+    'Frequencies')
 
+for Field = fieldnames(Topographies)'
+    ShortData = Topographies.(Field{1})(Metadata.Index, :);
+    Topographies.(Field{1}) = ShortData;
+end
 save(fullfile(ResultsFolder, 'ExtendedData_4.mat'), 'Metadata',  ...
     'Topographies',  'Chanlocs')
 
+for Field = fieldnames(TopographiesBands)'
+    ShortData = TopographiesBands.(Field{1})(Metadata.Index, :, :);
+    TopographiesBands.(Field{1}) = ShortData;
+end
 save(fullfile(ResultsFolder, 'ExtendedData_6.mat'), 'Metadata',  ...
     'TopographiesBands',  'Chanlocs', "Bands")
 
